@@ -39,6 +39,7 @@ import io.viash.config.Author
 import io.viash.config.ComputationalRequirements
 import io.viash.config.Links
 import io.viash.config.References
+import io.viash.config.Scope
 
 object CollectedSchemas {
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
@@ -75,6 +76,7 @@ object CollectedSchemas {
       getMembers[ArgumentGroup](),
       getMembers[Links](),
       getMembers[References](),
+      getMembers[Scope](),
 
       getMembers[Runner](),
       getMembers[ExecutableRunner](),

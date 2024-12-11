@@ -32,6 +32,7 @@ import io.viash.ViashNamespace
 import io.viash.config.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
 import io.viash.helpers.circe.Convert
+import io.viash.config.ScopeEnum
 
 object DependencyResolver extends Logging {
 
@@ -94,14 +95,19 @@ object DependencyResolver extends Logging {
 
         val config =
           if (dep.isLocalDependency) {
-            findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
+            val t = findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
+            t.map(t => (t._1, t._2, Some(t._3)))
           } else {
-            findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
+            val t = findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
+            t.map(t => (t._1, t._2, Option.empty[Config]))
           }
+
+        val internalDependencyTargetScope = config.flatMap(_._3).flatMap(_.scope.toOption).map(_.target).getOrElse(ScopeEnum.Public)
 
         dep.copy(
           foundConfigPath = config.map(_._1),
-          configInfo = config.map(_._2).getOrElse(Map.empty)
+          configInfo = config.map(_._2).getOrElse(Map.empty),
+          internalDependencyTargetScope = internalDependencyTargetScope
         )
       }
       )(config3)
@@ -121,7 +127,7 @@ object DependencyResolver extends Logging {
       if (dep.isLocalDependency) {
         // Dependency solving will be done by building the component and dependencies of that component will be handled there.
         // However, we have to fill in writtenPath. This will be needed when this built component is used as a dependency and we have to resolve dependencies of dependencies.
-        val writtenPath = ViashNamespace.targetOutputPath(output, runnerId, None, dep.name)
+        val writtenPath = ViashNamespace.targetOutputPath(output, runnerId, dep.internalDependencyTargetScope, None, dep.name)
         dep.copy(writtenPath = Some(writtenPath))
       } else {
         // copy the dependency to the output folder
@@ -144,7 +150,7 @@ object DependencyResolver extends Logging {
   }
 
   // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
-  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String])] = {
+  def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String], Config)] = {
 
     val config = namespaceConfigs.filter{ c => 
         val fullName = c.namespace.fold("")(n => n + "/") + c.name
@@ -177,7 +183,7 @@ object DependencyResolver extends Logging {
         ("name" -> c.name),
         ("namespace" -> c.namespace.getOrElse(""))
       )
-      (path, map ++ map2)
+      (path, map ++ map2, c)
     }
   }
 

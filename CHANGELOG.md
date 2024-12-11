@@ -6,6 +6,8 @@ TODO add summary
 
 * `Nextflow` runner: allow emitting multiple output channels (PR #736).
 
+* `Scope`: Add a `scope` field to the config (PR #782). This allows tuning how the components is built for release.
+
 ## MINOR CHANGES
 
 * `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
