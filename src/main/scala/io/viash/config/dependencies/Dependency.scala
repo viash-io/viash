@@ -23,6 +23,7 @@ import io.viash.schemas._
 import java.nio.file.Files
 import io.viash.ViashNamespace
 import io.viash.exceptions.MissingBuildYamlException
+import io.viash.config.ScopeEnum
 
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the component.
@@ -92,6 +93,9 @@ case class Dependency(
   @internalFunctionality
   @description("Location of the dependency component artifacts are written ready to be used.")
   writtenPath: Option[String] = None,
+
+  @internalFunctionality
+  internalDependencyTargetScope: ScopeEnum = ScopeEnum.Public
 ) {
   if (alias.isDefined) {
     // check functionality name
@@ -119,7 +123,7 @@ case class Dependency(
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the runner id should be dynamic
-      Some(ViashNamespace.targetOutputPath("", "executable", None, name))
+      Some(ViashNamespace.targetOutputPath("", "executable", internalDependencyTargetScope, None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))
