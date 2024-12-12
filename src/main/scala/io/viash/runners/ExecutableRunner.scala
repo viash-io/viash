@@ -165,6 +165,12 @@ final case class ExecutableRunner(
         |            shift 1
         |            ;;""".stripMargin
 
+    val helpStrings = 
+      s"""Viash built in Engines:
+         |    ---engine=ENGINE_ID
+         |        Specify the engine to use. Options are: ${engines.map(_.id).mkString(", ")}.
+         |        Default: ${engines.head.id}""".stripMargin
+
     val typeSetterStrs = engines.groupBy(_.`type`).map{ case (engineType, engineList) => 
       s""" ${oneOfEngines(engineList)} ; then
         |  VIASH_ENGINE_TYPE='${engineType}'""".stripMargin
@@ -179,6 +185,7 @@ final case class ExecutableRunner(
 
     BashWrapperMods(
       preParse = preParse,
+      helpStrings = List(("Engine", helpStrings)),
       parsers = parsers,
       postParse = postParse
     )
@@ -337,6 +344,20 @@ final case class ExecutableRunner(
         |            shift 1
         |            ;;""".stripMargin
 
+    val helpStrings = 
+      s"""Viash built in Docker:
+         |    ---setup=STRATEGY
+         |        Setup the docker container. Options are: alwaysbuild, alwayscachedbuild, ifneedbebuild, ifneedbecachedbuild, alwayspull, alwayspullelsebuild, alwayspullelsecachedbuild, ifneedbepull, ifneedbepullelsebuild, ifneedbepullelsecachedbuild, push, pushifnotpresent, donothing.
+         |        Default: ifneedbepullelsecachedbuild
+         |    ---dockerfile
+         |        Print the dockerfile to stdout.
+         |    ---docker_run_args=ARG
+         |        Provide runtime arguments to Docker. See the documentation on `docker run` for more information.
+         |    ---docker_image_id
+         |        Print the docker image id to stdout.
+         |    ---debug
+         |        Enter the docker container for debugging purposes.""".stripMargin
+
     val setDockerImageId = engines.map { engine => 
       s"""[[ "$$VIASH_ENGINE_ID" == '${engine.id}' ]]; then
         |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config).toString()}'""".stripMargin  
@@ -382,6 +403,7 @@ final case class ExecutableRunner(
           
     BashWrapperMods(
       preParse = preParse,
+      helpStrings = List(("Docker", helpStrings)),
       parsers = parsers,
       postParse = postParse
     )

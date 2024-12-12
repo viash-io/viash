@@ -102,6 +102,19 @@ object BashWrapper {
     }
   }
 
+  def generateHelp(helpSections: List[(String, String)]): String = {
+    val sections = helpSections.sortBy(_._1).map(_._2)
+    val helpStr = joinSections(sections).split("\n")
+      .map(h => Bash.escapeString(h, quote = true))
+      .mkString("  echo \"", "\"\n  echo \"", "\"")
+    val functionStr =
+      s"""# ViashHelp: Display helpful explanation about this executable
+      |function ViashHelp {
+      |$helpStr
+      |}""".stripMargin
+    spaceCode(functionStr)
+  }
+
   /**
     * Joins multiple strings such that there are two spaces between them.
     *
@@ -284,6 +297,7 @@ object BashWrapper {
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
        |${spaceCode(allMods.preParse)}
+       |${generateHelp(allMods.helpStrings)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
        |
@@ -336,18 +350,8 @@ object BashWrapper {
 
 
   private def generateHelp(config: Config) = {
-    val help = Helper.generateHelp(config)
-    val helpStr = help
-      .map(h => Bash.escapeString(h, quote = true))
-      .mkString("  echo \"", "\"\n  echo \"", "\"")
-
-    val preParse =
-      s"""# ViashHelp: Display helpful explanation about this executable
-      |function ViashHelp {
-      |$helpStr
-      |}""".stripMargin
-
-    BashWrapperMods(preParse = preParse)
+    val help = Helper.generateHelp(config).mkString("\n")
+    BashWrapperMods(helpStrings = List(("", help)))
   }
 
   private def generateParsers(params: List[Argument[_]]) = {
