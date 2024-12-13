@@ -727,6 +727,15 @@ object BashWrapper {
 
 
   private def generateComputationalRequirements(config: Config) = {
+
+    val helpStrings = 
+      """Viash built in Computational Requirements:
+        |    ---cpus=INT
+        |        Number of CPUs to use
+        |    ---memory=STRING
+        |        Amount of memory to use
+        |""".stripMargin
+
     val compArgs = List(
       ("---cpus", "VIASH_META_CPUS", config.requirements.cpus.map(_.toString)),
       ("---memory", "VIASH_META_MEMORY", config.requirements.memoryAsBytes.map(_.toString + "b"))
@@ -805,6 +814,7 @@ object BashWrapper {
 
     // return output
     BashWrapperMods(
+      helpStrings = List(("Computational Requirements", helpStrings)),
       parsers = parsers,
       postParse = BashWrapper.joinSections(List(defaultsStrs, memoryCalculations))
     )
