@@ -27,9 +27,11 @@ def runEach(Map args) {
   def toState_ = args.toState
   def filter_ = args.filter
   def runIf_ = args.runIf
+  def runElse_ = args.runElse
   def id_ = args.id
 
   assert !runIf_ || runIf_ instanceof Closure: "runEach: must pass a Closure to runIf."
+  assert !runElse_ || runElse_ instanceof Closure: "runElse: must pass a Closure to runElse."
 
   workflow runEachWf {
     take: input_ch
@@ -65,6 +67,15 @@ def runEach(Map args) {
         chRun = id_ch
         chPassthrough = Channel.empty()
       }
+      def chPassthroughElse = null
+      if (runElse_){
+        chPassthroughElse = chPassthrough.map{tup ->
+          runElse_(tup[0], tup[1], comp_)
+        }
+      } else {
+       chPassthroughElse = Channel.empty() 
+      }
+
       def data_ch = chRun | map{tup ->
           def new_data = tup[1]
           if (fromState_ instanceof Map) {
@@ -105,7 +116,7 @@ def runEach(Map args) {
         : out_ch
 
       def return_ch = post_ch
-        | concat(chPassthrough)
+        | concat(chPassthroughElse)
       
       return_ch
     }

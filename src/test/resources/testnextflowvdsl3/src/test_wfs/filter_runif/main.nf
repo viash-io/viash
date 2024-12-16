@@ -12,7 +12,8 @@ workflow base {
   ])
     | step1.run(
       filter: { id, data -> id != "three" },
-      runIf: { id, data -> data.input.size() == 2 || id == "three" }
+      runIf: { id, data -> data.input.size() == 2 || id == "three" },
+      runElse: {it}
     )
     | view{"output: $it"}
     | toSortedList{ a, b -> a[0] <=> b[0] }
