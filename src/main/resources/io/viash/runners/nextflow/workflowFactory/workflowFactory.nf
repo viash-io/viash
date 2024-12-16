@@ -119,9 +119,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
     }
 
     def chPassthroughElse = null
-    if (runElse_){
+    if (workflowArgs.runElse_){
       chPassthroughElse = chPassthrough.map{tup ->
-        runElse_(tup[0], tup[1])
+        workflowArgs.runElse_(tup[0], tup[1])
       }
     } else {
       chPassthroughElse = Channel.empty() 
