@@ -19,6 +19,8 @@ TODO add summary
   The biggest change is how the exporting of the schema is done, but this has no impact on the user.
   However, switching to Scala 3 allows for additional features and improvements in the future.
 
+* `--help`: Component `--help` messages will now display what built in `---` options are available (PR #784).
+
 ## BUG FIXES
 
 * `config build`: Fix a bug where a missing main script would cause a stack trace instead of a proper error message (PR #776).

@@ -105,11 +105,16 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
       "run", workflowsPath + "/pipeline3/config.vsh.yaml",
       "--", "--help"
     )
+    
+    // explicitly remove triple dash parameters
+    // these make sense when running from command line, not when running in nextflow
+    val correctedTestOutput = testOutput.stdout.replaceAll("""\n\nViash built in .*(\n\s{4}---.*\n(\s{8}.*)+)*""", "")
+
 
     assert(testOutput.exitCode == Some(0))
 
     // check if they are the same
-    assert(correctedStdOut2 == testOutput.stdout)
+    assert(correctedStdOut2 == correctedTestOutput)
   }
 
   override def afterAll(): Unit = {

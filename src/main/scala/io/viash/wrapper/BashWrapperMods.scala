@@ -21,6 +21,7 @@ import io.viash.config.arguments.Argument
 
 case class BashWrapperMods(
   preParse: String = "",
+  helpStrings: List[(String, String)] = Nil,
   parsers: String = "",
   postParse: String = "",
   preRun: String = "",
@@ -31,6 +32,7 @@ case class BashWrapperMods(
   def `++`(other: BashWrapperMods): BashWrapperMods = {
     BashWrapperMods(
       preParse = BashWrapper.joinSections(List(preParse, other.preParse)),
+      helpStrings = helpStrings ++ other.helpStrings,
       parsers = BashWrapper.joinSections(List(parsers, other.parsers), middle = "\n"),
       postParse = BashWrapper.joinSections(List(postParse, other.postParse)),
       preRun = BashWrapper.joinSections(List(preRun, other.preRun)),

@@ -102,6 +102,19 @@ object BashWrapper {
     }
   }
 
+  def generateHelp(helpSections: List[(String, String)]): String = {
+    val sections = helpSections.sortBy(_._1).map(_._2)
+    val helpStr = joinSections(sections).split("\n")
+      .map(h => Bash.escapeString(h, quote = true))
+      .mkString("  echo \"", "\"\n  echo \"", "\"")
+    val functionStr =
+      s"""# ViashHelp: Display helpful explanation about this executable
+      |function ViashHelp {
+      |$helpStr
+      |}""".stripMargin
+    spaceCode(functionStr)
+  }
+
   /**
     * Joins multiple strings such that there are two spaces between them.
     *
@@ -284,6 +297,7 @@ object BashWrapper {
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
        |${spaceCode(allMods.preParse)}
+       |${generateHelp(allMods.helpStrings)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=''
        |
@@ -336,18 +350,8 @@ object BashWrapper {
 
 
   private def generateHelp(config: Config) = {
-    val help = Helper.generateHelp(config)
-    val helpStr = help
-      .map(h => Bash.escapeString(h, quote = true))
-      .mkString("  echo \"", "\"\n  echo \"", "\"")
-
-    val preParse =
-      s"""# ViashHelp: Display helpful explanation about this executable
-      |function ViashHelp {
-      |$helpStr
-      |}""".stripMargin
-
-    BashWrapperMods(preParse = preParse)
+    val help = Helper.generateHelp(config).mkString("\n")
+    BashWrapperMods(helpStrings = List(("", help)))
   }
 
   private def generateParsers(params: List[Argument[_]]) = {
@@ -723,6 +727,15 @@ object BashWrapper {
 
 
   private def generateComputationalRequirements(config: Config) = {
+
+    val helpStrings = 
+      """Viash built in Computational Requirements:
+        |    ---cpus=INT
+        |        Number of CPUs to use
+        |    ---memory=STRING
+        |        Amount of memory to use. Examples: 4GB, 3MiB.
+        |""".stripMargin
+
     val compArgs = List(
       ("---cpus", "VIASH_META_CPUS", config.requirements.cpus.map(_.toString)),
       ("---memory", "VIASH_META_MEMORY", config.requirements.memoryAsBytes.map(_.toString + "b"))
@@ -801,6 +814,7 @@ object BashWrapper {
 
     // return output
     BashWrapperMods(
+      helpStrings = List(("Computational Requirements", helpStrings)),
       parsers = parsers,
       postParse = BashWrapper.joinSections(List(defaultsStrs, memoryCalculations))
     )
