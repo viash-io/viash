@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: viash-io/viash-actions/update-docker-engine@v5
+    - uses: viash-io/viash-actions/project/update-docker-engine@v6
       if: runner.os == 'Linux'
 
     - name: Set up R
@@ -61,7 +61,7 @@ jobs:
 
     - name: Set up Nextflow
       if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
-      uses: nf-core/setup-nextflow@v1
+      uses: nf-core/setup-nextflow@v2
       with:
         version: ${{ matrix.java.nxf_ver }}
 
