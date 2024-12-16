@@ -23,11 +23,12 @@ import io.viash.schemas._
 import java.nio.file.Files
 import io.viash.ViashNamespace
 import io.viash.exceptions.MissingBuildYamlException
+import io.viash.config.ScopeEnum
 
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the component.
     |The dependency components are collected and copied to the output folder during the Viash build step.
-    |""".stripMargin)
+    |""")
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
@@ -35,7 +36,7 @@ import io.viash.exceptions.MissingBuildYamlException
     |      type: github
     |      repo: openpipelines-bio/modules
     |      tag: 0.3.0
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of dependency with a fully defined repository"
 )
@@ -43,7 +44,7 @@ import io.viash.exceptions.MissingBuildYamlException
   """dependencies:
     |  - name: qc/multiqc
     |    repository: "github://openpipelines-bio/modules:0.3.0"
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a dependency with a repository using sugar syntax."
 )
@@ -51,14 +52,14 @@ import io.viash.exceptions.MissingBuildYamlException
   """dependencies:
     |  - name: qc/multiqc
     |    repository: "openpipelines-bio"
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.repositories`."
 )
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |""".stripMargin,
+    |""",
   "yaml",
   "Definition of a local dependency. This dependency is present in the current code base and will be built when `viash ns build` is run."
 )
@@ -76,7 +77,7 @@ case class Dependency(
       |This must either be a full definition of the repository or the name of a repository referenced as it is defined under repositories.
       |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
-      |""".stripMargin)
+      |""")
   @default("Empty")
   repository: Either[String, Repository] = Right(LocalRepository()),
 
@@ -92,6 +93,9 @@ case class Dependency(
   @internalFunctionality
   @description("Location of the dependency component artifacts are written ready to be used.")
   writtenPath: Option[String] = None,
+
+  @internalFunctionality
+  internalDependencyTargetScope: ScopeEnum = ScopeEnum.Public
 ) {
   if (alias.isDefined) {
     // check functionality name
@@ -119,7 +123,7 @@ case class Dependency(
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the runner id should be dynamic
-      Some(ViashNamespace.targetOutputPath("", "executable", None, name))
+      Some(ViashNamespace.targetOutputPath("", "executable", internalDependencyTargetScope, None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))

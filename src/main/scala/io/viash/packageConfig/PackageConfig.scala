@@ -21,6 +21,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.listToOneOrMore
 import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
@@ -41,7 +42,7 @@ import io.viash.config.{Author, Links, References}
     |config_mods: |
     |  .runners[.type == 'nextflow'].directives.tag := '$id'
     |  .runners[.type == 'nextflow'].config.script := 'includeConfig("configs/custom.config")'
-    |""".stripMargin, "yaml"
+    |""", "yaml"
 )
 @since("Viash 0.6.4")
 case class PackageConfig(
@@ -71,7 +72,7 @@ case class PackageConfig(
   @example(
     """description: |
       |  A (multiline) description of the purpose of this package
-      |  and the components it contains.""".stripMargin, "yaml")
+      |  and the components it contains.""", "yaml")
   @since("Viash 0.9.0")
   description: Option[String] = None,
 
@@ -79,7 +80,7 @@ case class PackageConfig(
   @example(
     """info:
       |  twitter: wizzkid
-      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+      |  classes: [ one, two, three ]""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   info: Json = Json.Null,
@@ -91,7 +92,7 @@ case class PackageConfig(
       |    type: github
       |    uri: openpipelines-bio/modules
       |    tag: 0.3.0
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
@@ -136,7 +137,7 @@ case class PackageConfig(
       |  - name: Tim Farbe
       |    roles: [author]
       |    email: tim@far.be
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   authors: List[Author] = Nil,
@@ -170,7 +171,7 @@ case class PackageConfig(
       |      journal={Baz},
       |      year={2024}
       |    }
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   references: References = References(),
@@ -183,7 +184,7 @@ case class PackageConfig(
       |  homepage: "https://viash.io"
       |  documentation: "https://viash.io/reference/"
       |  issue_tracker: "https://github.com/viash-io/viash/issues"
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
@@ -245,7 +246,12 @@ object PackageConfig {
 
     /* PACKAGE 0: converted from json */
     // convert Json into ViashPackage
-    val pack0 = Convert.jsonToClass[PackageConfig](json, path.toString())
+    // val pack0 = Convert.jsonToClass[PackageConfig](json2, path.toString())
+    // TODO fix empty json getting parsed as 'false' and then failing to create a PackageConfig from that
+    val pack0 = json match {
+      case json if json == Json.False => PackageConfig()
+      case json => Convert.jsonToClass[PackageConfig](json, path.toString())
+    }
 
     /* PACKAGE 1: make resources absolute */
     // make paths absolute

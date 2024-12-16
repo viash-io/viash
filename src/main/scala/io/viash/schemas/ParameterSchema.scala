@@ -17,8 +17,8 @@
 
 package io.viash.schemas
 
-import scala.reflect.runtime.universe._
 import io.viash.schemas.internalFunctionality
+import scala.annotation.Annotation
 
 final case class ParameterSchema(
   name: String,
@@ -39,48 +39,8 @@ final case class ParameterSchema(
 )
 
 object ParameterSchema {
-  // Aid processing `augmentString` strings
-  private def unfinishedStringStripMargin(s: String, marginChar: Char = '|'): String = {
-    s.replaceAll("\\\\n", "\n").stripMargin(marginChar)
-  }
 
-  private def mapTreeList(l: List[Tree], marginChar: Char = '|'): String = {
-    l.map(i => i match {
-      case Literal(Constant(value: String)) =>
-        unfinishedStringStripMargin(value, marginChar)
-      case _ =>
-        "unmatched in mapTreeList: " + i.toString()
-    }).mkString
-  }
-
-  // Traverse tree information and extract values or lists of values
-  private def annotationToStrings(ann: Annotation):(String, List[String]) = {
-    val name = ann.tree.tpe.toString()
-    val values = ann.tree match {
-      case Apply(c, args: List[Tree]) =>
-        args.collect({
-          case i: Tree =>
-            i match {
-              // Here 'Apply' contains lists
-              // While 'Select' has a single element
-              case Literal(Constant(value: String)) =>
-                value
-              // case Select(Select(a, b), stripMargin) =>
-              //   unfinishedStringStripMargin(b)
-              case Select(Apply(a, a2), b) if b.toString == "stripMargin" =>
-                mapTreeList(a2)
-              case Apply(Select(Apply(a, a2), b), stripMargin) if b.toString == "stripMargin" =>
-                val stripper = stripMargin.head.toString.charAt(1)
-                mapTreeList(a2, stripper)
-              case _ =>
-                "unmatched in annotationToStrings: " + i.toString()
-            }
-        })
-    }
-    (name, values)
-  }
-
-  def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[Annotation]): ParameterSchema = {
+  def apply(name: String, `type`: String, hierarchy: List[String], annotations: List[(String, List[String])]): ParameterSchema = {
 
     def beautifyTypeName(s: String): String = {
 
@@ -118,7 +78,6 @@ object ParameterSchema {
       }
     }
 
-    val annStrings = annotations.map(annotationToStrings(_))
     val hierarchyOption = hierarchy match {
       case l if l.length > 0 => Some(l)
       case _ => None
@@ -127,7 +86,7 @@ object ParameterSchema {
     // name is e.g. "io.viash.config.Config.name", only keep "name"
     // name can also be "__this__"
     // Use the name defined from the class, *unless* the 'nameOverride' annotation is set. Then use the override, unless the name is '__this__'.
-    val nameOverride = annStrings.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
+    val nameOverride = annotations.collectFirst({case (name, value) if name.endsWith("nameOverride") => value.head})
     val nameFromClass = name.split('.').last
     val name_ = (nameOverride, nameFromClass) match {
       case (Some(_), "__this__") => "__this__"
@@ -140,26 +99,26 @@ object ParameterSchema {
       case (typeName, _, _) => typeName
     }
     
-    val description = annStrings.collectFirst({case (name, value) if name.endsWith("description") => value.head})
-    val example = annStrings.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_))
-    val exampleWithDescription = annStrings.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_))
+    val description = annotations.collectFirst({case (name, value) if name.endsWith("description") => value.head})
+    val example = annotations.collect({case (name, value) if name.endsWith("example") => value}).map(ExampleSchema(_)).reverse
+    val exampleWithDescription = annotations.collect({case (name, value) if name.endsWith("exampleWithDescription") => value}).map(ExampleSchema(_)).reverse
     val examples = example ::: exampleWithDescription match {
       case l if l.length > 0 => Some(l)
       case _ => None
     }
-    val since = annStrings.collectFirst({case (name, value) if name.endsWith("since") => value.head})
-    val deprecated = annStrings.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
-    val removed = annStrings.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
-    val defaultFromAnnotation = annStrings.collectFirst({case (name, value) if name.endsWith("default") => value.head})
+    val since = annotations.collectFirst({case (name, value) if name.endsWith("since") => value.head})
+    val deprecated = annotations.collectFirst({case (name, value) if name.endsWith("deprecated") => value}).map(DeprecatedOrRemovedSchema(_))
+    val removed = annotations.collectFirst({case (name, value) if name.endsWith("removed") => value}).map(DeprecatedOrRemovedSchema(_))
+    val defaultFromAnnotation = annotations.collectFirst({case (name, value) if name.endsWith("default") => value.head})
     val defaultFromType = Option.when(typeName.startsWith("Option["))("Empty")
     val default = defaultFromAnnotation orElse defaultFromType
-    val subclass = annStrings.collect{ case (name, value) if name.endsWith("subclass") => value.head } match {
-      case l if l.nonEmpty => Some(l)
+    val subclass = annotations.collect{ case (name, value) if name.endsWith("subclass") => value.head } match {
+      case l if l.nonEmpty => Some(l.sorted())
       case _ => None
     }
     
-    val undocumented = annStrings.exists{ case (name, value) => name.endsWith("undocumented")}
-    val internalFunctionality = annStrings.exists{ case (name, value) => name.endsWith("internalFunctionality")}
+    val undocumented = annotations.exists{ case (name, value) => name.endsWith("undocumented")}
+    val internalFunctionality = annotations.exists{ case (name, value) => name.endsWith("internalFunctionality")}
 
     ParameterSchema(name_, typeName, beautifyTypeName(typeName), hierarchyOption, description, examples, since, deprecated, removed, default, subclass, undocumented, internalFunctionality)
   }

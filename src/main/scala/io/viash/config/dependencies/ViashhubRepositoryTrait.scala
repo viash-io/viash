@@ -47,10 +47,10 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
   def getCacheIdentifier(): Option[String] =
     Some(s"viashhub-${fullRepo.replace("/", "-")}${tag.map(_.prepended('-')).getOrElse("")}")
 
-  val uri = s"https://viash-hub.com/$fullRepo.git"
-  lazy val uri_ssh = s"git@viash-hub.com:$fullRepo.git"
+  val uri = s"https://packages.viash-hub.com/$fullRepo.git"
+  lazy val uri_ssh = s"git@packages.viash-hub.com:$fullRepo.git"
   val fakeCredentials = "nouser:nopass@" // obfuscate the credentials a bit so we don't trigger GitGuardian
-  lazy val uri_nouser = s"https://${fakeCredentials}viash-hub.com/$fullRepo.git"
+  lazy val uri_nouser = s"https://${fakeCredentials}packages.viash-hub.com/$fullRepo.git"
 
   val storePath = fullRepo // no need to add 'viash-hub.com' to the store path as 'type' (vsh) will be added
 }

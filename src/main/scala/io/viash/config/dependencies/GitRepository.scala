@@ -28,7 +28,7 @@ import java.nio.file.Paths
   """type: git
     |uri: git+https://github.com/openpipelines-bio/openpipeline.git
     |tag: 0.8.0
-    |""".stripMargin,
+    |""",
   "yaml"
 )
 @example(
@@ -36,7 +36,7 @@ import java.nio.file.Paths
     |uri: git+https://gitlab.com/viash-io/viash.git
     |tag: 0.7.1
     |path: src/test/resources/testns
-    |""".stripMargin,
+    |""",
   "yaml"
   )
 @subclass("git")

@@ -25,6 +25,7 @@ import java.nio.file.Paths
 import io.viash.ViashNamespace
 import io.viash.config.arguments._
 import io.viash.config.resources.Executable
+import io.viash.helpers.data_structures.oneOrMoreToList
 
 object BashWrapper {
   val metaArgs: List[Argument[_]] = {
@@ -138,6 +139,19 @@ object BashWrapper {
     }
   }
 
+  def generateHelp(helpSections: List[(String, String)]): String = {
+    val sections = helpSections.sortBy(_._1).map(_._2)
+    val helpStr = joinSections(sections).split("\n")
+      .map(h => Bash.escapeString(h, quote = true))
+      .mkString("  echo \"", "\"\n  echo \"", "\"")
+    val functionStr =
+      s"""# ViashHelp: Display helpful explanation about this executable
+      |function ViashHelp {
+      |$helpStr
+      |}""".stripMargin
+    spaceCode(functionStr)
+  }
+
   /**
     * Joins multiple strings such that there are two spaces between them.
     *
@@ -202,7 +216,7 @@ object BashWrapper {
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
-        val code = res.readWithInjection(argsMetaAndDeps, config).get
+        val code = res.readWithInjection(argsMetaAndDeps, config)
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         s"""
@@ -214,7 +228,7 @@ object BashWrapper {
 
       // if mainResource is a script
       case Some(res) =>
-        val code = res.readWithInjection(argsMetaAndDeps, config).get
+        val code = res.readWithInjection(argsMetaAndDeps, config)
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
         // check whether the script can be written to a temprorary location or
@@ -314,6 +328,7 @@ object BashWrapper {
        |${spaceCode(allMods.preParse)}
        |# preparse bashwrapper mods end --------------------------------
        |
+       |${generateHelp(allMods.helpStrings)}
        |# initialise array
        |VIASH_POSITIONAL_ARGS=()
        |
@@ -377,18 +392,8 @@ object BashWrapper {
 
 
   private def generateHelp(config: Config) = {
-    val help = Helper.generateHelp(config)
-    val helpStr = help
-      .map(h => Bash.escapeString(h, quote = true))
-      .mkString("  echo \"", "\"\n  echo \"", "\"")
-
-    val preParse =
-      s"""# ViashHelp: Display helpful explanation about this executable
-      |function ViashHelp {
-      |$helpStr
-      |}""".stripMargin
-
-    BashWrapperMods(preParse = preParse)
+    val help = Helper.generateHelp(config).mkString("\n")
+    BashWrapperMods(helpStrings = List(("", help)))
   }
 
   private def generateParsers(params: List[Argument[_]]) = {
@@ -636,13 +641,25 @@ object BashWrapper {
           |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
           |  fi
           |""".stripMargin
-      def minCheckInt(min: Long) = 
+      def minCheckInt(min: Int) = 
         s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
           |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
-      def maxCheckInt(max: Long) = 
+      def maxCheckInt(max: Int) = 
+        s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
+          |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |    exit 1
+          |  fi
+          |""".stripMargin
+      def minCheckLong(min: Long) = 
+        s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
+          |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |    exit 1
+          |  fi
+          |""".stripMargin
+      def maxCheckLong(max: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
           |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
           |    exit 1
@@ -651,13 +668,13 @@ object BashWrapper {
 
       val minCheck = param match {
         case p: IntegerArgument if min.isDefined => minCheckInt(min.get)
-        case p: LongArgument if min.isDefined => minCheckInt(min.get)
+        case p: LongArgument if min.isDefined => minCheckLong(min.get)
         case p: DoubleArgument if min.isDefined => minCheckDouble(min.get)
         case _ => ""
       }
       val maxCheck = param match {
         case p: IntegerArgument if max.isDefined => maxCheckInt(max.get)
-        case p: LongArgument if max.isDefined => maxCheckInt(max.get)
+        case p: LongArgument if max.isDefined => maxCheckLong(max.get)
         case p: DoubleArgument if max.isDefined => maxCheckDouble(max.get)
         case _ => ""
       }
@@ -783,6 +800,15 @@ object BashWrapper {
 
 
   private def generateComputationalRequirements(config: Config) = {
+
+    val helpStrings = 
+      """Viash built in Computational Requirements:
+        |    ---cpus=INT
+        |        Number of CPUs to use
+        |    ---memory=STRING
+        |        Amount of memory to use. Examples: 4GB, 3MiB.
+        |""".stripMargin
+
     val compArgs = List(
       ("---cpus", "VIASH_META_CPUS", config.requirements.cpus.map(_.toString)),
       ("---memory", "VIASH_META_MEMORY", config.requirements.memoryAsBytes.map(_.toString + "b"))
@@ -861,6 +887,7 @@ object BashWrapper {
 
     // return output
     BashWrapperMods(
+      helpStrings = List(("Computational Requirements", helpStrings)),
       parsers = parsers,
       postParse = BashWrapper.joinSections(List(defaultsStrs, memoryCalculations))
     )

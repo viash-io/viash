@@ -19,38 +19,26 @@ package io.viash.helpers
 
 import scala.io.AnsiColor
 
-object LoggerLevel extends Enumeration {
-  type Level = Value
-  val Error = Value(3)
-  val Warn = Value(4)
-  val Info = Value(6)
-  val Debug = Value(7)
-  val Trace = Value(8)
+enum LoggerLevel(val level: Int):
+  case Error extends LoggerLevel(3)
+  case Warn extends LoggerLevel(4)
+  case Info extends LoggerLevel(6)
+  case Debug extends LoggerLevel(7)
+  case Trace extends LoggerLevel(8)
   
-  val Success = Value(5) // Should have been 6, same as Info. Luckely we had a spare spot between 4 and 6
+  case Success extends LoggerLevel(5) // Should have been 6, same as Info. Luckely we had a spare spot between 4 and 6
 
-  def fromString(level: String): Value = {
-    level match {
-      case "error" => Error
-      case "warn" => Warn
-      case "info" => Info
-      case "debug" => Debug
-      case "trace" => Trace
-      case _ => throw new IllegalArgumentException(level)
-    }
-  }
+object LoggerLevel {
+  def fromString(level: String): LoggerLevel = LoggerLevel.valueOf(level.toLowerCase.capitalize)
 }
 
-object LoggerOutput extends Enumeration {
-  type Output = Value
-  val StdOut = Value(1)
-  val StdErr = Value(2)
-}
+enum LoggerOutput:
+  case StdOut, StdErr
 
 /** Partial logging facade styled alike SLF4J.
   * Used Grizzled slf4j as further inspiration and basis.
   */
-class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boolean) {
+class Logger(val name: String, val level: LoggerLevel, val useColor: Boolean) {
   import LoggerOutput._
   import LoggerLevel._
 
@@ -74,9 +62,9 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
   @inline final def traceOut(msg: => Any): Unit = _logOut(Trace, msg)
   @inline final def successOut(msg: => Any): Unit = _logOut(Success, msg)
 
-  @inline final def isEnabled(level: Level): Boolean = this.level >= level
+  @inline final def isEnabled(level: LoggerLevel): Boolean = this.level.level >= level.level
 
-  @inline private def _colorString(level: Level): String =
+  @inline private def _colorString(level: LoggerLevel): String =
     level match {
       case Error => AnsiColor.RED
       case Warn => AnsiColor.YELLOW
@@ -87,7 +75,7 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
       case Success => AnsiColor.GREEN
     }
 
-  @inline private def _log(level: Level, msg: => Any): Unit = {
+  @inline private def _log(level: LoggerLevel, msg: => Any): Unit = {
     if (!isEnabled(level)) return
     
     if (useColor)
@@ -96,7 +84,7 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
       Console.err.println(msg.toString())
   }
 
-  @inline private def _logOut(level: Level, msg: => Any): Unit = {
+  @inline private def _logOut(level: LoggerLevel, msg: => Any): Unit = {
     if (!isEnabled(level)) return
     
     if (useColor)
@@ -105,7 +93,7 @@ class Logger(val name: String, val level: LoggerLevel.Level, val useColor: Boole
       Console.out.println(msg.toString())
   }
 
-  @inline def log(out: Output, level: Level, color: String, msg: => Any): Unit = {
+  @inline def log(out: LoggerOutput, level: LoggerLevel, color: String, msg: => Any): Unit = {
     if (!isEnabled(level)) return
 
     val printer = 
@@ -148,7 +136,7 @@ trait Logging {
   protected def traceOut(msg: => Any): Unit = logger.traceOut(msg)
   protected def successOut(msg: => Any): Unit = logger.successOut(msg)
 
-  protected def log(out: LoggerOutput.Output, level: LoggerLevel.Level, color: String, msg: => Any): Unit = logger.log(out, level, color, msg)
+  protected def log(out: LoggerOutput, level: LoggerLevel, color: String, msg: => Any): Unit = logger.log(out, level, color, msg)
 }
 
 object Logger {
@@ -156,15 +144,15 @@ object Logger {
 
   val rootLoggerName = "Viash-root-logger"
 
-  def apply(name: String, level: LoggerLevel.Level, useColor: Boolean): Logger = new Logger(name, level, useColor)
+  def apply(name: String, level: LoggerLevel, useColor: Boolean): Logger = new Logger(name, level, useColor)
   def apply(name: String): Logger = new Logger(name, getLoggerLevel(name), useColor)
   def apply(cls: Class[_]): Logger = apply(cls.getName)
   def apply[C: ClassTag](): Logger = apply(classTag[C].runtimeClass.getName)
 
   def rootLogger = apply(rootLoggerName)
 
-  object UseLevelOverride extends util.DynamicVariable[LoggerLevel.Level](LoggerLevel.Info)
-  def getLoggerLevel(name: String): LoggerLevel.Level = {
+  object UseLevelOverride extends util.DynamicVariable[LoggerLevel](LoggerLevel.Info)
+  def getLoggerLevel(name: String): LoggerLevel = {
     if (name != rootLoggerName) // prevent constructor loop
       rootLogger.debug(s"GetLoggerLevel for $name")
 

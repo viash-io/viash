@@ -200,14 +200,15 @@ object JsonSchema {
           (p.name, mapType(s, pDescription))
 
         case s if p.name == "type" && subclass.isDefined =>
+          var subclassString = subclass.get.stripSuffix("withname")
           if (config.minimal) {
             ("type", Json.obj(
-              "const" -> Json.fromString(subclass.get)
+              "const" -> Json.fromString(subclassString)
             ))
           } else {
             ("type", Json.obj(
               "description" -> Json.fromString(description), // not pDescription! We want to show the description of the main class
-              "const" -> Json.fromString(subclass.get)
+              "const" -> Json.fromString(subclassString)
             ))
           }
         
@@ -286,7 +287,8 @@ object JsonSchema {
         "DockerSetupStrategy" -> createEnum(DockerSetupStrategy.objs.map(obj => obj.id).toSeq, Some("The Docker setup strategy to use when building a container."), Some("TODO add descriptions to different strategies")),
         "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
         "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
-        "DoubleStrings" -> createEnum(Seq("+infinity", "-infinity", "nan"), None, None)
+        "DoubleStrings" -> createEnum(Seq("+infinity", "-infinity", "nan"), None, None),
+        "ScopeEnum" -> createEnum(Seq("test", "private", "public"), Some("The scope of the component. `public` by default."), None),
       )
     } else {
       Seq(
@@ -294,7 +296,8 @@ object JsonSchema {
         "Direction" -> createEnum(Seq("input", "output"), Some("Makes this argument an `input` or an `output`, as in does the file/folder needs to be read or written. `input` by default."), None),
         "Status" -> createEnum(Seq("enabled", "disabled", "deprecated"), Some("Allows setting a component to active, deprecated or disabled."), None),
         "DockerResolveVolume" -> createEnum(Seq("manual", "automatic", "auto", "Manual", "Automatic", "Auto"), Some("Enables or disables automatic volume mapping. Enabled when set to `Automatic` or disabled when set to `Manual`. Default: `Automatic`"), Some("TODO make fully case insensitive")),
-        "DoubleStrings" -> createEnum(Seq("+.inf", "+inf", "+infinity", "positiveinfinity", "positiveinf", "-.inf", "-inf", "-infinity", "negativeinfinity", "negativeinf", ".nan", "nan"), None, None)
+        "DoubleStrings" -> createEnum(Seq("+.inf", "+inf", "+infinity", "positiveinfinity", "positiveinf", "-.inf", "-inf", "-infinity", "negativeinfinity", "negativeinf", ".nan", "nan"), None, None),
+        "ScopeEnum" -> createEnum(Seq("test", "private", "public"), Some("The scope of the component. `public` by default."), None),
       )
     }
 
@@ -307,7 +310,7 @@ object JsonSchema {
       }
 
     Json.obj(
-      "$schema" -> Json.fromString("https://json-schema.org/draft-07/schema#"),
+      "$schema" -> Json.fromString("http://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
         definitions: _*
       ),

@@ -9,38 +9,18 @@ import io.viash.helpers.Logger
 
 class SchemaTest extends AnyFunSuite with BeforeAndAfterAll with PrivateMethodTester{
   Logger.UseColorOverride.value = Some(false)
-
-  test("Check type name trimming") {
-    val checks = Map (
-      "foo" -> "foo",
-      "foo.bar" -> "bar",
-      "foo.bar.baz" -> "baz",
-      "foo.bar[baz]" -> "bar[baz]",
-      "foo[bar.baz]" -> "foo[baz]",
-      "foo[bar,baz]" -> "foo[bar,baz]",
-      "foo[bar.baz,quux]" -> "foo[baz,quux]",
-      "foo[bar,baz.quux]" -> "foo[bar,quux]"
-    )
-
-    val trimTypeName = PrivateMethod[String](Symbol("trimTypeName"))
-
-    for ((k, v) <- checks) {
-      val res = CollectedSchemas invokePrivate trimTypeName(k)
-      assert(res == v, s"$k -> $v != $res")
-    }
-  }
-    
+   
   test("All schema class val members should be annotated") {
     val nonAnnotated = CollectedSchemas.getAllNonAnnotated
 
-    assert(nonAnnotated.contains("CollectedSchemas"))
-    assert(nonAnnotated("CollectedSchemas") == "__this__")
+    assert(nonAnnotated.contains(("DeprecatedOrRemovedSchema", "__this__")))
 
-    nonAnnotated.removed("CollectedSchemas").foreach {
-     case (key, member) => Console.err.println(s"$key - $member")
+    nonAnnotated.foreach {
+     case (key, member) if key != "DeprecatedOrRemovedSchema" => Console.err.println(s"$key - $member")
+     case _ => ()
     }
     
-    assert(nonAnnotated.size == 1)
+    assert(nonAnnotated.size == 4) // DeprecatedOrRemovedSchema has 3 members, all of them unannotated + 1 __this__ member
   }
 
   test("Check formatting of deprecation annotations") {

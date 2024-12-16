@@ -1,4 +1,4 @@
-package io.viash.e2e.export
+package io.viash.e2e.`export`
 
 import io.viash._
 import io.viash.helpers.Logger
@@ -171,7 +171,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
       "export", "json_schema"
     )
 
-    assert(testOutput.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutput.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutput.stdout.contains("""- $ref: "#/definitions/Config""""))
   }
 
@@ -180,7 +180,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
       "export", "json_schema", "--format", "yaml"
     )
 
-    assert(testOutput.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutput.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutput.stdout.contains("""- $ref: "#/definitions/Config""""))
   }
 
@@ -191,7 +191,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     )
 
     val lines = helpers.IO.read(tempFile.toUri())
-    assert(lines.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(lines.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(lines.contains("""- $ref: "#/definitions/Config""""))
   }
 
@@ -202,7 +202,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
 
     assert(testOutput.stdout.startsWith(
         """{
-          |  "$schema" : "https://json-schema.org/draft-07/schema#",
+          |  "$schema" : "http://json-schema.org/draft-07/schema#",
           |  "definitions" : {
           |""".stripMargin))
     assert(testOutput.stdout.contains(""""$ref" : "#/definitions/Config""""))
@@ -217,7 +217,7 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     val lines = helpers.IO.read(tempFile.toUri())
     assert(lines.startsWith(
         """{
-          |  "$schema" : "https://json-schema.org/draft-07/schema#",
+          |  "$schema" : "http://json-schema.org/draft-07/schema#",
           |  "definitions" : {
           |""".stripMargin))
     assert(lines.contains(""""$ref" : "#/definitions/Config""""))
@@ -243,16 +243,16 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
         "--strict", "--minimal"
       )
 
-    assert(testOutput.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutput.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutput.stdout.contains("""- $ref: "#/definitions/Config""""))
 
-    assert(testOutputStrict.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputStrict.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutputStrict.stdout.contains("""- $ref: "#/definitions/Config""""))
 
-    assert(testOutputMinimal.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputMinimal.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutputMinimal.stdout.contains("""- $ref: "#/definitions/Config""""))
 
-    assert(testOutputStrictMinimal.stdout.startsWith("""$schema: "https://json-schema.org/draft-07/schema#""""))
+    assert(testOutputStrictMinimal.stdout.startsWith("""$schema: "http://json-schema.org/draft-07/schema#""""))
     assert(testOutputStrictMinimal.stdout.contains("""- $ref: "#/definitions/Config""""))
 
     // thresholds were chosen empirically

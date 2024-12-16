@@ -94,6 +94,37 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("With output id and key keywords", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/step2/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input1", "resources/lines3.txt",
+        "--input2", "resources/lines5.txt",
+        "--output1", "$id.${id}.$key.${key}.txt",
+        // "--output2", "$foo$bar.txt", // can't do this (yet) because of Nextflow doesn't support '$' yet.
+        "--publish_dir", "moduleOutput2"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    assert(Files.exists(Paths.get(tempFolStr + "/moduleOutput2/foo.foo.step2.step2.txt")))
+    // assert(Files.exists(Paths.get(tempFolStr + "/moduleOutput2/$foo$bar.txt")))
+    
+    val src1 = Source.fromFile(tempFolStr + "/moduleOutput2/foo.foo.step2.step2.txt")
+    // val src2 = Source.fromFile(tempFolStr + "/moduleOutput2/$foo$bar.txt")
+    try {
+      val moduleOut1 = src1.getLines().mkString(",")
+      // val moduleOut2 = src2.getLines().mkString(",")
+      assert(moduleOut1.equals("one,two,three"))
+      // assert(moduleOut2.equals("1,2,3,4,5"))
+    } finally {
+      src1.close()
+      // src2.close()
+    }
+  }
+
   test("With yamlblob param_list", NextflowTest) {
     val paramListStr = "[{input1: resources/lines3.txt, input2: resources/lines5.txt}]"
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(

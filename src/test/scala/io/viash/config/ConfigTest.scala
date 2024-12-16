@@ -14,6 +14,7 @@ import io.viash.engines.NativeEngine
 import io.viash.runners.ExecutableRunner
 import io.viash.helpers.IO
 import io.viash.helpers.status
+import io.viash.ConfigDeriver
 
 class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -22,6 +23,10 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
   private val tempFolStr = temporaryFolder.toString
 
   private val nsPath = getClass.getResource("/testns/").getPath
+
+  private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
+  private val temporaryConfigFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+  private val configDeriver = ConfigDeriver(Paths.get(configFile), temporaryConfigFolder)
   
   val infoJson = Yaml("""
     |foo:
@@ -131,7 +136,55 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(configs.filter(_.status == Some(status.ParseError)).length == 2, "Expect 2 failed component")
   }
 
-  // TODO: expand functionality tests
+  test("Test default scope value") {
+    val newConfigFilePath = configDeriver.derive(Nil, "default_scope")
+    val newConfig = Config.read(newConfigFilePath)
+
+    assert(newConfig.scope.isRight)
+    val scope = newConfig.scope.toOption.get
+    assert(scope.image == ScopeEnum.Public)
+    assert(scope.target == ScopeEnum.Public)
+  }
+
+  test("Test public scope value") {
+    val newConfigFilePath = configDeriver.derive(""".scope := "public"""", "public_scope")
+    val newConfig = Config.read(newConfigFilePath)
+
+    assert(newConfig.scope.isRight)
+    val scope = newConfig.scope.toOption.get
+    assert(scope.image == ScopeEnum.Public)
+    assert(scope.target == ScopeEnum.Public)
+  }
+
+  test("Test private scope value") {
+    val newConfigFilePath = configDeriver.derive(""".scope := "private"""", "private_scope")
+    val newConfig = Config.read(newConfigFilePath)
+
+    assert(newConfig.scope.isRight)
+    val scope = newConfig.scope.toOption.get
+    assert(scope.image == ScopeEnum.Private)
+    assert(scope.target == ScopeEnum.Private)
+  }
+
+  test("Test test scope value") {
+    val newConfigFilePath = configDeriver.derive(""".scope := "test"""", "test_scope")
+    val newConfig = Config.read(newConfigFilePath)
+
+    assert(newConfig.scope.isRight)
+    val scope = newConfig.scope.toOption.get
+    assert(scope.image == ScopeEnum.Test)
+    assert(scope.target == ScopeEnum.Test)
+  }
+
+  test("Test scope value with different image and target") {
+    val newConfigFilePath = configDeriver.derive(""".scope := {image: "test", target: "private"}""", "custom_scope")
+    val newConfig = Config.read(newConfigFilePath)
+
+    assert(newConfig.scope.isRight)
+    val scope = newConfig.scope.toOption.get
+    assert(scope.image == ScopeEnum.Test)
+    assert(scope.target == ScopeEnum.Private)
+  }
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)

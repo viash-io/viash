@@ -27,7 +27,7 @@ import io.viash.schemas._
     |  homepage: "https://viash.io"
     |  documentation: "https://viash.io/reference/"
     |  issue_tracker: "https://github.com/viash-io/viash/issues"
-    |""".stripMargin, "yaml")
+    |""", "yaml")
 @since("Viash 0.9.0")
 case class Links(
   @description("Source repository url.")

@@ -33,13 +33,13 @@ import io.viash.config.resources.{Executable, NextflowScript, PlainFile}
 
 @description(
   """Run a Viash component on a Nextflow backend engine.
-    |""".stripMargin)
+    |""")
 @example(
   """runners:
     |  - type: nextflow
     |    directives:
     |      label: [lowcpu, midmem]
-    |""".stripMargin,
+    |""",
   "yaml")
 @subclass("nextflow")
 final case class NextflowRunner(
@@ -53,13 +53,13 @@ final case class NextflowRunner(
   // nxf params
   @description(
     """@[Directives](nextflow_directives) are optional settings that affect the execution of the process. These mostly match up with the Nextflow counterparts.  
-      |""".stripMargin)
+      |""")
   @example(
     """directives:
       |  container: rocker/r-ver:4.1
       |  label: highcpu
       |  cpus: 4
-      |  memory: 16 GB""".stripMargin,
+      |  memory: 16 GB""",
       "yaml")
   @default("Empty")
   directives: NextflowDirectives = NextflowDirectives(),
@@ -74,17 +74,17 @@ final case class NextflowRunner(
       || `transcript` | If `true`, the module's transcripts from `work/` are automatically published to `params.transcriptDir`. If not defined, `params.publishDir + "/_transcripts"` will be used. Will throw an error if neither are defined. | `false` |
       || `publish` | If `true`, the module's outputs are automatically published to `params.publishDir`. If equal to `"state"`, also a `.state.yaml` file will be published in the publish dir. Will throw an error if `params.publishDir` is not defined. | `false` |
       |
-      |""".stripMargin)
+      |""")
   @example(
     """auto:
-      |  publish: true""".stripMargin,
+      |  publish: true""",
       "yaml")
   @default(
     """simplifyInput: true
       |simplifyOutput: false
       |transcript: false
       |publish: false
-      |""".stripMargin)
+      |""")
   auto: NextflowAuto = NextflowAuto(),
 
   @description("Allows tweaking how the @[Nextflow Config](nextflow_config) file is generated.")
@@ -217,7 +217,7 @@ final case class NextflowRunner(
       // if mainscript is a nextflow workflow
       case scr: NextflowScript =>
         s"""// user-provided Nextflow code
-          |${scr.readWithoutInjection.get.split("\n").mkString("\n|")}
+          |${scr.readWithoutInjection.split("\n").mkString("\n|")}
           |
           |// inner workflow hook
           |def innerWorkflowFactory(args) {

@@ -1,0 +1,31 @@
+name: multiple_emit_channels
+argument_groups:
+  - name: Outputs
+    arguments:
+      - name: "--input"
+        type: file
+        description: Input file
+        required: true
+        example: input.txt
+      - name: "--step_1_output"
+        required: true
+        type: file
+        direction: output
+      - name: "--step_3_output"
+        required: true
+        type: file
+        direction: output
+      - name: "--multiple_output"
+        required: true
+        multiple: true
+        type: file
+        direction: output
+resources:
+  - type: nextflow_script
+    path: main.nf
+    entrypoint: base
+dependencies:
+  - name: step1
+  - name: step3
+platforms:
+  - type: nextflow
