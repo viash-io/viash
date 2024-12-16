@@ -733,7 +733,7 @@ object BashWrapper {
         |    ---cpus=INT
         |        Number of CPUs to use
         |    ---memory=STRING
-        |        Amount of memory to use
+        |        Amount of memory to use. Examples: 4GB, 3MiB.
         |""".stripMargin
 
     val compArgs = List(
