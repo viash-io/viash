@@ -23,6 +23,7 @@ import java.net.URI
 import data_structures.OneOrMore
 import java.nio.file.Paths
 import scala.deriving.Mirror
+import scala.language.implicitConversions
 
 
 package object circe {

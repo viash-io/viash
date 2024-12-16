@@ -18,6 +18,7 @@
 package io.viash.helpers
 
 import io.circe.{Decoder, Encoder, Json}
+import scala.language.implicitConversions
 
 package object data_structures {
   // allows to pretend a OneOrMore is a list and vice versa
