@@ -25,7 +25,7 @@ import io.viash.schemas._
   """setup:
     |  - type: apt
     |    packages: [ sl ]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("apt")
 case class AptRequirements(

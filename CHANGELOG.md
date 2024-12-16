@@ -2,11 +2,22 @@
 
 TODO add summary
 
+## NEW FEATURES
+
+* `Nextflow` runner: allow emitting multiple output channels (PR #736).
+
+* `Scope`: Add a `scope` field to the config (PR #782). This allows tuning how the components is built for release.
+
 ## MINOR CHANGES
 
 * `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
 
 * `RRequirements`: Allow single quotes to be used again in the `.script` field (PR #771).
+
+* `scala`: Update Scala to Scala 3 (PR #759).
+  For most of the code, this was a minor update, so no breaking changes are expected.
+  The biggest change is how the exporting of the schema is done, but this has no impact on the user.
+  However, switching to Scala 3 allows for additional features and improvements in the future.
 
 ## BUG FIXES
 

@@ -23,13 +23,13 @@ import io.viash.schemas._
 // todo: assert contents?
 @description(
   """Directives are optional settings that affect the execution of the process.
-    |""".stripMargin)
+    |""")
 @example(
   """directives:
     |    container: rocker/r-ver:4.1
     |    label: highcpu
     |    cpus: 4
-    |    memory: 16 GB""".stripMargin,
+    |    memory: 16 GB""",
     "yaml")
 case class NextflowDirectives(
   @description(
@@ -38,7 +38,7 @@ case class NextflowDirectives(
       |Viash implements this directive as a map with accepted keywords: `type`, `limit`, `request`, and `runtime`.
       |
       |See [`accelerator`](https://www.nextflow.io/docs/latest/process.html#accelerator).
-      |""".stripMargin)
+      |""")
   @example("""[ limit: 4, type: "nvidia-tesla-k80" ]""", "yaml")
   @default("Empty")
   accelerator: Map[String, String] = Map(),
@@ -47,7 +47,7 @@ case class NextflowDirectives(
     """The `afterScript` directive allows you to execute a custom (Bash) snippet immediately after the main process has run. This may be useful to clean up your staging area.
       |
       |See [`afterScript`](https://www.nextflow.io/docs/latest/process.html#afterscript).
-      |""".stripMargin)
+      |""")
   @example("""source /cluster/bin/cleanup""", "yaml")
   afterScript: Option[String] = None,
   
@@ -55,7 +55,7 @@ case class NextflowDirectives(
     """The `beforeScript` directive allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying cluster environment or for other custom initialisation.
       |
       |See [`beforeScript`](https://www.nextflow.io/docs/latest/process.html#beforeScript).
-      |""".stripMargin)
+      |""")
   @example("""source /cluster/bin/setup""", "yaml")
   beforeScript: Option[String] = None,
   
@@ -69,7 +69,7 @@ case class NextflowDirectives(
       |Accepted values are: `true`, `false`, `"deep"`, and `"lenient"`.
       |
       |See [`cache`](https://www.nextflow.io/docs/latest/process.html#cache).
-      |""".stripMargin)
+      |""")
   @example("true", "yaml")
   @example("false", "yaml")
   @example(""""deep"""", "yaml")
@@ -82,7 +82,7 @@ case class NextflowDirectives(
       |Nextflow automatically sets up an environment for the given package names listed by in the `conda` directive.
       |
       |See [`conda`](https://www.nextflow.io/docs/latest/process.html#conda).
-      |""".stripMargin)
+      |""")
   @example(""""bwa=0.7.15"""", "yaml")
   @example(""""bwa=0.7.15 fastqc=0.11.5"""", "yaml")
   @example("""["bwa=0.7.15", "fastqc=0.11.5"]""", "yaml")
@@ -97,7 +97,7 @@ case class NextflowDirectives(
       |Viash implements allows either a string value or a map. In case a map is used, the allowed keys are: `registry`, `image`, and `tag`. The `image` value must be specified.
       |
       |See [`container`](https://www.nextflow.io/docs/latest/process.html#container).
-      |""".stripMargin)
+      |""")
   @example(""""foo/bar:tag"""", "yaml")
   @exampleWithDescription("""[ registry: "reg", image: "im", tag: "ta" ]""", "yaml", """This is transformed to `"reg/im:ta"`:""")
   @exampleWithDescription("""[ image: "im" ]""", "yaml", """This is transformed to `"im:latest"`:""")
@@ -107,7 +107,7 @@ case class NextflowDirectives(
     """The `containerOptions` directive allows you to specify any container execution option supported by the underlying container engine (ie. Docker, Singularity, etc). This can be useful to provide container settings only for a specific process e.g. mount a custom path.
       |
       |See [`containerOptions`](https://www.nextflow.io/docs/latest/process.html#containeroptions).
-      |""".stripMargin)
+      |""")
   @example(""""--foo bar"""", "yaml")
   @example("""["--foo bar", "-f b"]""", "yaml")
   @default("Empty")
@@ -117,7 +117,7 @@ case class NextflowDirectives(
     """The `cpus` directive allows you to define the number of (logical) CPU required by the process' task.
       |
       |See [`cpus`](https://www.nextflow.io/docs/latest/process.html#cpus).
-      |""".stripMargin)
+      |""")
   @example("1", "yaml")
   @example("10", "yaml")
   cpus: Option[Either[Int, String]] = None,
@@ -126,7 +126,7 @@ case class NextflowDirectives(
     """The `disk` directive allows you to define how much local disk storage the process is allowed to use.
       |
       |See [`disk`](https://www.nextflow.io/docs/latest/process.html#disk).
-      |""".stripMargin)
+      |""")
   @example(""""1 GB"""", "yaml")
   @example(""""2TB"""", "yaml")
   @example(""""3.2KB"""", "yaml")
@@ -137,7 +137,7 @@ case class NextflowDirectives(
     """By default the stdout produced by the commands executed in all processes is ignored. By setting the `echo` directive to true, you can forward the process stdout to the current top running process stdout file, showing it in the shell terminal.
       | 
       |See [`echo`](https://www.nextflow.io/docs/latest/process.html#echo).
-      |""".stripMargin)
+      |""")
   @example("true", "yaml")
   @example("false", "yaml")
   echo: Option[Either[Boolean, String]] = None,
@@ -154,7 +154,7 @@ case class NextflowDirectives(
       || `retry` | Re-submit for execution a process returning an error condition. |
       |
       |See [`errorStrategy`](https://www.nextflow.io/docs/latest/process.html#errorstrategy).
-      |""".stripMargin)
+      |""")
   @example(""""terminate"""", "yaml")
   @example(""""finish"""", "yaml")
   errorStrategy: Option[String] = None,
@@ -185,7 +185,7 @@ case class NextflowDirectives(
       || uge | Alias for the sge executor. |
       |
       |See [`executor`](https://www.nextflow.io/docs/latest/process.html#executor).
-      |""".stripMargin)
+      |""")
   @example(""""local"""", "yaml")
   @example(""""sge"""", "yaml")
   executor: Option[String] = None,
@@ -194,7 +194,7 @@ case class NextflowDirectives(
     """The `label` directive allows the annotation of processes with mnemonic identifier of your choice.
       |
       |See [`label`](https://www.nextflow.io/docs/latest/process.html#label).
-      |""".stripMargin)
+      |""")
   @example(""""big_mem"""", "yaml")
   @example(""""big_cpu"""", "yaml")
   @example("""["big_mem", "big_cpu"]""", "yaml")
@@ -205,7 +205,7 @@ case class NextflowDirectives(
     """ The `machineType` can be used to specify a predefined Google Compute Platform machine type when running using the Google Life Sciences executor.
       |
       |See [`machineType`](https://www.nextflow.io/docs/latest/process.html#machinetype).
-      |""".stripMargin)
+      |""")
   @example(""""n1-highmem-8"""", "yaml")
   machineType: Option[String] = None,
   
@@ -213,7 +213,7 @@ case class NextflowDirectives(
     """The `maxErrors` directive allows you to specify the maximum number of times a process can fail when using the `retry` error strategy. By default this directive is disabled.
       |
       |See [`maxErrors`](https://www.nextflow.io/docs/latest/process.html#maxerrors).
-      |""".stripMargin)
+      |""")
   @example("1", "yaml")
   @example("3", "yaml")
   maxErrors: Option[Either[String, Int]] = None,
@@ -224,7 +224,7 @@ case class NextflowDirectives(
       |If you want to execute a process in a sequential manner, set this directive to one.
       |
       |See [`maxForks`](https://www.nextflow.io/docs/latest/process.html#maxforks).
-      |""".stripMargin)
+      |""")
   @example("1", "yaml")
   @example("3", "yaml")
   maxForks: Option[Either[String, Int]] = None,
@@ -233,7 +233,7 @@ case class NextflowDirectives(
     """The `maxRetries` directive allows you to define the maximum number of times a process instance can be re-submitted in case of failure. This value is applied only when using the retry error strategy. By default only one retry is allowed.
       |
       |See [`maxRetries`](https://www.nextflow.io/docs/latest/process.html#maxretries).
-      |""".stripMargin)
+      |""")
   @example("1", "yaml")
   @example("3", "yaml")
   maxRetries: Option[Either[String, Int]] = None,
@@ -242,7 +242,7 @@ case class NextflowDirectives(
     """The `memory` directive allows you to define how much memory the process is allowed to use.
       |
       |See [`memory`](https://www.nextflow.io/docs/latest/process.html#memory).
-      |""".stripMargin)
+      |""")
   @example(""""1 GB"""", "yaml")
   @example(""""2TB"""", "yaml")
   @example(""""3.2KB"""", "yaml")
@@ -257,7 +257,7 @@ case class NextflowDirectives(
       |In a process definition you can use the `module` directive to load a specific module version to be used in the process execution environment.
       |
       |See [`module`](https://www.nextflow.io/docs/latest/process.html#module).
-      |""".stripMargin)
+      |""")
   @example(""""ncbi-blast/2.2.27"""", "yaml")
   @example(""""ncbi-blast/2.2.27:t_coffee/10.0"""", "yaml")
   @example("""["ncbi-blast/2.2.27", "t_coffee/10.0"]""", "yaml")
@@ -268,7 +268,7 @@ case class NextflowDirectives(
     """The `penv` directive allows you to define the parallel environment to be used when submitting a parallel task to the SGE resource manager.
       |
       |See [`penv`](https://www.nextflow.io/docs/latest/process.html#penv).
-      |""".stripMargin)
+      |""")
   @example(""""smp"""", "yaml")
   penv: Option[String] = None,
   
@@ -276,7 +276,7 @@ case class NextflowDirectives(
     """The `pod` directive allows the definition of pods specific settings, such as environment variables, secrets and config maps when using the Kubernetes executor.
       |
       |See [`pod`](https://www.nextflow.io/docs/latest/process.html#pod).
-      |""".stripMargin)
+      |""")
   @example("""[ label: "key", value: "val" ]""", "yaml")
   @example("""[ annotation: "key", value: "val" ]""", "yaml")
   @example("""[ env: "key", value: "val" ]""", "yaml")
@@ -291,7 +291,7 @@ case class NextflowDirectives(
       |The allowed values for `mode` are: `symlink`, `rellink`, `link`, `copy`, `copyNoFollow`, `move`.
       |
       |See [`publishDir`](https://www.nextflow.io/docs/latest/process.html#publishdir).
-      |""".stripMargin)
+      |""")
   @example("[]", "yaml")
   @example("""[ [ path: "foo", enabled: true ], [ path: "bar", enabled: false ] ]""", "yaml")
   @exampleWithDescription(""""/path/to/dir"""", "yaml", """This is transformed to `[[ path: "/path/to/dir" ]]`:""")
@@ -303,7 +303,7 @@ case class NextflowDirectives(
     """The `queue` directory allows you to set the queue where jobs are scheduled when using a grid based executor in your pipeline.
       |
       |See [`queue`](https://www.nextflow.io/docs/latest/process.html#queue).
-      |""".stripMargin)
+      |""")
   @example(""""long"""", "yaml")
   @example(""""short,long"""", "yaml")
   @example("""["short", "long"]""", "yaml")
@@ -314,7 +314,7 @@ case class NextflowDirectives(
     """The `scratch` directive allows you to execute the process in a temporary folder that is local to the execution node.
       |
       |See [`scratch`](https://www.nextflow.io/docs/latest/process.html#scratch).
-      |""".stripMargin)
+      |""")
   @example("true", "yaml")
   @example(""""/path/to/scratch"""", "yaml")
   @example("""'$MY_PATH_TO_SCRATCH'""", "yaml")
@@ -325,7 +325,7 @@ case class NextflowDirectives(
     """The `storeDir` directive allows you to define a directory that is used as a permanent cache for your process results.
       |
       |See [`storeDir`](https://www.nextflow.io/docs/latest/process.html#storeDir).
-      |""".stripMargin)
+      |""")
   @example(""""/path/to/storeDir"""", "yaml")
   storeDir: Option[String] = None,
   
@@ -340,7 +340,7 @@ case class NextflowDirectives(
       || rellink | Input files are staged in the process work directory by creating a symbolic link with a relative path for each of them. | 
       |
       |See [`stageInMode`](https://www.nextflow.io/docs/latest/process.html#stageinmode).
-      |""".stripMargin)
+      |""")
   @example(""""copy"""", "yaml")
   @example(""""link"""", "yaml")
   stageInMode: Option[String] = None,
@@ -355,7 +355,7 @@ case class NextflowDirectives(
       || rsync | Output files are copied from the scratch directory to the work directory by using the rsync utility. |
       |
       |See [`stageOutMode`](https://www.nextflow.io/docs/latest/process.html#stageoutmode).
-      |""".stripMargin)
+      |""")
   @example(""""copy"""", "yaml")
   @example(""""link"""", "yaml")
   stageOutMode: Option[String] = None,
@@ -366,7 +366,7 @@ case class NextflowDirectives(
       |For ease of use, the default tag is set to `"$id"`, which allows tracking the progression of the channel events through the workflow more easily.
       |
       |See [`tag`](https://www.nextflow.io/docs/latest/process.html#tag).
-      |""".stripMargin)
+      |""")
   @example(""""foo"""", "yaml")
   @default("""'$id'""")
   tag: Option[String] = Some("$id"),
@@ -375,7 +375,7 @@ case class NextflowDirectives(
     """The `time` directive allows you to define how long a process is allowed to run.
       |
       |See [`time`](https://www.nextflow.io/docs/latest/process.html#time).
-      |""".stripMargin)
+      |""")
   @example(""""1h"""", "yaml")
   @example(""""2days"""", "yaml")
   @example(""""1day 6hours 3minutes 30seconds"""", "yaml")

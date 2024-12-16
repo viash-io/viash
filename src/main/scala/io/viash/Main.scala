@@ -34,6 +34,7 @@ import io.viash.helpers.LoggerLevel
 import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.engines.Engine
+import io.viash.helpers.data_structures.*
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -551,7 +552,7 @@ object Main extends Logging {
         configs0
       }
     
-      configs1
+    configs1
   }
 
   // Handle dependencies operations for a single config

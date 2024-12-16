@@ -25,7 +25,7 @@ import io.viash.schemas._
   """setup:
     |  - type: apk
     |    packages: [ sl ]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("apk")
 case class ApkRequirements(

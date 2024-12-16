@@ -21,7 +21,7 @@ import org.rogach.scallop.Subcommand
 import org.rogach.scallop.ScallopOptionGroup
 import org.rogach.scallop.ValueConverter
 import org.rogach.scallop.ScallopOption
-import scala.reflect.runtime.universe._
+import io.viash.helpers.typeOf
 
 /**
   * Wrapper class for Subcommand to expose protected members
@@ -76,7 +76,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
   // We need to get the TypeTag[A], which changes the interface of 'opt', however since we have default values we can't just overload the methods.
   // The same goes for 'trailArgs'. Not really for 'choice' but it's better to keep the same change in naming schema here too.
 
-  def registerOpt[A](
+  inline def registerOpt[A](
     name: String,
     short: Option[Char] = None,
     descr: String = "",
@@ -86,9 +86,8 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     argName: String = "arg",
     hidden: Boolean = false,
     group: ScallopOptionGroup = null
-  )(implicit conv:ValueConverter[A], tag: TypeTag[A]): ScallopOption[A] = {
+  )(implicit conv:ValueConverter[A]): ScallopOption[A] = {
 
-    val `type` = tag.tpe
     val cleanName = name match {
       case null => ""
       case _ => name
@@ -103,14 +102,14 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       argName = Some(argName), 
       hidden = hidden, 
       choices = None, 
-      `type` = `type`.toString(), 
+      `type` = typeOf[A],
       optType = "opt"
     )
     registeredOpts = registeredOpts :+ registeredOpt
     opt(name, short.getOrElse('\u0000'), removeMarkup(descr), default, validate, required, argName, hidden, short.isEmpty, group)
   }
 
-  def registerChoice(
+  inline def registerChoice(
     choices: Seq[String],
     name: String,
     short: Option[Char],
@@ -143,7 +142,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     choice(choices, name, short.getOrElse('\u0000'), removeMarkup(descr), default, required, argName, hidden, short.isEmpty, group)
   }
 
-  def registerTrailArg[A](
+  inline def registerTrailArg[A](
     name: String,
     descr: String = "",
     validate: A => Boolean = (_:A) => true,
@@ -151,9 +150,8 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
     default: => Option[A] = None,
     hidden: Boolean = false,
     group: ScallopOptionGroup = null
-  )(implicit conv:ValueConverter[A], tag: TypeTag[A]) = {
+  )(implicit conv:ValueConverter[A]) = {
 
-    val `type` = tag.tpe
     val cleanName = name match {
       case null => ""
       case _ => name
@@ -168,7 +166,7 @@ class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(co
       argName = None, 
       hidden = hidden, 
       choices = None, 
-      `type` = `type`.toString, 
+      `type` = typeOf[A],
       optType = "trailArgs"
     )
     registeredOpts = registeredOpts :+ registeredOpt

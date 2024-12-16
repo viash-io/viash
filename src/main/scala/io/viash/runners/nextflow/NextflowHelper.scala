@@ -33,6 +33,8 @@ import java.nio.file.Paths
 import io.viash.ViashNamespace
 
 object NextflowHelper {
+  import io.viash.config.encodeConfig
+
   private def readSource(s: String) = {
     val path = s"io/viash/runners/nextflow/$s"
     Source.fromResource(path).getLines().mkString("\n")

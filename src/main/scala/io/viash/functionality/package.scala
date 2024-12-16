@@ -17,7 +17,6 @@
 
 package io.viash
 
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.ACursor
 
@@ -36,10 +35,10 @@ import config.arguments._
 package object functionality extends Logging {
   // import implicits
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
-  import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
+
+  import io.viash.config.{decodeAuthor, decodeArgumentGroup, decodeStatus, decodeComputationalRequirements, decodeReferences, decodeLinks}
+  import io.viash.config.resources.decodeResource
+  import io.viash.config.dependencies.{decodeDependency, decodeRepositoryWithName}
 
   // encoder and decoder for Functionality
   // implicit val encodeFunctionality: Encoder.AsObject[Functionality] = deriveConfiguredEncoderStrict[Functionality]

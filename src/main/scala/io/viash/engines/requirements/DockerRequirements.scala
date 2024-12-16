@@ -23,11 +23,11 @@ import io.viash.schemas._
 @description("Specify which Docker commands should be run during setup.")
 @example(
   """setup:
-    #  - type: docker
-    #    build_args: "R_VERSION=hello_world"
-    #    run: |
-    #      echo 'Run a custom command'
-    #      echo 'Foo' > /path/to/file.txt""".stripMargin('#'),
+    |  - type: docker
+    |    build_args: "R_VERSION=hello_world"
+    |    run: |
+    |      echo 'Run a custom command'
+    |      echo 'Foo' > /path/to/file.txt""",
     "yaml")
 @subclass("docker")
 case class DockerRequirements(
@@ -48,8 +48,8 @@ case class DockerRequirements(
 
   @description("Specifies which `RUN` entries to add to the Dockerfile while building it.")
   @example("""run: |
-    #  echo 'Run a custom command'
-    #  echo 'Foo' > /path/to/file.txt""".stripMargin('#'), "yaml")
+    |  echo 'Run a custom command'
+    |  echo 'Foo' > /path/to/file.txt""", "yaml")
   @default("Empty")
   run: OneOrMore[String] = Nil,
   

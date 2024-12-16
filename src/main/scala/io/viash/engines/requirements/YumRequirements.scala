@@ -25,7 +25,7 @@ import io.viash.schemas._
   """setup:
     |  - type: yum
     |    packages: [ sl ]
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("yum")
 case class YumRequirements(

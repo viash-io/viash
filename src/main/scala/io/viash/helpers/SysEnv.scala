@@ -19,29 +19,34 @@ package io.viash.helpers
 
 import io.viash.schemas._
 
+trait SysEnvTrait {
+  def viashHome: String
+  def viashVersion: Option[String]
+}
+
 @nameOverride("EnvironmentVariables")
 @description("Viash checks several environment variables during operation.")
 @documentFully
-trait SysEnvTrait {
+case class SysEnvCC(
   @nameOverride("VIASH_HOME")
   @description(
     """If `VIASH_HOME` is not defined, the fallback `HOME`/.viash is used.
       |
       |Location where specific downloaded versions of Viash will be cached and run from.
-      |""".stripMargin)
-  def viashHome: String
+      |""")
+  viashHome: String,
 
   @nameOverride("VIASH_VERSION")
   @description(
     """A specific Viash version can be set to run the commands with. If so required, the specific Viash version will be downloaded.
       |This is useful when replicating older results or building Viash components that use outdated code.
-      |""".stripMargin)
+      |""")
   @example(
     """VIASH_VERSION=0.7.0 viash ns build""",
     "sh"
   )
-  def viashVersion: Option[String]
-}
+  viashVersion: Option[String]
+) extends SysEnvTrait
 
 
 object SysEnv extends SysEnvTrait {

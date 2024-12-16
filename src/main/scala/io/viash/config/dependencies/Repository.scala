@@ -28,14 +28,14 @@ import java.nio.file.{Path, Paths, Files}
     | - @[git](repo_git)
     | - @[github](repo_github)
     | - @[vsh](repo_vsh)
-    |""".stripMargin)
+    |""")
 @exampleWithDescription(
   """repositories:
     |  - name: openpipelines-bio
     |    type: github
     |    repo: openpipelines-bio/modules
     |    tag: 0.3.0
-    |""".stripMargin,
+    |""",
     "yaml",
     "Definition of a repository in the component config or package config.")
 @exampleWithDescription(
@@ -45,7 +45,7 @@ import java.nio.file.{Path, Paths, Files}
     |      type: github
     |      repo: openpipelines-bio/modules
     |      tag: 0.3.0
-    |""".stripMargin,
+    |""",
     "yaml",
     "Definition of dependency with a fully defined repository")
 @subclass("LocalRepository")

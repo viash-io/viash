@@ -30,7 +30,7 @@ import io.viash.schemas._
     | - @[R](r_req)
     | - @[Ruby](ruby_req)
     | - @[yum](yum_req)
-    |""".stripMargin)
+    |""")
 @subclass("ApkRequirements")
 @subclass("AptRequirements")
 @subclass("DockerRequirements")

@@ -18,12 +18,15 @@
 package io.viash
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
 
 package object runners {
   import io.viash.helpers.circe._
-  import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
+
+  import io.viash.runners.executable.{decodeSetupStrategy, encodeSetupStrategy}
+  import io.viash.runners.nextflow.{decodeNextflowDirectives, encodeNextflowDirectives}
+  import io.viash.runners.nextflow.{decodeNextflowAuto, encodeNextflowAuto}
+  import io.viash.runners.nextflow.{decodeNextflowConfig, encodeNextflowConfig}
 
   implicit val encodeExecutableRunner: Encoder.AsObject[ExecutableRunner] = deriveConfiguredEncoder
   implicit val decodeExecutableRunner: Decoder[ExecutableRunner] = deriveConfiguredDecoderFullChecks
