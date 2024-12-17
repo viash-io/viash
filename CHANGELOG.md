@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
 Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
