@@ -1,3 +1,37 @@
+# Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
+
+Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
+Dependencies will use the new dedicated git url instead of the top level domain name.
+
+## NEW FEATURES
+
+* `Nextflow` runner: allow emitting multiple output channels (PR #736).
+
+* `Scope`: Add a `scope` field to the config (PR #782). This allows tuning how the components is built for release.
+
+## MINOR CHANGES
+
+* `viash-hub`: Change the url for viash-hub Git access to packages.viash-hub.com (PR #774).
+
+* `RRequirements`: Allow single quotes to be used again in the `.script` field (PR #771).
+
+* `scala`: Update Scala to Scala 3 (PR #759).
+  For most of the code, this was a minor update, so no breaking changes are expected.
+  The biggest change is how the exporting of the schema is done, but this has no impact on the user.
+  However, switching to Scala 3 allows for additional features and improvements in the future.
+
+* `--help`: Component `--help` messages will now display what built in `---` options are available (PR #784).
+
+## BUG FIXES
+
+* `config build`: Fix a bug where a missing main script would cause a stack trace instead of a proper error message (PR #776).
+  The error message showed the path of the missing resource but it was easy to miss given the stack trace, besides it shouldn't have been a stack trace anyway.
+  
+* `RRequirements`: Treat warnings as errors when installing R dependencies in Docker engines (PR #771).
+
+* `Nextflow` runner: fix false-positive error when output argument arguments `required: true` 
+  are incorrectly flagged as missing input arguments (PR #778).
+
 # Viash 0.9.0 (2024-09-03): Restructure platforms into runners and engines
 
 This release restructures the introduces changes to the Viash config:

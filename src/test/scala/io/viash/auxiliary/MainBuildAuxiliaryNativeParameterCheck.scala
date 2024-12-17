@@ -11,6 +11,7 @@ import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.TestHelper
 import java.nio.file.Path
 import scala.annotation.meta.param
+import io.viash.helpers.data_structures._
 
 class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

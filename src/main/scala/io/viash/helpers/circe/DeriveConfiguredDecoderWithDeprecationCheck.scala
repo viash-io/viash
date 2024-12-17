@@ -17,24 +17,23 @@
 
 package io.viash.helpers.circe
 
-import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
-import io.circe.{ Decoder, CursorOp }
-import io.circe.generic.extras.decoding.ConfiguredDecoder
-
-import scala.reflect.runtime.universe._
-import shapeless.Lazy
-
-import io.viash.schemas.ParameterSchema
-import io.circe.ACursor
+import io.circe.{ ACursor, Decoder, CursorOp }
+import io.circe.derivation.{Configuration, ConfiguredDecoder}
+import scala.deriving.Mirror
 
 import io.viash.helpers.Logging
-import io.viash.schemas.CollectedSchemas
+import io.viash.helpers.*
 
 object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
 
-  private def memberDeprecationCheck(name: String, history: List[CursorOp], parameters: List[ParameterSchema]): Unit = {
-    val schema = parameters.find(p => p.name == name).getOrElse(ParameterSchema("", "", "", None, None, None, None, None, None, None, None, false, false))
-
+  // This method doesn't use any mirroring, so it can be called from multiple inlined validators without needing inlining.
+  private def memberDeprecationCheck(
+    name: String,
+    history: List[CursorOp],
+    deprecated: Option[(String, String, String)],
+    removed: Option[(String, String, String)],
+    hasInternalFunctionality: Boolean
+  ): Unit = {
     lazy val historyString = history.collect{ case df: CursorOp.DownField => df.k }.reverse.mkString(".")
 
     lazy val fullHistoryName = 
@@ -44,42 +43,46 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
         s".$historyString.$name"
       }
 
-    schema.deprecated match {
+    deprecated match {
       case Some(d) =>
-        info(s"Warning: $fullHistoryName is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+        info(s"Warning: $fullHistoryName is deprecated: ${d._1} Deprecated since ${d._2}, planned removal ${d._3}.")
       case _ =>
     }
-    schema.removed match {
+    removed match {
       case Some(r) => 
-        info(s"Error: $fullHistoryName was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+        info(s"Error: $fullHistoryName was removed: ${r._1} Initially deprecated ${r._2}, removed ${r._3}.")
       case _ =>
     }
-    if (schema.hasInternalFunctionality) {
+    if (hasInternalFunctionality) {
       error(s"Error: $fullHistoryName is internal functionality.")
       throw new RuntimeException(s"Internal functionality used: $fullHistoryName")
     }
   }
 
-  private def selfDeprecationCheck(parameters: List[ParameterSchema]): Unit = {
-    val schema = parameters.find(p => p.name == "__this__").get
+  private inline def selfDeprecationCheck[A]()(using inline A: Mirror.Of[A]): Unit = {
+    val name = typeOf[A]
+    val deprecated = deprecatedOf[A].headOption
+    val removed = removedOf[A].headOption
 
-    schema.deprecated match {
+    deprecated match {
       case Some(d) =>
-        info(s"Warning: ${schema.`type`} is deprecated: ${d.message} Deprecated since ${d.deprecation}, planned removal ${d.removal}.")
+        info(s"Warning: $name is deprecated: ${d._1} Deprecated since ${d._2}, planned removal ${d._3}.")
       case _ =>
     }
-    schema.removed match {
+    removed match {
       case Some(r) =>
-        info(s"Error: ${schema.`type`} was removed: ${r.message} Initially deprecated ${r.deprecation}, removed ${r.removal}.")
+        info(s"Error: $name was removed: ${r._1} Initially deprecated ${r._2}, removed ${r._3}.")
       case _ =>
     }
   }
 
-  // 
-  def checkDeprecation[A](cursor: ACursor)(implicit tag: TypeTag[A]) : ACursor = {
-    val parameters = CollectedSchemas.getParameters[A]()
+  inline def checkDeprecation[A](cursor: ACursor)(using inline A: Mirror.Of[A]) : ACursor = {
 
-    selfDeprecationCheck(parameters)
+    selfDeprecationCheck()
+
+    val df = deprecatedFieldsOf[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
+    val rf = removedFieldsOf[A].map(t => t._1 -> (t._2, t._3, t._4)).toMap
+    val iff = internalFunctionalityFieldsOf[A]
 
     // check each defined 'key' value
     for (key <- cursor.keys.getOrElse(Nil)) {
@@ -91,13 +94,13 @@ object DeriveConfiguredDecoderWithDeprecationCheck extends Logging {
           case _ => false
         }
       if (!isEmpty) {
-        memberDeprecationCheck(key, cursor.history, parameters)
+        memberDeprecationCheck(key, cursor.history, df.get(key), rf.get(key), iff.contains(key))
       }
     }
     cursor // return unchanged json info
   }
 
   // Use prepare to get raw json data to inspect used fields in the json but we're not performing any changes here
-  def deriveConfiguredDecoderWithDeprecationCheck[A](implicit decode: Lazy[ConfiguredDecoder[A]], tag: TypeTag[A]): Decoder[A] = deriveConfiguredDecoder[A]
+  inline def deriveConfiguredDecoderWithDeprecationCheck[A](using inline A: Mirror.Of[A], inline configuration: Configuration) = deriveConfiguredDecoder[A]
     .prepare( checkDeprecation[A] )
 }

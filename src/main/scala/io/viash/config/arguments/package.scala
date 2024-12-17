@@ -18,11 +18,8 @@
 package io.viash.config
 
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 import cats.syntax.functor._ // for .widen
-import io.viash.helpers.circe.DeriveConfiguredDecoderFullChecks._
-import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck._
-import io.viash.helpers.circe.DeriveConfiguredEncoderStrict._
+import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder
 import io.viash.exceptions.ConfigParserSubTypeException
 
 package object arguments {

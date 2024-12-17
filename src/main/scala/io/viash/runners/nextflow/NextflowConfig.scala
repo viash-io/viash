@@ -20,6 +20,7 @@ package io.viash.runners.nextflow
 import scala.collection.immutable.ListMap
 import io.viash.schemas._
 import io.viash.helpers.data_structures.OneOrMore
+import io.viash.helpers.data_structures.listToOneOrMore
 
 @description("Allows tweaking how the Nextflow Config file is generated.")
 @since("Viash 0.7.4")
@@ -32,7 +33,7 @@ case class NextflowConfig(
       |
       |Conceptually it is possible for a Viash Config to overwrite the full labels parameter, however likely it is more efficient to add additional labels
       |in the Viash Package with a config mod.
-      |""".stripMargin)
+      |""")
   @exampleWithDescription(
     """labels:
       |  lowmem: "memory = 4.GB"
@@ -43,7 +44,7 @@ case class NextflowConfig(
       |  highcpu: "cpus = 20"
       |  vhighmem: "memory = 100.GB"
       |  vhighcpu: "cpus = 40"
-      |""".stripMargin,
+      |""",
     "yaml",
     "Replace the default labels with a different set of labels")
   @exampleWithDescription(
@@ -54,14 +55,14 @@ case class NextflowConfig(
     """config_mods: |
       |  .runners[.type == "nextflow"].config.labels.lowmem := "memory = 4.GB"
       |  .runners[.type == "nextflow"].config.labels.lowcpu := "cpus = 4"
-      |""".stripMargin,
+      |""",
     "viash_package_file",
     "Add 'lowmem' and 'lowcpu' to the default labels by using the Viash Package file"
   )
   @exampleWithDescription(
     """config_mods: |
       |  .runners[.type == "nextflow"].config.labels := { lowmem: "memory = 4.GB", lowcpu: "cpus = 4", midmem: "memory = 25.GB", midcpu: "cpus = 10", highmem: "memory = 50.GB", highcpu: "cpus = 20", vhighmem: "memory = 100.GB", vhighcpu: "cpus = 40" }
-      |""".stripMargin,
+      |""",
     "viash_package_file",
     "Replace the default labels with a different set of labels by using the Viash Package file"
   )
@@ -89,14 +90,14 @@ case class NextflowConfig(
   @description(
     """Includes a single string or list of strings into the nextflow.config file.
       |This can be used to add custom profiles or include an additional config file.
-      |""".stripMargin)
+      |""")
   @example(
     """script:
       |  - |
       |    profiles {
       |    ...
       |    }
-      |""".stripMargin,
+      |""",
     "yaml")
   @example("""script: includeConfig("config.config")""", "yaml")
   @default("Empty")

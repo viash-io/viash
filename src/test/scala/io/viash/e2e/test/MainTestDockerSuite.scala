@@ -8,10 +8,9 @@ import io.viash.helpers.{IO, Exec, Logger}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.reflect.io.Directory
 import sys.process._
 import org.scalatest.ParallelTestExecution
-import java.nio.file.Path
+import java.nio.file.{Path, Files}
 
 class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with ParallelTestExecution{
   Logger.UseColorOverride.value = Some(false)
@@ -336,26 +335,26 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
     // Get temporary directory
     val FolderRegex = ".*Running tests in temporary directory: '([^']*)'.*".r
 
-    val tempPath = testText.replaceAll("\n", "") match {
+    val tempPathStr = testText.replaceAll("\n", "") match {
       case FolderRegex(path) => path
       case _ => ""
     }
 
-    assert(tempPath.contains(s"${IO.tempDir}/viash_test_testbash"))
+    assert(tempPathStr.contains(s"${IO.tempDir}/viash_test_testbash"))
 
-    val tempFolder = new Directory(Paths.get(tempPath).toFile)
+    val tempPath = Paths.get(tempPathStr)
 
     if (expectDirectoryExists) {
       // Check temporary directory is still present
-      assert(tempFolder.exists)
-      assert(tempFolder.isDirectory)
+      assert(Files.exists(tempPath))
+      assert(Files.isDirectory(tempPath))
 
       // Remove the temporary directory
-      tempFolder.deleteRecursively()
+      IO.deleteRecursively(tempPath)
     }
 
     // folder should always have been removed at this stage
-    assert(!tempFolder.exists)
+    assert(!Files.exists(tempPath))
   }
 
   override def afterAll(): Unit = {

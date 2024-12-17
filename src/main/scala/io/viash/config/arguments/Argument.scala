@@ -32,7 +32,7 @@ import java.nio.file.Paths
     | - @[boolean](arg_boolean)
     | - @[boolean_true](arg_boolean_true)
     | - @[boolean_false](arg_boolean_false)
-    |""".stripMargin)
+    |""")
 @example(
   """arguments:
     |  - name: --foo
@@ -47,7 +47,7 @@ import java.nio.file.Paths
     |    multiple_sep: ";"
     |  - name: --bar
     |    type: string
-    |""".stripMargin,
+    |""",
     "yaml")
 @subclass("BooleanArgument")
 @subclass("BooleanTrueArgument")
@@ -77,7 +77,7 @@ abstract class Argument[Type] {
   val dest: String
 
   private val pattern = "^(-*)(.*)$".r
-  val pattern(flags, plainName) = name
+  val pattern(flags, plainName) = name : @unchecked
 
   /** Common parameter name for this argument */
   val par: String = dest + "_" + plainName

@@ -29,7 +29,7 @@ import io.viash.schemas._
     |    default: 16
     |    description: Amount of CPU cores to use
     |    alternatives: ["-c"]
-    |""".stripMargin,
+    |""",
     "yaml")
 @since("Viash 0.6.1")
 @subclass("long")
@@ -40,7 +40,7 @@ case class LongArgument(
       |  - `--foo` is a long option, which can be passed with `executable_name --foo=value` or `executable_name --foo value`
       |  - `-f` is a short option, which can be passed with `executable_name -f value`
       |  - `foo` is an argument, which can be passed with `executable_name value`  
-      |""".stripMargin)
+      |""")
   name: String,
 
   @description("List of alternative format variations for this argument.")
@@ -63,7 +63,7 @@ case class LongArgument(
   @example(
     """description: |
       |  A (multiline) description of the purpose of
-      |  this argument.""".stripMargin, "yaml")
+      |  this argument.""", "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -71,7 +71,7 @@ case class LongArgument(
   @example(
     """info:
       |  category: cat1
-      |  labels: [one, two, three]""".stripMargin, "yaml")
+      |  labels: [one, two, three]""", "yaml")
   @since("Viash 0.6.3")
   @default("Empty")
   info: Json = Json.Null,
@@ -81,7 +81,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  example: 100
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   example: OneOrMore[Long] = Nil,
@@ -91,7 +91,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  default: 100
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   default: OneOrMore[Long] = Nil,
@@ -101,7 +101,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  required: true
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("False")
   required: Boolean = false,
@@ -111,7 +111,7 @@ case class LongArgument(
     """- name: --values
       |  type: long
       |  choices: [1024, 2048, 4096]
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   choices: List[Long] = Nil,
@@ -121,7 +121,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  min: 50
-      |""".stripMargin,
+      |""",
       "yaml")
   min: Option[Long] = None,
 
@@ -130,7 +130,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  max: 150
-      |""".stripMargin,
+      |""",
       "yaml")  
   max: Option[Long] = None,
 
@@ -142,7 +142,7 @@ case class LongArgument(
     """- name: --my_long
       |  type: long
       |  multiple: true
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   @default("False")
@@ -154,7 +154,7 @@ case class LongArgument(
       |  type: long
       |  multiple: true
       |  multiple_sep: ";"
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription("my_component --my_long=10:80:152", "bash", "Here's an example of how to use this:")
   @default(";")

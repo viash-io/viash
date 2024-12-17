@@ -240,7 +240,7 @@ object ViashTest extends Logging {
     val tests = conf.test_resources
 
     val testResults = tests.filter(_.isInstanceOf[Script]).map {
-      case test: Script if test.read.isEmpty =>
+      case test: Script if test.readSome.isEmpty =>
         TestOutput(test.filename, 1, "Test script does not exist.", "", 0L)
 
       case test: Script =>
@@ -285,7 +285,7 @@ object ViashTest extends Logging {
         val configYaml = ConfigMeta.toMetaFile(appliedConfig, Some(dir))
 
         // assemble full resources list for test
-        val confFinal = resourcesLens.set(
+        val confFinal = resourcesLens.replace(
           testBash ::
           // the executable, wrapped with an executable runner,
           // to be run inside of the runner of the test

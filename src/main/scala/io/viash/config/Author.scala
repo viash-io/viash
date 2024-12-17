@@ -34,7 +34,7 @@ import io.viash.schemas._
     |    twitter: janedoe
     |    orcid: XXAABBCCXX
     |    groups: [ one, two, three ]
-    |""".stripMargin, "yaml")
+    |""", "yaml")
 case class Author(
   @description("Full name of the author, usually in the name of FirstName MiddleName LastName.")
   name: String,
@@ -48,7 +48,7 @@ case class Author(
       |* `"author"`: Authors who have made substantial contributions to the component.
       |* `"maintainer"`: The maintainer of the component.
       |* `"contributor"`: Authors who have made smaller contributions (such as code patches etc.).
-      |""".stripMargin)
+      |""")
   @default("Empty")
   roles: OneOrMore[String] = Nil,
 

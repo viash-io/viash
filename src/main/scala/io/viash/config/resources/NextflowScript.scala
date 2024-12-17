@@ -30,7 +30,7 @@ import io.viash.helpers.circe._
 import io.viash.ViashNamespace
 import io.viash.config.dependencies.Dependency
 
-@description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""".stripMargin)
+@description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""")
 @subclass("nextflow_script")
 case class NextflowScript(
   path: Option[String] = None,

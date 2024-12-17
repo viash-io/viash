@@ -26,13 +26,13 @@ import io.viash.schemas._
     |
     | * @[Docker](docker_engine)
     | * @[Native](native_engine)
-    |""".stripMargin)
+    |""")
 @example(
   """engines:
     |  - type: docker
     |    image: "bash:4.0"
     |  - type: native
-    |""".stripMargin,
+    |""",
   "yaml")
 @subclass("DockerEngine")
 @subclass("NativeEngine")

@@ -24,13 +24,13 @@ import java.nio.file.Paths
   """Defines a locally present and available repository.
     |This can be used to define components from the same code base as the current component.
     |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
-    |""".stripMargin
+    |"""
 )
 @exampleWithDescription(
   """name: my_local_code
     |type: local
     |path: /additional_code/src
-    |""".stripMargin,
+    |""",
   "yaml",
   "Refer to a local code repository under `additional_code/src` referenced to the Viash Package Config file."
 )

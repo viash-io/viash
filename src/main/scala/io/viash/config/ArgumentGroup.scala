@@ -40,7 +40,7 @@ import io.viash.schemas._
     |      - name: "--output_optional"
     |        type: file
     |        direction: output
-    |""".stripMargin,
+    |""",
     "yaml")
 case class ArgumentGroup(
   @description("The name of the argument group.")
@@ -62,7 +62,7 @@ case class ArgumentGroup(
   @example(
     """description: |
       |  A (multiline) description of the purpose of the arguments
-      |  in this argument group.""".stripMargin, "yaml")
+      |  in this argument group.""", "yaml")
   @default("Empty")
   description: Option[String] = None,
 
@@ -76,7 +76,7 @@ case class ArgumentGroup(
       | - @[boolean](arg_boolean)
       | - @[boolean_true](arg_boolean_true)
       | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
+      |""")
   @example(
     """arguments:
       |  - name: --foo
@@ -91,7 +91,7 @@ case class ArgumentGroup(
       |    multiple_sep: ";"
       |  - name: --bar
       |    type: string
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   arguments: List[Argument[_]] = Nil

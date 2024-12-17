@@ -24,7 +24,7 @@ import io.viash.schemas._
   """requirements:
     |  cpus: 5
     |  memory: 10GB
-    |""".stripMargin,
+    |""",
     "yaml")
 @since("Viash 0.6.0")
 case class ComputationalRequirements(

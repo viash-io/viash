@@ -47,11 +47,12 @@ import io.viash.lenses.ConfigLenses._
 import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
+import io.viash.helpers.data_structures.oneOrMoreToList
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
     |We commonly name this file `config.vsh.yaml` in our examples, but you can name it however you choose.  
-    |""".stripMargin)
+    |""")
 @example(
   """name: hello_world
     |arguments:
@@ -67,7 +68,7 @@ import scala.collection.immutable.ListMap
     |engines:
     |  - type: docker
     |    image: "bash:4.0"
-    |""".stripMargin, "yaml")
+    |""", "yaml")
 case class Config(
   @description("Name of the component and the filename of the executable when built with `viash build`.")
   @example("name: this_is_my_component", "yaml")
@@ -83,20 +84,20 @@ case class Config(
 
   @description(
     """A list of @[authors](author). An author must at least have a name, but can also have a list of roles, an e-mail address, and a map of custom properties.
-      +
-      +Suggested values for roles are:
-      + 
-      +| Role | Abbrev. | Description |
-      +|------|---------|-------------|
-      +| maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
-      +| author | aut | for persons who have made substantial contributions to the software. |
-      +| contributor | ctb| for persons who have made smaller contributions (such as code patches).
-      +| datacontributor | dtc | for persons or organisations that contributed data sets for the software
-      +| copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
-      +| funder | fnd | for persons or organizations that furnished financial support for the development of the software
-      +
-      +The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
-      +""".stripMargin('+'))
+      |
+      |Suggested values for roles are:
+      | 
+      || Role | Abbrev. | Description |
+      ||------|---------|-------------|
+      || maintainer | mnt | for the maintainer of the code. Ideally, exactly one maintainer is specified. |
+      || author | aut | for persons who have made substantial contributions to the software. |
+      || contributor | ctb| for persons who have made smaller contributions (such as code patches).
+      || datacontributor | dtc | for persons or organisations that contributed data sets for the software
+      || copyrightholder | cph | for all copyright holders. This is a legal concept so should use the legal name of an institution or corporate body.
+      || funder | fnd | for persons or organizations that furnished financial support for the development of the software
+      |
+      |The [full list of roles](https://www.loc.gov/marc/relators/relaterm.html) is extremely comprehensive.
+      |""")
   @example(
     """authors:
       |  - name: Jane Doe
@@ -110,7 +111,7 @@ case class Config(
       |  - name: Tim Farbe
       |    roles: [author]
       |    email: tim@far.be
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @since("Viash 0.3.1")
   @default("Empty")
   authors: List[Author] = Nil,
@@ -122,7 +123,7 @@ case class Config(
       | - `description: Description of foo`, a description of the argument group. Multiline descriptions are supported.
       | - `arguments: [arg1, arg2, ...]`, list of the arguments.
       |
-      |""".stripMargin)
+      |""")
   @example(
     """argument_groups:
       |  - name: "Input"
@@ -142,7 +143,7 @@ case class Config(
       |      - name: "--output_optional"
       |        type: file
       |        direction: output
-      |""".stripMargin,
+      |""",
       "yaml")
   @exampleWithDescription(
     """component_name
@@ -160,7 +161,7 @@ case class Config(
       |
       |      --optional_output
       |          type: file
-      |""".stripMargin,
+      |""",
       "bash",
       "This results in the following output when calling the component with the `--help` argument:")
   @since("Viash 0.5.14")
@@ -177,14 +178,14 @@ case class Config(
       | * path: `path/to/file`, the path of the input file. Can be a relative or an absolute path, or a URI. Mutually exclusive with `text`.
       | * text: ...multiline text..., the content of the resulting file specified as a string. Mutually exclusive with `path`.
       | * is_executable: `true` / `false`, whether the resulting resource file should be made executable.
-      |""".stripMargin)
+      |""")
   @example(
     """resources:
       |  - type: r_script
       |    path: script.R
       |  - type: file
       |    path: resource1.txt
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   resources: List[Resource] = Nil,
@@ -205,9 +206,9 @@ case class Config(
   @default("Empty")
   @example(
     """description: |
-      +  This component performs function Y and Z.
-      +  It is possible to make this a multiline string.
-      +""".stripMargin('+'),
+      |  This component performs function Y and Z.
+      |  It is possible to make this a multiline string.
+      |""",
       "yaml")
   description: Option[String] = None,
 
@@ -223,7 +224,7 @@ case class Config(
       |  - type: r_script
       |    path: tests/test2.R
       |  - path: resource1.txt
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   test_resources: List[Resource] = Nil,
@@ -232,7 +233,7 @@ case class Config(
   @example(
     """info:
       |  twitter: wizzkid
-      |  classes: [ one, two, three ]""".stripMargin, "yaml")
+      |  classes: [ one, two, three ]""", "yaml")
   @since("Viash 0.4.0")
   @default("Empty")
   info: Json = Json.Null,
@@ -241,17 +242,26 @@ case class Config(
   @since("Viash 0.6.0")
   @default("Enabled")
   status: Status = Status.Enabled,
+
+  @description(
+    """Defines the scope of the component.
+      |`test`: only available during testing; components aren't published.
+      |`private`: only meant for internal use within a workflow or other component.
+      |`public`: core component or workflow meant for general use.""")
+  @since("Viash 0.9.1")
+  @default("public")
+  scope: Either[ScopeEnum, Scope] = Left(ScopeEnum.Public),
   
   @description(
     """@[Computational requirements](computational_requirements) related to running the component. 
       |`cpus` specifies the maximum number of (logical) cpus a component is allowed to use., whereas
       |`memory` specifies the maximum amount of memory a component is allowed to allicate. Memory units must be
-      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""".stripMargin)
+      |in B, KB, MB, GB, TB or PB for SI units (1000-base), or KiB, MiB, GiB, TiB or PiB for binary IEC units (1024-base).""")
   @example(
     """requirements:
       |  cpus: 5
       |  memory: 10GB
-      |""".stripMargin,
+      |""",
       "yaml")
   @since("Viash 0.6.0")
   @default("Empty")
@@ -265,21 +275,21 @@ case class Config(
       |      type: github
       |      uri: openpipelines-bio/modules
       |      tag: 0.3.0
-      |""".stripMargin,
+      |""",
     "yaml",
     "Full specification of a repository")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
       |    repository: "github://openpipelines-bio/modules:0.3.0"
-      |""".stripMargin,
+      |""",
     "yaml",
     "Full specification of a repository using sugar syntax")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
       |    repository: "openpipelines-bio"
-      |""".stripMargin,
+      |""",
     "yaml",
     "Reference to a repository fully specified under 'repositories'")
   @default("Empty")
@@ -287,14 +297,14 @@ case class Config(
 
   @description(
     """(Pre-)defines repositories that can be used as repository in dependencies.
-      |Allows reusing repository definitions in case it is used in multiple dependencies.""".stripMargin)
+      |Allows reusing repository definitions in case it is used in multiple dependencies.""")
   @example(
     """repositories:
       |  - name: openpipelines-bio
       |    type: github
       |    uri: openpipelines-bio/modules
       |    tag: 0.3.0
-      |""".stripMargin,
+      |""",
       "yaml")
   @default("Empty")
   repositories: List[RepositoryWithName] = Nil,
@@ -322,7 +332,7 @@ case class Config(
       |      journal={Baz},
       |      year={2024}
       |    }
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   references: References = References(),
@@ -335,7 +345,7 @@ case class Config(
       |  homepage: "https://viash.io"
       |  documentation: "https://viash.io/reference/"
       |  issue_tracker: "https://github.com/viash-io/viash/issues"
-      |""".stripMargin, "yaml")
+      |""", "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
@@ -352,7 +362,7 @@ case class Config(
       |
       | - @[ExecutableRunner](executable_runner)
       | - @[NextflowRunner](nextflow_runner)
-      |""".stripMargin)
+      |""")
   @since("Viash 0.8.0")
   @default("Empty")
   runners: List[Runner] = Nil,
@@ -361,7 +371,7 @@ case class Config(
       |
       | - @[NativeEngine](native_engine)
       | - @[DockerEngine](docker_engine)
-      |""".stripMargin)
+      |""")
   @since("Viash 0.8.0")
   @default("Empty")
   engines: List[Engine] = Nil,
@@ -377,7 +387,7 @@ case class Config(
   @description(
     """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
       |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
-      |""".stripMargin)
+      |""")
   @deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
   @default("")
   private val functionality: Functionality = Functionality("foo")
@@ -392,7 +402,7 @@ case class Config(
       | - @[boolean](arg_boolean)
       | - @[boolean_true](arg_boolean_true)
       | - @[boolean_false](arg_boolean_false)
-      |""".stripMargin)
+      |""")
   @default("Empty")
   private val arguments: List[Argument[_]] = Nil
 
@@ -400,7 +410,7 @@ case class Config(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
       |separate files. `__merge__` can be used in any level of the YAML. For example,
       |not just in the config but also in the argument_groups or any of the engines.
-      |""".stripMargin)
+      |""")
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
@@ -411,7 +421,7 @@ case class Config(
     | - @[Native](platform_native)
     | - @[Docker](platform_docker)
     | - @[Nextflow](platform_nextflow)
-    |""".stripMargin)
+    |""")
   @default("Empty")
   @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
   private val platforms: List[Platform] = Nil
@@ -552,7 +562,7 @@ case class Config(
       case s: Script => Some(s)
       case _ => None
     }
-  def mainCode: Option[String] = mainScript.flatMap(_.read)
+  def mainCode: Option[String] = mainScript.flatMap(_.readSome)
   // provide function to use resources.tail but that allows resources to be an empty list
   // If mainScript ends up being None because the first resource isn't a script, return the whole list
   def additionalResources = resources match {
@@ -697,8 +707,8 @@ object Config extends Logging {
     val resources = conf1.resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
     val tests = conf1.test_resources.map(_.copyWithAbsolutePath(parentURI, packageDir))
 
-    val conf2a = resourcesLens.set(resources)(conf1)
-    val conf2 = testResourcesLens.set(tests)(conf2a)
+    val conf2a = resourcesLens.replace(resources)(conf1)
+    val conf2 = testResourcesLens.replace(tests)(conf2a)
 
     /* CONFIG 3: add info */
     // gather git info
@@ -735,16 +745,21 @@ object Config extends Logging {
     val conf4 = conf3.copy(
       package_config = viashPackage
     )
-
-    if (!addOptMainScript) {
-      return conf4
-    }
-    
+   
     /* CONFIG 5: add main script if config is stored inside script */
     // add info and additional resources
-    val conf5 = resourcesLens.modify(optScript.toList ::: _)(conf4)
+    val conf5 = addOptMainScript match {
+      case true => resourcesLens.modify(optScript.toList ::: _)(conf4)
+      case false => conf4
+    }
+    
+    /* CONFIG 6: Finalize Scope */
+    val conf6 = scopeLens.modify {
+      case Left(scope) => Right(Scope(scope))
+      case right => right
+    }(conf5)
 
-    conf5
+    conf6
   }
 
   def readConfigs(

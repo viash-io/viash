@@ -20,6 +20,7 @@ package io.viash.config
 import io.viash.runners.Runner
 import io.viash.helpers.status.Status
 import io.viash.engines.Engine
+import scala.language.implicitConversions
 
 final case class AppliedConfig(
   config: Config,

@@ -33,6 +33,8 @@ import java.nio.file.Paths
 import io.viash.ViashNamespace
 
 object NextflowHelper {
+  import io.viash.config.encodeConfig
+
   private def readSource(s: String) = {
     val path = s"io/viash/runners/nextflow/$s"
     Source.fromResource(path).getLines().mkString("\n")
@@ -65,7 +67,7 @@ object NextflowHelper {
       includeMeta = true,
       filterInputs = true
     )
-    val code = res.readWithInjection(argsAndMeta, config).get
+    val code = res.readWithInjection(argsAndMeta, config)
     val escapedCode = Bash.escapeString(code, allowUnescape = true)
       .replace("\\", "\\\\")
       .replace("'''", "\\'\\'\\'")

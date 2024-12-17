@@ -17,11 +17,6 @@
 
 package io.viash.helpers.status
 
-// object BuildStatus extends Enumeration {
-//   type BuildStatus = Value
-//   val ParseError, Disabled, BuildError, TestError, TestMissing, Success = Value
-// }
-
 sealed trait Status {
   val isError: Boolean
   val color: String

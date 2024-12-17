@@ -10,6 +10,7 @@ import io.circe.yaml.{parser => YamlParser}
 import io.viash.helpers.circe._
 import io.viash.helpers.data_structures._
 import io.viash.helpers.Logger
+import io.viash.config.arguments.decodeStringArgument
 
 class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)

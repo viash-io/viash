@@ -33,6 +33,7 @@ import io.viash.helpers.LoggerOutput
 import io.viash.helpers.LoggerLevel
 import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
+import io.viash.config.{ScopeEnum, Scope}
 
 object ViashNamespace extends Logging {
 
@@ -52,12 +53,18 @@ object ViashNamespace extends Logging {
         list.foreach(f)
   }
 
-  def targetOutputPath(targetDir: String, runnerId: String, config: Config): String =
-    targetOutputPath(targetDir, runnerId, config.namespace, config.name)
+  def targetOutputPath(targetDir: String, runnerId: String, config: Config): String = {
+    val scope = config.scope match {
+      case Left(value) => Scope(value)
+      case Right(value) => value
+    }
+    targetOutputPath(targetDir, runnerId, scope.target, config.namespace, config.name)
+  }
 
   def targetOutputPath(
     targetDir: String,
     runnerId: String,
+    scope: ScopeEnum,
     namespace: Option[String],
     name: String
   ): String = {
@@ -65,7 +72,12 @@ object ViashNamespace extends Logging {
       case Some(ns) => ns + "/"
       case None => ""
     }
-    s"$targetDir/$runnerId/$nsStr$name"
+    val scopeStr = scope match {
+      case ScopeEnum.Test => "_test/"
+      case ScopeEnum.Private => "_private/"
+      case ScopeEnum.Public => ""
+    }
+    s"$targetDir/$scopeStr$runnerId/$nsStr$name"
   }
 
   def build(
