@@ -231,14 +231,21 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         | map{ tup ->
           tup.take(4)
         }
-
-      safeJoin(chPublishFiles, chArgsWithDefaults, key_)
+      
+      def chPublishFilesWithDefaults = safeJoin(chPublishFiles, chArgsWithDefaults, key_)
         // input tuple format: [join_id, channel_id, id, new_state, orig_state, ...]
         // output tuple format: [id, new_state, orig_state]
         | map { tup ->
           tup.drop(2).take(3)
         }
-        | publishFilesByConfig(key: key_, config: meta.config)
+      
+      meta.config.allArguments.findAll { 
+        it.type == "file" && it.direction == "output"
+      }.each{par ->
+        chPublishFilesWithDefaults
+          | publishFilesByConfig(key: key_, par: par)
+      }
+        
     }
     // Join the state from the events that were emitted from different channels
     def chJoined = chInitialOutputProcessed
