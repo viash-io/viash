@@ -14,7 +14,7 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto" "filter", "runIf", "fromState", "toState", "args", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "filter", "runIf", "fromState", "toState", "args", "debug"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
