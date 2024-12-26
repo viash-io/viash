@@ -41,7 +41,6 @@ workflow base {
     
     | step1.run(
       key: "step1bis",
-      // TODO: renameKeys, map, mapId, mapData will be deprecated
       // TODO: test filter, runIf
       map: { id, state -> 
         def new_state = state + [
@@ -50,18 +49,18 @@ workflow base {
         ]
         [id, new_state]
       },
-      mapId: { id ->
-        "${id}_modified"
-      },
-      mapData: { state -> 
-        state + [another_key: "bar"]
-      },
-      renameKeys: ["original_id": "oid"],
       fromState: { id, state ->
         ["input": state.file]
       },
       toState: { id, output, state ->
-        state + ["step1bis_output": output.output]
+        def original_id = state.original_id
+        def new_state = state.findAll{k, v -> k != "original_id"}
+        
+        ["${id}_modified", state + 
+          ["step1bis_output": output.output] + 
+          ["another_key": "bar"] + 
+          ["oid": original_id]
+        ]
       }
     )
 

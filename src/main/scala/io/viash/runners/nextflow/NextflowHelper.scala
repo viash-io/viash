@@ -109,22 +109,6 @@ object NextflowHelper {
       |  // auto settings
       |  auto: readJsonBlob('''${jsonPrinter.print(autoJson)}'''),
       |
-      |  // Apply a map over the incoming tuple
-      |  // Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`
-      |  map: null,
-      |
-      |  // Apply a map over the ID element of a tuple (i.e. the first element)
-      |  // Example: `{ id -> id + "_foo" }`
-      |  mapId: null,
-      |
-      |  // Apply a map over the data element of a tuple (i.e. the second element)
-      |  // Example: `{ data -> [ input: data.output ] }`
-      |  mapData: null,
-      |
-      |  // Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements)
-      |  // Example: `{ pt -> pt.drop(1) }`
-      |  mapPassthrough: null,
-      |
       |  // Filter the channel
       |  // Example: `{ tup -> tup[0] == "foo" }`
       |  filter: null,
