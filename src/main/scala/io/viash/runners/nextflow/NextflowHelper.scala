@@ -118,11 +118,6 @@ object NextflowHelper {
       |  // Example: `{ tup -> tup[0] != "skip_this" }`
       |  runIf: null,
       |
-      |  // Rename keys in the data field of the tuple (i.e. the second element)
-      |  // Will likely be deprecated in favour of `fromState`.
-      |  // Example: `[ "new_key": "old_key" ]`
-      |  renameKeys: null,
-      |
       |  // Fetch data from the state and pass it to the module without altering the current state.
       |  // 
       |  // `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 
