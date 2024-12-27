@@ -56,6 +56,12 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
 
   /* combine arguments into channel */
   /**********************************/
+
+  // Fetch default values for arguments
+  def defaultArgs = config.allArguments
+    .findAll { it.containsKey("default") }
+    .collectEntries { [ it.plainName, it.default ] }
+
   def processedParams = paramSets.indexed().collect{ index, tup ->
     // Process ID
     def id = tup[0] ?: globalID
@@ -67,7 +73,7 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
     assert id != null: "Each parameter set should have at least an 'id'"
 
     // Process params
-    def parValues = globalParams + tup[1]
+    def parValues = defaultArgs + globalParams + tup[1]
     // // Remove parameters which are null, if the default is also null
     // parValues = parValues.collectEntries{paramName, paramValue ->
     //   parameterSettings = config.functionality.allArguments.find({it.plainName == paramName})
