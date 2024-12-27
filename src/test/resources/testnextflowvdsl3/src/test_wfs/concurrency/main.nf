@@ -17,7 +17,6 @@ workflow base {
       fromState: ["input": "file"],
       toState: ["step1_output": "output"]
     )
-    
     | view{ id, state ->
       def num = state.num
 
@@ -38,29 +37,24 @@ workflow base {
         null
       }
     }
-    
+    | map {id, state ->
+      def new_state = state + ["oid": id]
+      [id, new_state]
+    }
     | step1.run(
       key: "step1bis",
       // TODO: test filter, runIf
-      map: { id, state -> 
-        def new_state = state + [
-          "oid": id,
-          "extra_key": "foo"
-        ]
-        [id, new_state]
-      },
       fromState: { id, state ->
         ["input": state.file]
       },
       toState: { id, output, state ->
         def original_id = state.original_id
         def new_state = state.findAll{k, v -> k != "original_id"}
-        
-        ["${id}_modified", state + 
+        def return_state = state + 
           ["step1bis_output": output.output] + 
-          ["another_key": "bar"] + 
+          ["another_key": "bar", "extra_key": "foo"] + 
           ["oid": original_id]
-        ]
+        return_state
       }
     )
 
@@ -68,10 +62,7 @@ workflow base {
       def num = state.num
 
       // check id
-      assert id == "num${num}_modified": "id should be 'num${num}_modified'. Found: '$id'"
-
-      // check orig id
-      assert state.original_id == "num$num": "original_id should be 'num$num'. Found: '${state.original_id}'"
+      assert id == "num${num}": "id should be 'num${num}'. Found: '$id'"
 
       // check file text
       def file_text = state.file.toFile().readLines()[0]
