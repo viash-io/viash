@@ -117,12 +117,16 @@ def _processFromState(fromState, key_, config_) {
     assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
     assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
     def fromStateMap = fromState.clone()
-    def requiredInputNames = meta.config.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    def allArgumentNames = config_.allArguments.collect{it.plainName}
+    def requiredInputNames = config_.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     fromState = { it ->
       def state = it[1]
       assert state instanceof Map : "Error in module '$key_': the state is not a Map"
       def data = fromStateMap.collectMany{newkey, origkey ->
+        if (!allArgumentNames.contains(newkey)) {
+          throw new Exception("Error processing fromState for '$key_': invalid argument '$newkey'")
+        }
         // check whether newkey corresponds to a required argument
         if (state.containsKey(origkey)) {
           [[newkey, state[origkey]]]
