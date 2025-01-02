@@ -2,7 +2,7 @@
 
 ## NEW FEATURES
 
-* `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` now raises an error (PR #793). 
+* `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
