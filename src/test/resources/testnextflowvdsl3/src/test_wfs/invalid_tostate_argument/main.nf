@@ -16,10 +16,10 @@ workflow base {
         "file": "file",
       ],
       toState: [
-          "step1_output": "output",
-          "file": "file",
-          "newkey": "thisargumentdoesnotexist" // This should raise
-        ]
+        "step1_output": "output",
+        "file": "file",
+        "newkey": "thisargumentdoesnotexist" // This should raise
+      ]
     )
 
 
