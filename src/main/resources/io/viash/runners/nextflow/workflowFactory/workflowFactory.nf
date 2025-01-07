@@ -118,6 +118,15 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       chPassthrough = Channel.empty()
     }
 
+    def chPassthroughElse = null
+    if (workflowArgs.runElse_){
+      chPassthroughElse = chPassthrough.map{tup ->
+        workflowArgs.runElse_(tup[0], tup[1])
+      }
+    } else {
+      chPassthroughElse = Channel.empty() 
+    }
+
     def chRunFiltered = workflowArgs.filter ?
       chRun | filter{workflowArgs.filter(it)} :
       chRun
