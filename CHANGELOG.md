@@ -10,6 +10,8 @@ TODO add summary
   `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`,
   `passthroughFlatMap` and `passthroughFilter` (PR #792).
 
+* `Nextflow` runner: `channelFromParams` now adds default arguments specified in the viash config (PR #792)
+
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
 Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
