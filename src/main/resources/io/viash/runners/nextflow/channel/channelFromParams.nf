@@ -120,7 +120,7 @@ private _channelFromParams(Map params, Map config) {
  */
 def channelFromParams(Map params, Map config) {
   log.warn "channelFromParams is deprecated and will be removed in Viash 0.10.0. ",
-    "Nextflow workflows can now be build into standalone components where parsed parameters ",
+    "Nextflow workflows can now be built into standalone components where parsed parameters ",
     "are automatically provided to the input channel."
   return _channelFromParams(params, config) 
 }
