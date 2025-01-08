@@ -45,5 +45,5 @@ resources:
   - type: nextflow_script
     path: main.nf
     entrypoint: run_wf
-platforms:
+runners:
   - type: nextflow
