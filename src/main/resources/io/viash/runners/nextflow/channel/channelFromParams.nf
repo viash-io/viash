@@ -95,6 +95,12 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
   return processedParams
 }
 
+
+private _channelFromParams(Map params, Map config) {
+  def processedParams = _paramsToParamSets(params, config)
+  return Channel.fromList(processedParams)
+}
+
 /**
  * Parse nextflow parameters based on settings defined in a viash config 
  * and return a nextflow channel.
@@ -113,6 +119,8 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
  *
  */
 def channelFromParams(Map params, Map config) {
-  def processedParams = _paramsToParamSets(params, config)
-  return Channel.fromList(processedParams)
+  log.warn "channelFromParams is deprecated and will be removed in Viash 0.10.0. ",
+    "Nextflow workflows can now be built into standalone components where parsed parameters ",
+    "are automatically provided to the input channel."
+  return _channelFromParams(params, config) 
 }

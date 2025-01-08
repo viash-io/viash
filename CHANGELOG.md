@@ -4,6 +4,17 @@
 
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
 
+## BREAKING CHANGES
+
+* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` (PR #792).
+
+* `WorkflowHelper.nf` for the `Nextflow` runner: remove `DataflowHelper` functions: 
+  `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`,
+  `passthroughFlatMap` and `passthroughFilter` (PR #792).
+
+* `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
+
+
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
 Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.

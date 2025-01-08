@@ -1,4 +1,5 @@
-name: pipeline3
+name: empty_workflow
+namespace: test_wfs
 argument_groups:
   - name: Inputs
     arguments:
@@ -11,18 +12,6 @@ argument_groups:
         must_exist: true
         type: file
         example: input.txt
-  - name: Outputs
-    arguments:
-      - name: "--output"
-        description: Write the parameters to a json file.
-        required: true
-        type: file
-        direction: output
-      - name: "--log"
-        description: An optional log file.
-        required: false
-        type: file
-        direction: output
   - name: Arguments
     arguments:
       - name: "--id"
@@ -55,6 +44,6 @@ argument_groups:
 resources:
   - type: nextflow_script
     path: main.nf
-    entrypoint: base
-engines:
-  - type: native
+    entrypoint: run_wf
+runners:
+  - type: nextflow
