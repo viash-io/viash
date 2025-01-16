@@ -33,11 +33,32 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
   // todo: fetch key from run args
   def key_ = config.name
   
+  def allowedExtra = [
+    "override_container_registry",
+    "publishDir",
+    "publish-dir",
+    "publish_dir",
+    "transcripts-dir",
+    "transcriptsDir",
+    "param_list",
+    "id"
+  ]
   /* parse regular parameters (not in param_list)  */
   /*************************************************/
   def globalParams = config.allArguments
     .findAll { params.containsKey(it.plainName) }
     .collectEntries { [ it.plainName, params[it.plainName] ] }
+  // Get the non-overwrite params. This could result in false negatives:
+  // these arguments are not checked for validity.
+  // Note that overrides can only be set in `params` and not through an
+  // entry in param_list.
+  def nonOverwriteParams = params.findAll{k, v -> !k.contains("__")}
+  // When the parameter name is formatted using camelCase,
+  // a second parameter is created with the same value using
+  // kebab-case, and vice versa.
+  def configParamNames = config.allArguments.collect{it.plainName}
+  def leftover = nonOverwriteParams.keySet().collect() - configParamNames - allowedExtra
+  assert leftover.isEmpty(): "Found invalid parameter(s) for ${key_}: ${leftover}"
   def globalID = params.get("id", null)
 
   /* process params_list arguments */
@@ -65,6 +86,9 @@ private List<Tuple2<String, Map<String, Object>>> _paramsToParamSets(Map params,
       id = "stub${index}"
     }
     assert id != null: "Each parameter set should have at least an 'id'"
+
+    def extraArgs = tup[1].keySet().collect() - ["id"] - configParamNames
+    assert extraArgs.isEmpty(): "Found invalid parameter(s) in param_list, id ${id}: ${extraArgs}"
 
     // Process params
     def parValues = globalParams + tup[1]
