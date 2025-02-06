@@ -281,8 +281,8 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           stateToAddMultiple.each {k, v ->
             def currentKey = return_state.getOrDefault(k, [])
             def currentKeyList = currentKey instanceof List ? currentKey : [currentKey]
-            currentKeyList.add(v)
-            return_state[k] = currentKeyList
+            def newKey = currentKeyList + v
+            return_state[k] = newKey
           }
           return return_state
         }
