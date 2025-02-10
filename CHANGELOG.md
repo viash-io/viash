@@ -1,3 +1,9 @@
+# Viash 0.9.2 (xxx)
+
+## BUG FIXES
+
+* `NextflowRunner`: Fix values for 'multiple: true' arguments being added to state as nested arrays (PR #798).
+
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
 Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
