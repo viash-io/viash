@@ -16,7 +16,8 @@ workflow base {
         def newState = [
           "step1_output": output.output, 
           "num": state.num,
-          "file": state.file
+          "file": state.file,
+          "multiple_strings": output.multiple_strings
         ]
         return newState
       }
@@ -26,6 +27,9 @@ workflow base {
 
       // check id
       assert id == "num$num": "id should be 'num$num'. Found: '$id'"
+
+      // check multiple output
+      assert state.multiple_strings == ["a", "b"], "Expected multiple_strings to be ['a', 'b'], found ${state.multiple_strings}"
 
       // check file text
       def file_text = state.file.toFile().readLines()[0]
