@@ -278,9 +278,11 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
 
           // Add `multiple: true` arguments
           def stateToAddMultiple = state_to_add.findAll{k, v -> multipleArgs.contains(k)}
+          // note: this is a stateful modification, but because return_state was created only a few lines above,
+          // it won't affect previous state dicts.
           stateToAddMultiple.each {k, v ->
             def currentValue = return_state.getOrDefault(k, [])
-            def currentValueList = currentValue instanceof List ? currentValue.clone() : [currentValue]
+            def currentValueList = currentValue instanceof List ? currentValue : [currentValue]
             return_state[k] = currentValueList + v
           }
           return return_state
