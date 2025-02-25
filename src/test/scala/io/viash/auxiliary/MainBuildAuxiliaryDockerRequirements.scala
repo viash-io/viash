@@ -83,11 +83,11 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "fortune"
+        "--file", "/usr/bin/fortune"
       )
     )
 
-    assert(output.output == "")
+    assert(output.output.contains("/usr/bin/fortune doesn't exist."))
   }
 
   test("setup; check docker requirements using apk to add the fortune package", DockerTest) { f =>
@@ -107,11 +107,11 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "fortune"
+        "--file", "/usr/bin/fortune"
       )
     )
 
-    assert(output.output == "/usr/bin/fortune\n")
+    assert(output.output.contains("/usr/bin/fortune exists."))
   }
 
   test("setup; check docker requirements using apk but with an empty list", DockerTest) { f =>
@@ -131,11 +131,11 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "fortune"
+        "--file", "/usr/bin/fortune"
       )
     )
 
-    assert(output.output == "")
+    assert(output.output.contains("/usr/bin/fortune doesn't exist."))
   }
 }
 
@@ -596,11 +596,11 @@ class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxil
     val output = Exec.runCatch(
       Seq(
         executableRequirementsFile.toString,
-        "--which", "fortune"
+        "--file", "/usr/bin/fortune"
       )
     )
 
-    assert(output.output == "")
+    assert(output.output.contains("/usr/bin/fortune doesn't exist."))
   }
 
   test("test_setup; check the fortune package is added for the test option", DockerTest) { f =>
