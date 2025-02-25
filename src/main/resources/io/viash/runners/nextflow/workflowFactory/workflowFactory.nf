@@ -269,8 +269,8 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         def newJoinIdUnique = newJoinId[0]
         def newState = states.inject([:]){ old_state, state_to_add ->
           def stateToAddNoMultiple = state_to_add.findAll{k, v -> !multipleArgs.contains(k)}
-          // First add non multiple arguments
 
+          // First add non multiple arguments
           def overlap = old_state.keySet().intersect(stateToAddNoMultiple.keySet())
           assert overlap.isEmpty() : "ID $id: multiple entries for " + 
             " argument(s) $overlap were emitted."
@@ -279,10 +279,9 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           // Add `multiple: true` arguments
           def stateToAddMultiple = state_to_add.findAll{k, v -> multipleArgs.contains(k)}
           stateToAddMultiple.each {k, v ->
-            def currentKey = return_state.getOrDefault(k, [])
-            def currentKeyList = currentKey instanceof List ? currentKey : [currentKey]
-            currentKeyList.add(v)
-            return_state[k] = currentKeyList
+            def currentValue = return_state.getOrDefault(k, [])
+            def currentValueList = currentValue instanceof List ? currentValue.clone() : [currentValue]
+            return_state[k] = currentValueList + v
           }
           return return_state
         }
