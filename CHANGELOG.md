@@ -5,7 +5,7 @@ It will be re-introduced in a future release with fixed functionality.
 
 ## BUG FIXES
 
-* `Nextflow` runner: restore previous behavior (PR #xxx). 
+* `Nextflow` runner: restore previous behavior (PR #799). 
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
