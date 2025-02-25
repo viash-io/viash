@@ -1,3 +1,12 @@
+# Viash 0.9.2 (2025-02-25): Hotfix for broken workflow outputs
+
+Undo some changes introduced in the previous build as it breaks things.
+It will be re-introduced in a future release with fixed functionality.
+
+## BUG FIXES
+
+* `Nextflow` runner: restore previous behavior (PR #xxx). 
+
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
 Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
