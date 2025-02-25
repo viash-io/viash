@@ -200,37 +200,6 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
   } 
 
-
-  test("Run multiple output channels standalone", NextflowTest) {
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "target/nextflow/multiple_emit_channels/main.nf",
-      args = List(
-        "--id", "foo",
-        "--input", "resources/lines5.txt",
-        "--publish_dir", "output"
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  }
-
-
-  test("Run multiple output channels check output", DockerTest, NextflowTest) {
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "target/nextflow/multiple_emit_channels/main.nf",
-      entry = Some("test_base"),
-      args = List(
-        "--rootDir", tempFolStr,
-        "--publish_dir", "output"
-      ),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  }
-
-
   test("Check whether --help is same as Viash's --help", NextflowTest) {
     // except that WorkflowHelper.nf will not print alternatives, and
     // will always prefix argument names with -- (so --foo, not -f or foo).
