@@ -14,6 +14,9 @@
 
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
 
+## MINOR CHANGES
+
+* `Executable`: Add more info to the --help (PR #802).
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
