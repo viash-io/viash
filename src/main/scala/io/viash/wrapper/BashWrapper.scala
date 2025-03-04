@@ -52,49 +52,86 @@ object BashWrapper {
     )
   }
 
-  def store(name: String, env: String, value: String, multiple_sep: Option[String]): Array[String] = {
-    if (multiple_sep.isDefined) {
-      s"""if [ -z "$$$env" ]; then
-         |  $env=$value
-         |else
-         |  $env="$$$env${multiple_sep.get}"$value
-         |fi""".stripMargin.split("\n")
-    } else {
-      Array(
-        s"""[ -n "$$$env" ] && ViashError Bad arguments for option \\'$name\\': \\'$$$env\\' \\& \\'$$2\\' - you should provide exactly one argument for this option. && exit 1""",
-        env + "=" + value
-      )
-    }
-  }
-
-  def argStore(
-    name: String,
-    plainName: String,
-    store: String,
+  /**
+   * Generate a flag parser for arguments of the form --arg value (by default)
+   * 
+   * @param argName The name of the argument.
+   * @param envName The name of the environment variable to store the value in.
+   * @param value Where the value of the argument is stored during parsing.
+   * @param argsConsumed The number of arguments consumed by this argument.
+   * @param matchKey The key to match the argument with.
+   * @param multiple_sep The separator to use when splitting the value into multiple values.
+   */
+  private def generateParser(
+    matchKey: String,
+    argName: String,
+    envName: String,
+    value: String,
     argsConsumed: Int,
     multiple_sep: Option[String] = None
   ): String = {
-    argsConsumed match {
-      case num if num > 1 =>
-        s"""        $name)
-           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
-           |            [ $$# -lt $argsConsumed ] && ViashError Not enough arguments passed to $name. Use "--help" to get more information on the parameters. && exit 1
-           |            shift $argsConsumed
-           |            ;;""".stripMargin
-      case _ =>
-        s"""        $name)
-           |            ${this.store(name, plainName, store, multiple_sep).mkString("\n            ")}
-           |            shift $argsConsumed
-           |            ;;""".stripMargin
-    }
-    
+
+    s"""        ${matchKey})
+        |            ViashParseArgumentValue "${argName}" "${envName}" "${multiple_sep.isDefined}" "${value}"
+        |            shift ${argsConsumed}
+        |            ;;""".stripMargin
   }
 
-  def argStoreSed(name: String, plainName: String, multiple_sep: Option[String] = None): String = {
-    argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, multiple_sep)
+  /**
+   * Helper function for generating a flag parser for arguments of the form --arg ...
+   */
+  private def generateFlagParser(
+    argName: String,
+    envName: String,
+    multiple_sep: Option[String] = None
+  ): String = {
+    generateParser(
+      argName = argName,
+      envName = envName,
+      matchKey = argName,
+      value = "$2",
+      argsConsumed = 2,
+      multiple_sep = multiple_sep
+    )
   }
 
-  def spaceCode(str: String): String = {
+  /**
+   * Helper function for generating a flag parser for arguments of the form --arg=...
+   */
+  private def generateFlagWithEqualsParser(
+    argName: String,
+    envName: String,
+    multiple_sep: Option[String] = None
+  ): String = {
+    generateParser(
+      argName = argName,
+      matchKey = argName + "=*", 
+      envName = envName,
+      value = "$(ViashRemoveFlags \"$1\")",
+      argsConsumed = 1,
+      multiple_sep = multiple_sep
+    )
+  }
+
+  /**
+   * Helper function for generating a flag parser for boolean arguments of the form --arg
+   */
+  private def generateBooleanFlagParser(
+    argName: String,
+    envName: String,
+    value: Boolean
+  ): String = {
+    generateParser(
+      argName = argName,
+      envName = envName,
+      matchKey = argName,
+      value = value.toString,
+      argsConsumed = 1,
+      multiple_sep = None
+    )
+  }
+
+  private def spaceCode(str: String): String = {
     if (str != "") {
       "\n" + str + "\n"
     } else {
@@ -229,34 +266,22 @@ object BashWrapper {
 
     // generate script modifiers
     val helpMods = generateHelp(config)
-    val computationalRequirementMods = generateComputationalRequirements(config)
+    val reqMods = generateComputationalRequirements(config)
     val parMods = generateParsers(args)
     val execMods = mainResource match {
       case Some(_: Executable) => generateExecutableArgs(args)
       case _ => BashWrapperMods()
     }
+    val depMods = generateDependencies(config)
+    val workDirMods = generateWorkDir(argsMetaAndDeps)
 
     // combine
-    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ computationalRequirementMods
+    val allMods = helpMods ++ parMods ++ mods ++ execMods ++ reqMods ++ depMods ++ workDirMods
 
     // generate header
     val header = Helper.generateScriptHeader(config)
       .map(h => Escaper(h, newline = true))
       .mkString("# ", "\n# ", "")
-
-    val (localDependencies, remoteDependencies) = config.dependencies
-      .partition(d => d.isLocalDependency)
-    val localDependenciesStrings = localDependencies.map{ d =>
-      // relativize the path of the main component to the local dependency
-      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
-      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
-      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
-      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
-    }
-    val remoteDependenciesStrings = remoteDependencies.map{ d =>
-      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
-    }
-    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
 
     /* GENERATE BASH SCRIPT */
     s"""#!/usr/bin/env bash
@@ -276,12 +301,15 @@ object BashWrapper {
        |  VIASH_TEMP=$${VIASH_TEMP:-/tmp}
        |fi
        |
-       |# define helper functions
+       |# bash helper functions start -----------------------------------
        |${Bash.ViashQuote}
        |${Bash.ViashRemoveFlags}
        |${Bash.ViashSourceDir}
        |${Bash.ViashFindTargetDir}
        |${Bash.ViashLogging}
+       |${Bash.ViashParseArgumentValue}
+       |${Bash.ViashRenderYaml}
+       |# bash helper functions end -------------------------------------
        |
        |# find source folder of this component
        |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
@@ -296,10 +324,13 @@ object BashWrapper {
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
        |
+       |# preparse bashwrapper mods start ------------------------------
        |${spaceCode(allMods.preParse)}
+       |# preparse bashwrapper mods end --------------------------------
+       |
        |${generateHelp(allMods.helpStrings)}
        |# initialise array
-       |VIASH_POSITIONAL_ARGS=''
+       |VIASH_POSITIONAL_ARGS=()
        |
        |while [[ $$# -gt 0 ]]; do
        |    case "$$1" in
@@ -324,25 +355,36 @@ object BashWrapper {
        |            exit
        |            ;;
        |${allMods.parsers}
-       |        *)  # positional arg or unknown option
-       |            # since the positional args will be eval'd, can we always quote, instead of using ViashQuote
-       |            VIASH_POSITIONAL_ARGS="$$VIASH_POSITIONAL_ARGS '$$1'"
-       |            [[ $$1 == -* ]] && ViashWarning $$1 looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use "--help" to get more information on the parameters.
+       |        *)
+       |            # positional arg or unknown option
+       |            VIASH_POSITIONAL_ARGS+=("$$1")
+       |            [[ $$1 == -* ]] && ViashWarning "Value '$$1' looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use \\"--help\\" to get more information on the parameters."
        |            shift # past argument
        |            ;;
        |    esac
        |done
        |
        |# parse positional parameters
-       |eval set -- $$VIASH_POSITIONAL_ARGS
-       |${spaceCode(allMods.postParse)}${spaceCode(allMods.preRun)}
+       |set -- "$${VIASH_POSITIONAL_ARGS[@]}"
        |
-       |# set dependency paths
-       |$dependenciesStr
+       |# postparse bashwrapper mods start -----------------------------
+       |${spaceCode(allMods.postParse)}
+       |# postparse bashwrapper mods end -------------------------------
+       |
+       |# prerun bashwrapper mods start --------------------------------
+       |${spaceCode(allMods.preRun)}
+       |# prerun bashwrapper mods end ----------------------------------
        |
        |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
        |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
-       |${spaceCode(allMods.postRun)}${spaceCode(allMods.last)}
+       |
+       |# postrun bashwrapper mods start -------------------------------
+       |${spaceCode(allMods.postRun)}
+       |# postrun bashwrapper mods end ---------------------------------
+       |
+       |# last bashwrapper mods start ----------------------------------
+       |${spaceCode(allMods.last)}
+       |# last bashwrapper mods end ------------------------------------
        |
        |exit 0
        |""".stripMargin
@@ -355,22 +397,32 @@ object BashWrapper {
   }
 
   private def generateParsers(params: List[Argument[_]]) = {
-    // gather parse code for params
+    // no parsers should be generated for positional arguments, so remove these first
     val wrapperParams = params.filterNot(_.flags == "")
+    
+    // gather parse code for params
     val parseStrs = wrapperParams.map {
-      case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
-        val fv = bo.flagValue.get
+      case param: BooleanArgumentBase if param.flagValue.isDefined =>
+        val flagValue = param.flagValue.get
 
         // params of the form --param
-        val part1 = argStore(bo.name, bo.VIASH_PAR, fv.toString, 1)
+        val part1 = generateBooleanFlagParser(
+          argName = param.name,
+          envName = param.VIASH_PAR,
+          value = flagValue
+        )
         // Alternatives
-        val moreParts = bo.alternatives.map(alt => {
-          argStore(alt, bo.VIASH_PAR, fv.toString, 1)
+        val moreParts = param.alternatives.map(alt => {
+          generateBooleanFlagParser(
+            argName = alt,
+            envName = param.VIASH_PAR,
+            value = flagValue
+          )
         })
 
         (part1 :: moreParts).mkString("\n")
       case param =>
-        val multisep =
+        val multiple_sep =
           if (param.multiple && param.direction == Input) {
             Some(param.multiple_sep)
           } else {
@@ -378,18 +430,31 @@ object BashWrapper {
           }
 
         // params of the form --param ...
-        val part1 = param.flags match {
-          case "---" | "--" | "-" => argStore(param.name, param.VIASH_PAR, "\"$2\"", 2, multisep)
-          case "" => Nil
-        }
+        val part1 = generateFlagParser(
+          argName = param.name,
+          envName = param.VIASH_PAR,
+          multiple_sep = multiple_sep
+        )
+
         // params of the form --param=..., except -param=... is not allowed
         val part2 = param.flags match {
-          case "---" | "--" => List(argStoreSed(param.name, param.VIASH_PAR, multisep))
-          case "-" | "" => Nil
+          case "---" | "--" =>
+            List(
+              generateFlagWithEqualsParser(
+                argName = param.name,
+                envName = param.VIASH_PAR,
+                multiple_sep = multiple_sep
+              )
+            )
+          case "-" => Nil
         }
         // Alternatives
-        val moreParts = param.alternatives.map(alt => {
-          argStore(alt, param.VIASH_PAR, "\"$2\"", 2, multisep)
+        val moreParts = param.alternatives.map(alternativeFlag => {
+          generateFlagParser(
+            argName = alternativeFlag,
+            envName = param.VIASH_PAR,
+            multiple_sep = multiple_sep
+          )
         })
 
         (part1 :: part2 ::: moreParts).mkString("\n")
@@ -403,17 +468,21 @@ object BashWrapper {
       } else {
         "\n# storing leftover values in positionals\n" +
         positionals.map { param =>
-          if (param.multiple && param.direction == Input) {
-            s"""while [[ $$# -gt 0 ]]; do
-              |  ${store("positionalArg", param.VIASH_PAR, "\"$1\"", Some(param.multiple_sep)).mkString("\n  ")}
-              |  shift 1
-              |done""".stripMargin
-          } else {
-            s"""if [[ $$# -gt 0 ]]; then
-              |  ${param.VIASH_PAR}="$$1"
-              |  shift 1
-              |fi"""
-          }
+          val storeStr =
+            s"""ViashParseArgumentValue "${param.name}" "${param.VIASH_PAR}" "${param.multiple}" "$$1""""
+
+          val (begin, mid, end) =
+            if (param.multiple && param.direction == Input) {
+              ("while", "do", "done")
+            } else {
+              ("if", "then", "fi")
+            }
+
+          s"""# processing positional values for '${param.name}'
+             |${begin} [[ $$# -gt 0 ]]; ${mid}
+             |  ${storeStr}
+             |  shift 1
+             |${end}""".stripMargin
         }.mkString("\n")
       }
 
@@ -477,10 +546,8 @@ object BashWrapper {
                  |fi""".stripMargin
             } else if (direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
-                 |  for file in $$${param.VIASH_PAR}; do
-                 |    unset IFS
+                 |  for file in $${${param.VIASH_PAR}[@]}; do
                  |    if [ ! -e "$$file" ]; then
                  |      ViashError "$direction file '$$file' does not exist."
                  |      exit 1
@@ -513,10 +580,8 @@ object BashWrapper {
           createParentFiles.map { param =>
             if (param.multiple && param.direction == Input) {
               s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-                 |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                  |  set -f
-                 |  for file in $$${param.VIASH_PAR}; do
-                 |    unset IFS
+                 |  for file in $${${param.VIASH_PAR}[@]}; do
                  |    if [ ! -d "$$(dirname "$$file")" ]; then
                  |      mkdir -p "$$(dirname "$$file")"
                  |    fi
@@ -618,14 +683,12 @@ object BashWrapper {
         case param if param.multiple && param.direction == Input =>
           val checkStart = 
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
-               |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
                |  set -f
-               |  for val in $$${param.VIASH_PAR}; do
+               |  for val in $${${param.VIASH_PAR}[@]}; do
                |"""
           val checkEnd =
             s"""  done
                |  set +f
-               |  unset IFS
                |fi
                |""".stripMargin
           // TODO add extra spaces for typeCheck, minCheck, maxCheck
@@ -664,37 +727,47 @@ object BashWrapper {
       }
 
     def checkChoices[T](param: Argument[T], allowedChoices: List[T]) = {
-      val allowedChoicesString = allowedChoices.mkString(param.multiple_sep.toString)
+      val allowedChoicesString = allowedChoices.map(choice => "\"" + Bash.escapeString(choice.toString, quote = true) + "\"").mkString(" ")
 
       param match {
         case _ if param.multiple && param.direction == Input =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
-             |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$${val}${param.multiple_sep}" ]]; then
-             |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-             |      exit 1
-             |    fi
-             |  done
-             |  set +f
-             |  unset IFS
-             |fi
-             |""".stripMargin
+            |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
+            |  set -f
+            |  for val in $${${param.VIASH_PAR}}[@]}; do
+            |    found=0
+            |    for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |      if [ "$$val" == "$$choice" ]; then
+            |        found=1
+            |        break
+            |      fi
+            |    done
+            |    if [ $$found -eq 0 ]; then
+            |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+            |      exit 1
+            |    fi
+            |  done
+            |  set +f
+            |fi
+            |""".stripMargin
         case _ =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  ${param.VIASH_PAR}_CHOICES=("$allowedChoicesString")
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
-             |  set -f
-             |  if ! [[ "${param.multiple_sep}$${${param.VIASH_PAR}_CHOICES[*]}${param.multiple_sep}" =~ "${param.multiple_sep}$$${param.VIASH_PAR}${param.multiple_sep}" ]]; then
-             |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
-             |    exit 1
-             |  fi
-             |  set +f
-             |  unset IFS
-             |fi
-             |""".stripMargin
+            |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
+            |  found=0
+            |  for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |    if [ "$$${param.VIASH_PAR}" == "$$choice" ]; then
+            |      found=1
+            |      break
+            |    fi
+            |  done
+            |  set -f
+            |  if [ $$found -eq 0 ]; then
+            |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+            |    exit 1
+            |  fi
+            |  set +f
+            |fi
+            |""".stripMargin
       }
     }
     val choicesCheckList = 
@@ -745,8 +818,8 @@ object BashWrapper {
     val parsers = 
       compArgs.flatMap{ case (flag, env, _) => 
         List(
-          argStore(flag, env, "\"$2\"", 2),
-          argStoreSed(flag, env)
+          generateFlagParser(argName = flag, envName = env),
+          generateFlagWithEqualsParser(argName = flag, envName = env)
         )
       }.map("\n" + _).mkString
 
@@ -833,10 +906,8 @@ object BashWrapper {
         if (param.multiple && param.direction == Input) {
           s"""
              |if [ ! -z "$$${param.VIASH_PAR}" ]; then
-             |  IFS='${Bash.escapeString(param.multiple_sep, quote = true)}'
              |  set -f
-             |  for val in $$${param.VIASH_PAR}; do
-             |    unset IFS
+             |  for val in $${${param.VIASH_PAR}[@]}; do
              |    VIASH_EXECUTABLE_ARGS="$$VIASH_EXECUTABLE_ARGS$flag '$$val'"
              |  done
              |  set +f
@@ -854,4 +925,72 @@ object BashWrapper {
     )
   }
 
+  private def generateDependencies(
+    config: Config
+  ): BashWrapperMods = {
+    if (config.dependencies.isEmpty) {
+      return BashWrapperMods()
+    }
+
+    val (localDependencies, remoteDependencies) = config.dependencies
+      .partition(d => d.isLocalDependency)
+
+    val localDependenciesStrings = localDependencies.map{ d =>
+      // relativize the path of the main component to the local dependency
+      // TODO ideally we'd already have 'thisPath' precalculated but until that day, calculate it here
+      val thisPath = ViashNamespace.targetOutputPath("", "invalid_runner_name", config)
+      val relativePath = Paths.get(thisPath).relativize(Paths.get(d.configInfo.getOrElse("executable", "")))
+      s"${d.VIASH_DEP}=\"$$VIASH_META_RESOURCES_DIR/$relativePath\""
+    }
+    val remoteDependenciesStrings = remoteDependencies.map{ d =>
+      s"${d.VIASH_DEP}=\"$$VIASH_TARGET_DIR/dependencies/${d.subOutputPath.get}/${Paths.get(d.configInfo.getOrElse("executable", "not_found")).getFileName()}\""
+    }
+    val dependenciesStr = (localDependenciesStrings ++ remoteDependenciesStrings).mkString("\n")
+
+    BashWrapperMods(
+      preRun = "\n# set dependency paths\n" + dependenciesStr
+    )
+  }
+  
+  private def generateWorkDir(argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
+    val renderStrs = argsMetaAndDeps.map{case (key, args) =>
+      val renderYamlStrs = args.map(arg => {
+        val multiple = arg.multiple && arg.direction == Input
+        val value =
+          if (multiple) {
+            s"$${${arg.VIASH_PAR}[@]}"
+          } else {
+            s"$${${arg.VIASH_PAR}:-UNDEFINED}"
+          }
+        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
+      })
+      s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"
+         |${renderYamlStrs.mkString("\n")}""".stripMargin
+    }
+
+    val preRun = 
+      s"""VIASH_WORK_DIR=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viash-run-testbash-XXXXXX")
+         |function clean_up {
+         |  rm -rf "$$VIASH_WORK_DIR"
+         |}
+         |function interrupt {
+         |  echo -e "\nCTRL-C Pressed..."
+         |  exit 1
+         |}
+         |trap clean_up EXIT
+         |trap interrupt INT SIGINT
+         |
+         |# Create params yaml
+         |VIASH_WORK_PARAMS="$$VIASH_WORK_DIR/params.yaml"
+         |touch "$$VIASH_WORK_PARAMS"
+         |
+         |${renderStrs.mkString("\n\n")}
+         |
+         |cat "$$VIASH_WORK_PARAMS" # cat it for now
+         |""".stripMargin
+    // todo: generate script here as well?
+    BashWrapperMods(
+      preRun = preRun
+    )
+  }
 }
