@@ -40,12 +40,11 @@ jobs:
       run: |
         viash_version=$(bin/viash --version | cut -d ' ' -f 2)
         echo "Detected Viash version: $viash_version"
-
-        echo "viash_version=$viash_version" >> $GITHUB_OUTPUT
-
-        # fetch relevant section from changelog that starts with '# Viash {version}' until the next section
+        echo "viash_version=$viash_version" >> "$GITHUB_OUTPUT"
+        
+        # fetch relevant changelog section
         changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;next}/^# /{flag=0}flag" CHANGELOG.md)
-        echo "changelog_section=$changelog_section" >> $GITHUB_OUTPUT
+        echo "changelog_section=$changelog_section" >> "$GITHUB_OUTPUT"
 
     - name: Create and push tag (error if already available)
       run: |
