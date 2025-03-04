@@ -2,6 +2,10 @@
 
 This release fixes an edge case where output arguments for subworkflows were malformed.
 
+## MINOR CHANGES
+
+* CI: Added a CI for creating a release (PR #805).
+
 ## BUG FIXES
 
 * `NextflowRunner`: Fix issue where output arguments for subworkflows were being returned as nested arrays instead of simple arrays (PR #798, PR #800).
