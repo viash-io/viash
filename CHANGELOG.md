@@ -1,4 +1,8 @@
-# Viash 0.9.2 (xxx)
+# Viash 0.9.2 (2025-03-04): Bugfix in Nextflow runner
+
+## MINOR CHANGES
+
+* CI: Added a CI for creating a release (PR #805).
 
 ## BUG FIXES
 
