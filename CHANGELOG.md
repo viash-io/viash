@@ -1,4 +1,6 @@
-# Viash 0.9.2 (2025-03-04): Bugfix in Nextflow runner
+# Viash 0.9.2 (2025-03-04) Bug fix release
+
+This release fixes an edge case where output arguments for subworkflows were malformed.
 
 ## MINOR CHANGES
 
