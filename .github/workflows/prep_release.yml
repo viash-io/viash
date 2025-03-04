@@ -49,53 +49,18 @@ jobs:
         echo "$changelog_section" >> "$GITHUB_OUTPUT"
         echo "GITHUB_EOF" >> "$GITHUB_OUTPUT"
 
-    - name: Create and push tag (error if already available)
-      run: |
-        git tag -a ${{ steps.get_version.outputs.viash_version }} -m "Viash ${{ steps.get_version.outputs.viash_version }}"
-        git push origin ${{ steps.get_version.outputs.viash_version }}
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Create release
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Viash ${{ steps.get_version.outputs.viash_version }}
+        tag_name: ${{ steps.get_version.outputs.viash_version }}
+        target_commitish: ${{ github.sha }}
+        name: Viash ${{ steps.get_version.outputs.viash_version }}
+        body: ${{ steps.get_version.outputs.changelog_section }}
         draft: true
-        prerelease: true
-        body: |
-          ${{ steps.get_version.outputs.changelog_section }}
-
-    - name: Upload Executable
-      if: success() && steps.create_release.outcome == 'success'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/viash
-        asset_name: viash
-        asset_content_type: application/octet-stream
-
-    - name: Upload Schema
-      if: success() && steps.create_release.outcome == 'success'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/schema.json
-        asset_name: schema.json
-        asset_content_type: application/json
-    
-    - name: Upload viash_install
-      if: success() && steps.create_release.outcome == 'success'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/viash_install
-        asset_name: viash_install
-        asset_content_type: application/octet-stream
+        fail_on_unmatched_files: true
+        files: |
+          bin/viash
+          bin/schema.json
+          bin/viash_install
