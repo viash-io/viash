@@ -39,7 +39,13 @@ jobs:
       id: get_version
       run: |
         viash_version=$(bin/viash --version | cut -d ' ' -f 2)
+        echo "Detected Viash version: $viash_version"
+
         echo "viash_version=$viash_version" >> $GITHUB_OUTPUT
+
+        # fetch relevant section from changelog that starts with '# Viash {version}' until the next section
+        changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;next}/^# /{flag=0}flag" CHANGELOG.md)
+        echo "changelog_section=$changelog_section" >> $GITHUB_OUTPUT
 
     - name: Create and push tag (error if already available)
       run: |
@@ -55,9 +61,7 @@ jobs:
         draft: true
         prerelease: true
         body: |
-          Release of Viash version ${{ steps.get_version.outputs.viash_version }}.
-          
-          TODO: Copy the release notes from the CHANGELOG.md file.
+          ${{ steps.get_version.outputs.changelog_section }}
 
     - name: Upload Executable
       if: success() && steps.create_release.outcome == 'success'
