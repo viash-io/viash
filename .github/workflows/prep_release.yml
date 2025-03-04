@@ -1,0 +1,95 @@
+name: Prepare Viash Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+    
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up sbt
+      uses: sbt/setup-sbt@v1
+
+    - name: Set up Scala
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y scala
+
+    - name: Build Viash
+      run: |
+        ./configure
+        make
+        make tools
+        bin/viash export json_schema --format=json --output=bin/schema.json
+
+    - name: Get Version
+      id: get_version
+      run: echo "::set-output name=VERSION::${{ github.event.inputs.version }}"
+
+    - name: Create tag (error if already available)
+      run: |
+        git tag ${{ steps.get_version.outputs.VERSION }}
+        git push origin ${{ steps.get_version.outputs.VERSION }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Viash ${{ steps.get_version.outputs.VERSION }}
+        draft: true
+        prerelease: true
+        body: |
+          Release of Viash version ${{ steps.get_version.outputs.VERSION }}.
+          
+          TODO: Copy the release notes from the CHANGELOG.md file.
+
+    - name: Upload Executable
+      if: success() && steps.create_release.outcome == 'success'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/viash
+        asset_name: viash
+        asset_content_type: application/octet-stream
+
+    - name: Upload Schema
+      if: success() && steps.create_release.outcome == 'success'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/schema.json
+        asset_name: schema.json
+        asset_content_type: application/json
+    
+    - name: Upload viash_install
+      if: success() && steps.create_release.outcome == 'success'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/viash_install
+        asset_name: viash_install
+        asset_content_type: application/octet-stream
