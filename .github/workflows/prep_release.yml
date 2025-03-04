@@ -2,10 +2,6 @@ name: Prepare Viash Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release'
-        required: true
     
 jobs:
   build-and-release:
@@ -41,23 +37,25 @@ jobs:
 
     - name: Get Version
       id: get_version
-      run: echo "::set-output name=VERSION::${{ github.event.inputs.version }}"
-
-    - name: Create tag (error if already available)
       run: |
-        git tag ${{ steps.get_version.outputs.VERSION }}
-        git push origin ${{ steps.get_version.outputs.VERSION }}
+        viash_version=$(bin/viash --version | cut -d ' ' -f 2)
+        echo "viash_version=$viash_version" >> $GITHUB_OUTPUT
+
+    - name: Create and push tag (error if already available)
+      run: |
+        git tag -a ${{ steps.get_version.outputs.viash_version }} -m "Viash ${{ steps.get_version.outputs.viash_version }}"
+        git push origin ${{ steps.get_version.outputs.viash_version }}
 
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       with:
         tag_name: ${{ github.ref }}
-        release_name: Viash ${{ steps.get_version.outputs.VERSION }}
+        release_name: Viash ${{ steps.get_version.outputs.viash_version }}
         draft: true
         prerelease: true
         body: |
-          Release of Viash version ${{ steps.get_version.outputs.VERSION }}.
+          Release of Viash version ${{ steps.get_version.outputs.viash_version }}.
           
           TODO: Copy the release notes from the CHANGELOG.md file.
 
