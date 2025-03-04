@@ -43,7 +43,7 @@ jobs:
         echo "viash_version=$viash_version" >> "$GITHUB_OUTPUT"
         
         # fetch relevant changelog section
-        changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;next}/^# /{flag=0}flag" CHANGELOG.md)
+        changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;print;next}/^# /{flag=0}flag" CHANGELOG.md)
         
         echo "changelog_section<<GITHUB_EOF" >> "$GITHUB_OUTPUT"
         echo "$changelog_section" >> "$GITHUB_OUTPUT"
