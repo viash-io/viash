@@ -1,6 +1,19 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.2 (2025-03-04) Bug fix release
 
-TODO add summary
+This release fixes an edge case where output arguments for subworkflows were malformed.
+
+## MINOR CHANGES
+
+* CI: Added a CI for creating a release (PR #805).
+
+## BUG FIXES
+
+* `NextflowRunner`: Fix issue where output arguments for subworkflows were being returned as nested arrays instead of simple arrays (PR #798, PR #800).
+
+# Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
+
+Workflows can now publish results asynchronously by emitting multiple output channels. These results will then be merged into a published output behind the screens.
+Dependencies will use the new dedicated git url instead of the top level domain name.
 
 ## NEW FEATURES
 

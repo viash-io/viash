@@ -12,14 +12,7 @@ workflow base {
       ["num$num", [ file: file ], ["num": num]]
     }
     | sub_workflow.run(
-      toState: {id, output, state -> 
-        def newState = [
-          "step1_output": output.output, 
-          "num": state.num,
-          "file": state.file
-        ]
-        return newState
-      }
+      toState: ["output", "required_int", "multiple_strings"]
     )
     | view{ id, state, extra ->
       def num = extra.num
@@ -31,12 +24,18 @@ workflow base {
       def file_text = state.file.toFile().readLines()[0]
       assert file_text == "num: $num": "file text should be 'num: $num'. Found: '$file_text'"
 
-      // check step1_output text
-      def step1_output_text = state.step1_output.toFile().readLines()[0]
-      assert step1_output_text == "num: $num": "step1_output text should be 'num: $num'. Found: '$step1_output_text'"
+      // check output text
+      def output_text = state.output.toFile().readLines()[0]
+      assert output_text == "num: $num": "output text should be 'num: $num'. Found: '$output_text'"
+
+      // check required int
+      assert state.required_int == 1: "Expected required_int to be 1, found ${state.required_int}"
+      
+      // check multiple output
+      assert state.multiple_strings == ["a", "b"]: "Expected multiple_strings to be ['a', 'b'], found ${state.multiple_strings}"
 
       if (num == 0) {
-        "after step1: id: $id, state: $state"
+        "after sub_workflow: id: $id, state: $state"
       } else {
         null
       }
