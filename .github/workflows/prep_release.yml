@@ -44,7 +44,10 @@ jobs:
         
         # fetch relevant changelog section
         changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;next}/^# /{flag=0}flag" CHANGELOG.md)
-        echo "changelog_section=$changelog_section" >> "$GITHUB_OUTPUT"
+        
+        echo "changelog_section<<GITHUB_EOF" >> "$GITHUB_OUTPUT"
+        echo "$changelog_section" >> "$GITHUB_OUTPUT"
+        echo "GITHUB_EOF" >> "$GITHUB_OUTPUT"
 
     - name: Create and push tag (error if already available)
       run: |
