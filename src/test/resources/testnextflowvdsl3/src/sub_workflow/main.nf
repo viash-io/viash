@@ -11,7 +11,7 @@ workflow base {
       }
     )
     | map {id, state ->
-      def newState = state + ["required_int": 1]
+      def newState = state + [required_int: 1, multiple_strings: ["a", "b"]]
       [id, newState]
     }
     

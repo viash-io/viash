@@ -10,6 +10,11 @@ arguments:
     type: integer
     direction: output
     required: true
+  - name: "--multiple_strings"
+    direction: output
+    type: string
+    multiple: true
+    required: true
 resources:
   - type: nextflow_script
     path: main.nf
