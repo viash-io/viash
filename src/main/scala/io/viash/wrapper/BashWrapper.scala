@@ -494,7 +494,7 @@ object BashWrapper {
       } else {
         "\n# check whether required parameters exist\n" +
           reqParams.map { param =>
-            s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
+            s"""if [ -z $${${param.VIASH_PAR}+x} ] || [ "$${${param.VIASH_PAR}}" == "@@VIASH_UNDEFINED@@" ]; then
                |  ViashError '${param.name}' is a required argument. Use "--help" to get more information on the parameters.
                |  exit 1
                |fi""".stripMargin
@@ -790,10 +790,19 @@ object BashWrapper {
           choicesCheckList.mkString("\n")
       }
 
+    // unset variables that are set to @@VIASH_UNDEFINED@@
+    val unsetUndefinedStr = 
+      "\n# unset variables that are set to @@VIASH_UNDEFINED@@\n" +
+      params.map { param =>
+        s"""if [ "$$${param.VIASH_PAR}" == "@@VIASH_UNDEFINED@@" ]; then
+           |  unset ${param.VIASH_PAR}
+           |fi""".stripMargin
+      }.mkString("\n")
+
     // return output
     BashWrapperMods(
       parsers = parseStrs,
-      preRun = joinSections(List(positionalStr, reqCheckStr, defaultsStrs, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr)),
+      preRun = joinSections(List(positionalStr, reqCheckStr, defaultsStrs, unsetUndefinedStr, reqInputFilesStr, typeMinMaxCheckStr, choiceCheckStr, createParentStr)),
       last = reqOutputFilesStr
     )
   }
