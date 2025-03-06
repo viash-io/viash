@@ -9,7 +9,7 @@
 # * If the value is equal to UNDEFINED, it is replaced with
 #   @@VIASH_UNDEFINED@@.
 # * If the value is quoted, the quotes are removed.
-
+#
 # If the argument is multiple: true:
 #
 # * If the value is equal to UNDEFINED, it is replaced with
