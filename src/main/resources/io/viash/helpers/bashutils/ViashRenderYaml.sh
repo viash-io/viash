@@ -36,40 +36,31 @@ function ViashRenderYamlKeyValue {
   local multiple="$3"
   shift 3
 
-  local out="  ${key}: "
+  local out="  ${key}:"
 
-  if [ "$1" == "UNDEFINED" ]; then
-    out+="null"
+  if [ $# -eq 1 ] && [ "$1" == "@@VIASH_UNDEFINED@@" ]; then
+    out+=" null"
     echo "$out"
     return
   fi
 
-  if [ "$multiple" == "true" ]; then
-    out+="["
-  fi
-
-  first_elem=1
-
-  for value in "$@"; do
-    if [ $first_elem -eq 1 ]; then
-      first_elem=0
+  while [ $# -gt 0 ]; do
+    if [ "$multiple" == "true" ]; then
+      out+=$'\n    - '
     else
-      out+=", "
+      out+=" "
     fi
-    if [ "$value" == "UNDEFINED_ITEM" ]; then
+    if [ "$1" == "@@VIASH_UNDEFINED_ITEM@@" ]; then
       out+="null"
-    elif [[ "$type" == "string" || "$type" == "file" ]]; then
-      out+="$(ViashRenderYamlQuotedValue "$key" "$value")"
-    elif [[ "$type" == "boolean" || "$type" == "boolean_true" || "$type" == "boolean_false" ]]; then
-      out+="$(ViashRenderYamlBooleanValue "$key" "$value")"
+    elif [ "$type" == "string" ] || [ "$type" == "file" ]; then
+      out+="$(ViashRenderYamlQuotedValue "$key" "$1")"
+    elif [ "$type" == "boolean" ] || [ "$type" == "boolean_true" ] || [ "$type" == "boolean_false" ]; then
+      out+="$(ViashRenderYamlBooleanValue "$key" "$1")"
     else
-      out+="$(ViashRenderYamlUnquotedValue "$key" "$value")"
+      out+="$(ViashRenderYamlUnquotedValue "$key" "$1")"
     fi
+    shift
   done
-
-  if [ "$multiple" == "true" ]; then
-    out+="]"
-  fi
 
   echo "$out"
 }

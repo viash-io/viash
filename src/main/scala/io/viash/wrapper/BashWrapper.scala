@@ -956,12 +956,7 @@ object BashWrapper {
     val renderStrs = argsMetaAndDeps.map{case (key, args) =>
       val renderYamlStrs = args.map(arg => {
         val multiple = arg.multiple && arg.direction == Input
-        val value =
-          if (multiple) {
-            s"$${${arg.VIASH_PAR}[@]}"
-          } else {
-            s"$${${arg.VIASH_PAR}:-UNDEFINED}"
-          }
+        val value = s"$${${arg.VIASH_PAR}[@]:-@@VIASH_UNDEFINED@@}"
         s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
       })
       s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"

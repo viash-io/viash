@@ -1,22 +1,9 @@
-# todo: align tests with
-# https://github.com/viash-io/viash/issues/705#issuecomment-2208448576
-
-assert_value_equal() {
-  name="$1"
-  expected="$2"
-  shift 2
-  values="$@"
-  if [ "$expected" != "$values" ]; then
-    echo "Expected '$name' to be equal to '$expected', but got '$values'"
-    # exit 1
-  fi
-}
+#!/bin/bash
 
 # load helper functions
 source src/main/resources/io/viash/helpers/bashutils/ViashParseArgumentValue.sh
 source src/main/resources/io/viash/helpers/bashutils/ViashLogging.sh
-
-
+source src/test/resources/io/viash/helpers/bashutils/helpers.sh
 
 ## TEST1: test simple strings
 
