@@ -15,7 +15,7 @@ TODO add summary
 
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
 
-* `Nextflow` runner: remove deprecated `runComponents` (PR #xxx).
+* `Nextflow` runner: remove deprecated `runComponents` (PR #811).
 
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
