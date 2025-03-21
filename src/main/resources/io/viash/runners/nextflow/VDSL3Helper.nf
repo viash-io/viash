@@ -325,7 +325,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   // create process from temp file
   def binding = new nextflow.script.ScriptBinding([:])
   def session = nextflow.Nextflow.getSession()
-  def parser = new nextflow.script.ScriptParser(session)
+  def parser = _getScriptLoader()
     .setModule(true)
     .setBinding(binding)
   def moduleScript = parser.runScript(tempFile)
@@ -337,4 +337,25 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
 
   // retrieve and return process from meta
   return scriptMeta.getProcess(procKey)
+}
+
+// use Reflection to get a ScriptParser / ScriptLoader
+//   <25.02.0-edge: new nextflow.script.ScriptParser(session)
+//   >=25.02.0-edge: nextflow.script.ScriptLoaderFactory.create(session)
+def _getScriptLoader() {
+  // try using the old method
+  try {
+    Class<?> scriptParserClass = Class.forName('nextflow.script.ScriptParser')
+    return scriptParserClass.getDeclaredConstructor(nextflow.Session).newInstance(session)
+  } catch (ClassNotFoundException e) {
+    // else try with the new method
+    try {
+      Class<?> scriptLoaderFactoryClass = Class.forName('nextflow.script.ScriptLoaderFactory')
+      def createMethod = scriptLoaderFactoryClass.getDeclaredMethod('create', nextflow.Session)
+      return createMethod.invoke(null, session) // null because create is static
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException e2) {
+      // Handle the case where neither class is found
+      throw new Exception("Neither nextflow.script.ScriptParser nor nextflow.script.ScriptLoaderFactory could be found. Is this a compatible Nextflow version?", e2)
+    }
+  }
 }
