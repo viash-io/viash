@@ -1,6 +1,24 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+
 TODO add summary
+
+
+## NEW FEATURES
+
+* `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
+
+## BREAKING CHANGES
+
+* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` (PR #792).
+
+* `WorkflowHelper.nf` for the `Nextflow` runner: remove `DataflowHelper` functions: 
+  `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`,
+  `passthroughFlatMap` and `passthroughFilter` (PR #792).
+
+* `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
+
+# Viash 0.9.3 (yyyy-MM-dd): TODO Add title
 
 ## BUG FIXES
 
@@ -18,6 +36,7 @@ This release fixes an edge case where output arguments for subworkflows were mal
 ## BUG FIXES
 
 * `NextflowRunner`: Fix issue where output arguments for subworkflows were being returned as nested arrays instead of simple arrays (PR #798, PR #800).
+
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 

@@ -66,45 +66,4 @@ workflow base {
   // : Channel[(String, File)]
 }
 
-workflow test_map_mapdata_mapid_arguments {
-  channelValue
-  | view{ "DEBUG1: $it" }
-  | step1.run(
-    auto: [simplifyOutput: true]
-  )
-  | view{ "DEBUG2: $it" }
-  | step2.run(
-    // test map
-    map: { [ it[0], [ "input1" : it[1], "input2" : it[2] ] ] },
-    auto: [simplifyOutput: true]
-  )
-  | view { "DEBUG3: $it" }
-  | step3.run(
-    // test id
-    mapId: {it + "_bar"},
-    // test mapdata
-    mapData: { [ "input": [ it.output1 , it.output2 ] ] },
-    auto: [simplifyOutput: true]
-  )
-  /* TESTING */
-  | view{ "DEBUG4: $it"}
-  | toList()
-  | view { output_list ->
-    assert output_list.size() == 1 : "output channel should contain 1 event"
-
-    def output = output_list[0]
-    assert output.size() == 2 : "outputs should contain two elements; [id, output]"
-    def id = output[0]
-
-    // check id
-    assert id == "foo_bar" : "id should be foo_bar"
-
-    // check final output file
-    def output_str = output[1].readLines().join("\n")
-    assert output_str.matches('^11 .*$') : 'output should match ^11 .*$'
-
-    // return something to print
-    "DEBUG5: $output"
-  }
-}
 
