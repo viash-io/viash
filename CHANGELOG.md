@@ -17,6 +17,10 @@ TODO add summary
 
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
 
+## BUG FIXES
+
+* `NextflowRunner`: Make sure scripts are generated with the right extension (PR #808).
+
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
