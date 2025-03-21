@@ -731,9 +731,11 @@ object BashWrapper {
     val helpStrings = 
       """Viash built in Computational Requirements:
         |    ---cpus=INT
-        |        Number of CPUs to use
+        |        Number of CPUs to use.
         |    ---memory=STRING
         |        Amount of memory to use. Examples: 4GB, 3MiB.
+        |    $VIASH_TEMP
+        |        The temporary directory to use.
         |""".stripMargin
 
     val compArgs = List(
