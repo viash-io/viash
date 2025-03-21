@@ -4,7 +4,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `NextflowRunner`: Make sure scripts are generated with the right extension (PR #xxx). 
+* `NextflowRunner`: Make sure scripts are generated with the right extension (PR #813). 
   Backport of PR #808.
 
 
