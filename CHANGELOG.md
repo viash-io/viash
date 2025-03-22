@@ -3,6 +3,7 @@
 
 TODO add summary
 
+
 ## NEW FEATURES
 
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
@@ -21,6 +22,12 @@ TODO add summary
 
 * `NextflowRunner`: Make sure scripts are generated with the right extension (PR #808).
 
+# Viash 0.9.3 (yyyy-MM-dd): TODO Add title
+
+## BUG FIXES
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #812). This fix uses reflection
+  to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
