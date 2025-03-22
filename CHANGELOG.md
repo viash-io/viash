@@ -7,6 +7,9 @@ TODO add summary
 * `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #812). This fix uses reflection
   to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
 
+
+* `NextflowRunner`: Make sure scripts are generated with the right extension (PR #xxx). Backport of PR #808.
+
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
 This release fixes an edge case where output arguments for subworkflows were malformed.
