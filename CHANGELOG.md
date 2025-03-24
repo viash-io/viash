@@ -3,9 +3,14 @@
 
 TODO add summary
 
+
 ## NEW FEATURES
 
-* `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
+* `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
+
+* `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #xxx).
+  This allows for running a component without having to build it first.
+  Example: `viash run vsh://toolbox/v0.1.0/yq -- --input input.yaml --output output.yaml`.
 
 ## BREAKING CHANGES
 
@@ -17,6 +22,12 @@ TODO add summary
 
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
 
+# Viash 0.9.3 (yyyy-MM-dd): TODO Add title
+
+## BUG FIXES
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #812). This fix uses reflection
+  to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
