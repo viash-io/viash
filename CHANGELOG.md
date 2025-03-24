@@ -8,7 +8,7 @@ TODO add summary
 
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
 
-* `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #xxx).
+* `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
   This allows for running a component without having to build it first.
   Example: `viash run vsh://toolbox/v0.1.0/yq -- --input input.yaml --output output.yaml`.
 

@@ -26,7 +26,7 @@ import io.viash.helpers.Logging
 
 case class AutoNetConfig(
   api_version: String,
-  valid_until: String,
+  valid_until: String = "",
   provided_by: String,
   name: String,
   prefix: String,
@@ -65,17 +65,27 @@ object AutoNetConfig extends Logging {
       }
       anc match {
         case None => info(s"Failed to parse ANC from ${base}")
-        case Some(anc) => {
+        case Some(anc) if !anc.valid_until.isBlank() => {
           val now = java.time.Instant.now()
-          info(s"Now: ${now}")
-          val validUntil = java.time.Instant.parse(anc.valid_until)
-          info(s"Valid until: ${validUntil}")
+          info(s"Now: ${now}, valid_until: ${anc.valid_until}")
+          val validUntil = try {
+            java.time.Instant.parse(anc.valid_until)
+          } catch {
+            case e: java.time.format.DateTimeParseException => {
+              error(s"Failed to parse valid_until: ${anc.valid_until} in ${cachePath}")
+              return None
+            }
+          }
           if (validUntil.isBefore(now)) {
             info(s"ANC from ${base} is expired")
           } else {
             info(s"Returning cached ANC from ${base}")
             return Some(anc)
           }
+        }
+        case Some(anc) => {
+          info(s"ANC from ${base} has no expiration date")
+          return Some(anc)
         }
       }
     }

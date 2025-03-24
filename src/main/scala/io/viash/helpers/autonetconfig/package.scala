@@ -18,10 +18,12 @@
 package io.viash.helpers
 
 import io.circe.{Decoder, Encoder}
-import io.circe.derivation.{ConfiguredEnumEncoder, ConfiguredEnumDecoder}
+import io.circe.derivation.{Configuration, ConfiguredEnumEncoder, ConfiguredEnumDecoder}
 
 package object autonetconfig {
   import io.viash.helpers.circe._
+  implicit val customConfig: Configuration =
+    Configuration.default.withDefaults.withStrictDecoding
 
   implicit val encodeAutoNetConfig: Encoder.AsObject[AutoNetConfig] = deriveConfiguredEncoder
   implicit val decodeAutoNetConfig: Decoder[AutoNetConfig] = deriveConfiguredDecoder

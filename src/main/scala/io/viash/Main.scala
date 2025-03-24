@@ -259,7 +259,7 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(cli.run, packageConfig = pack1)
+        val config = readConfig(cli.run, packageConfig = pack1, allowPackageBundle = true)
         ViashRun(
           appliedConfig = config,
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
@@ -377,7 +377,8 @@ object Main extends Logging {
           cli.config.view,
           packageConfig = pack1,
           addOptMainScript = false,
-          applyRunnerAndEngine = cli.config.view.platform.isDefined || cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
+          applyRunnerAndEngine = cli.config.view.platform.isDefined || cli.config.view.runner.isDefined || cli.config.view.engine.isDefined,
+          allowPackageBundle = true
         )
         val config2 = DependencyResolver.modifyConfig(config.config, None, pack1.rootDir)
         ViashConfig.view(
@@ -477,12 +478,16 @@ object Main extends Logging {
     subcommand: ViashCommand,
     packageConfig: PackageConfig,
     addOptMainScript: Boolean = true,
-    applyRunnerAndEngine: Boolean = true
+    applyRunnerAndEngine: Boolean = true,
+    allowPackageBundle: Boolean = false
   ): AppliedConfig = {
     val packageBundleRegex = raw"vsh://(\w+)/([\w\-\.]+)/(.*)".r
     val configPath = subcommand.config() match {
-      case packageBundleRegex(package_, version, component) =>
-        fetchPackageBundle(package_, version, component)
+      case packageBundleRegex(package_, version, component) => 
+        if allowPackageBundle then
+          fetchPackageBundle(package_, version, component)
+        else 
+          throw new IllegalArgumentException("Error: Package bundles are not allowed in this context.")
       case str => str
     }
     
