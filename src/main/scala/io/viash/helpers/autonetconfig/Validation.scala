@@ -17,31 +17,7 @@
 
 package io.viash.helpers.autonetconfig
 
-case class HostsStruct(
-  http: String,
-  ssh: String,
-  sshttp: String,
-  images: String,
-  sources: String,
-  sources_type: SourcesType,
-  // sources_type: String,
-  front: String,
-  back: String,
-  back_protocol: Protocol
-  // back_protocol: String
+case class Validation(
+  length: Int,
+  pattern: String
 )
-
-enum SourcesType:
-  case Gitlab, Gitea
-
-enum Protocol:
-  case Http, Https, Auto
-
-// sealed trait Protocol
-// case object Http extends Protocol
-// case object Https extends Protocol
-// case object Auto extends Protocol
-
-// sealed trait SourcesType
-// case object Gitlab extends SourcesType
-// case object Gitea extends SourcesType

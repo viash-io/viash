@@ -40,7 +40,7 @@ import io.viash.helpers.DependencyResolver.findRemoteConfig
 import sys.process._
 import scala.jdk.CollectionConverters._
 import scala.io.Source
-import io.viash.helpers.autonetconfig.AutoNetConfigStruct
+import io.viash.helpers.autonetconfig.AutoNetConfig
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -658,7 +658,7 @@ object Main extends Logging {
 
     val etag = Try(Source.fromFile(etag_path.toString).getLines().next()).toOption
 
-    val anc = AutoNetConfigStruct.fetch("api-dev.viash-hub.dev")
+    val anc = AutoNetConfig.fetch("api-dev.viash-hub.dev")
     if (anc.isEmpty) {
       throw new RuntimeException("Error: Could not fetch ANC")
     }

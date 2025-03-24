@@ -17,7 +17,20 @@
 
 package io.viash.helpers.autonetconfig
 
-case class ValidationStruct(
-  length: Int,
-  pattern: String
+case class Hosts(
+  http: String,
+  ssh: String,
+  sshttp: String,
+  images: String,
+  sources: String,
+  sources_type: SourcesType,
+  front: String,
+  back: String,
+  back_protocol: Protocol
 )
+
+enum SourcesType:
+  case Gitlab, Gitea
+
+enum Protocol:
+  case Http, Https, Auto

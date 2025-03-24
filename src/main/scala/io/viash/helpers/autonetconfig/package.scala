@@ -23,14 +23,14 @@ import io.circe.derivation.{ConfiguredEnumEncoder, ConfiguredEnumDecoder}
 package object autonetconfig {
   import io.viash.helpers.circe._
 
-  implicit val encodeAutoNetConfig: Encoder.AsObject[AutoNetConfigStruct] = deriveConfiguredEncoder
-  implicit val decodeAutoNetConfig: Decoder[AutoNetConfigStruct] = deriveConfiguredDecoder
+  implicit val encodeAutoNetConfig: Encoder.AsObject[AutoNetConfig] = deriveConfiguredEncoder
+  implicit val decodeAutoNetConfig: Decoder[AutoNetConfig] = deriveConfiguredDecoder
 
-  implicit val encodeHostsStruct: Encoder.AsObject[HostsStruct] = deriveConfiguredEncoder
-  implicit val decodeHostsStruct: Decoder[HostsStruct] = deriveConfiguredDecoder
+  implicit val encodeHostsStruct: Encoder.AsObject[Hosts] = deriveConfiguredEncoder
+  implicit val decodeHostsStruct: Decoder[Hosts] = deriveConfiguredDecoder
 
-  implicit val encodeValidationStruct: Encoder.AsObject[ValidationStruct] = deriveConfiguredEncoder
-  implicit val decodeValidationStruct: Decoder[ValidationStruct] = deriveConfiguredDecoder
+  implicit val encodeValidationStruct: Encoder.AsObject[Validation] = deriveConfiguredEncoder
+  implicit val decodeValidationStruct: Decoder[Validation] = deriveConfiguredDecoder
 
   implicit val encodeProtocol: Encoder[Protocol] = ConfiguredEnumEncoder.derive(_.toLowerCase())
   implicit val decodeProtocol: Decoder[Protocol] = ConfiguredEnumDecoder.derive[Protocol](_.toLowerCase()).prepare {
