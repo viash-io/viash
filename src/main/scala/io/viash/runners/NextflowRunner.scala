@@ -290,7 +290,7 @@ final case class NextflowRunner(
       |
       |  helpMessage(newConfig)
       |
-      |  channelFromParams(newParams, newConfig)
+      |  _channelFromParams(newParams, newConfig)
       |    // make sure id is not in the state if id is not in the args
       |    | map {id, state ->
       |      if (!argsContainsId) {

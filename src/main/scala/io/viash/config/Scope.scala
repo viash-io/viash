@@ -25,20 +25,24 @@ enum ScopeEnum {
 
 @description(
   """Defines the scope of the component.
-    |`test`: only available during testing; components aren't published.
-    |`private`: only meant for internal use within a workflow or other component.
-    |`public`: core component or workflow meant for general use.""")
+    |
+    |- `test`: only available during testing; components aren't published
+    |- `private`: only meant for internal use within a workflow or other component
+    |- `public`: core component or workflow meant for general use""")
 case class Scope(
   @description(
-    """test: image is only used during testing and is transient
-      |private: image is published in the registry
-      |public: image is published in the registry""")
+    """Defines whether the image is published or not.
+      |
+      |- `test`: image is only used during testing and is transient
+      |- `private`: image is published in the registry
+      |- `public`: image is published in the registry""")
   image: ScopeEnum,
   @description(
-    """test: target folder is only used during testing and is transient
-      |private: target folder can be published in target/private or target/dependencies/private
-      |public: target is published in target/executable or target/nextflow"""
-  )
+    """Defines the target location of the component.
+      |
+      |- `test`: target folder is only used during testing and is transient
+      |- `private`: target folder can be published in target/_private or target/dependencies/_private
+      |- `public`: target is published in target/executable or target/nextflow""")
   target: ScopeEnum,
 )
 
