@@ -3,7 +3,6 @@
 
 TODO add summary
 
-
 ## NEW FEATURES
 
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
