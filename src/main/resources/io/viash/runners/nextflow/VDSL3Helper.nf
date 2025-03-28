@@ -342,7 +342,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
 // use Reflection to get a ScriptParser / ScriptLoader
 //   <25.02.0-edge: new nextflow.script.ScriptParser(session)
 //   >=25.02.0-edge: nextflow.script.ScriptLoaderFactory.create(session)
-def _getScriptLoader(Session session) {
+def _getScriptLoader(nextflow.Session session) {
   // try using the old method
   try {
     Class<?> scriptParserClass = Class.forName('nextflow.script.ScriptParser')
