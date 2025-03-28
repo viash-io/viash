@@ -325,7 +325,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   // create process from temp file
   def binding = new nextflow.script.ScriptBinding([:])
   def session = nextflow.Nextflow.getSession()
-  def parser = _getScriptLoader()
+  def parser = _getScriptLoader(session)
     .setModule(true)
     .setBinding(binding)
   def moduleScript = parser.runScript(tempFile)
@@ -342,7 +342,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
 // use Reflection to get a ScriptParser / ScriptLoader
 //   <25.02.0-edge: new nextflow.script.ScriptParser(session)
 //   >=25.02.0-edge: nextflow.script.ScriptLoaderFactory.create(session)
-def _getScriptLoader() {
+def _getScriptLoader(Session session) {
   // try using the old method
   try {
     Class<?> scriptParserClass = Class.forName('nextflow.script.ScriptParser')
