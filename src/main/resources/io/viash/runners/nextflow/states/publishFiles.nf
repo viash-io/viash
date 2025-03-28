@@ -42,7 +42,7 @@ process publishFilesProc {
       if (infile.toString() != outfile.toString()) {
         [
           "[ -d \"\$(dirname '${outfile.toString()}')\" ] || mkdir -p \"\$(dirname '${outfile.toString()}')\"",
-          "cp -r '${infile.toString()}' '${outfile.toString()}'"
+          "ln '${infile.toString()}' '${outfile.toString()}'"
         ]
       } else {
         // no need to copy if infile is the same as outfile
@@ -72,7 +72,6 @@ def publishFilesByConfig(Map args) {
           def id_ = tup[0]
           def state_ = tup[1] // e.g. [output: new File("myoutput.h5ad"), k: 10]
           def origState_ = tup[2] // e.g. [output: '$id.$key.foo.h5ad']
-
 
           // the processed state is a list of [key, value, inputPath, outputFilename] tuples, where
           //   - key is a String
