@@ -1,3 +1,7 @@
+# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
 # Viash 0.9.3 (2025-03-31): Support upcoming version of Nextflow
 
 The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
