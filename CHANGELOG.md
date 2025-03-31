@@ -17,6 +17,12 @@ TODO add summary
 
 * `Nextflow` runner: remove deprecated `runComponents` (PR #811).
 
+# Viash 0.9.3 (yyyy-MM-dd): TODO Add title
+
+## BUG FIXES
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #812). This fix uses reflection
+  to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
