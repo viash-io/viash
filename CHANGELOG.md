@@ -1,5 +1,8 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
+
+TODO add summary
+
 ## NEW FEATURES
 
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793). 
@@ -17,6 +20,19 @@
 ## MINOR CHANGES
 
 * `Executable`: Add more info to the --help (PR #802).
+
+# Viash 0.9.2 (2025-03-04): Bug fix release
+
+This release fixes an edge case where output arguments for subworkflows were malformed.
+
+## MINOR CHANGES
+
+* CI: Added a CI for creating a release (PR #805).
+
+## BUG FIXES
+
+* `NextflowRunner`: Fix issue where output arguments for subworkflows were being returned as nested arrays instead of simple arrays (PR #798, PR #800).
+
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 

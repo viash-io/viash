@@ -227,24 +227,23 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
         def newJoinId = join_ids.flatten().unique{a, b -> a <=> b}
         assert newJoinId.size() == 1: "Multiple events were emitted for '$id'."
         def newJoinIdUnique = newJoinId[0]
+        
+        // Merge the states from the different channels
         def newState = states.inject([:]){ old_state, state_to_add ->
-          def stateToAddNoMultiple = state_to_add.findAll{k, v -> !multipleArgs.contains(k)}
-          // First add non multiple arguments
-
-          def overlap = old_state.keySet().intersect(stateToAddNoMultiple.keySet())
-          assert overlap.isEmpty() : "ID $id: multiple entries for " + 
-            " argument(s) $overlap were emitted."
-          def return_state = old_state + stateToAddNoMultiple
-
-          // Add `multiple: true` arguments
-          def stateToAddMultiple = state_to_add.findAll{k, v -> multipleArgs.contains(k)}
-          stateToAddMultiple.each {k, v ->
-            def currentKey = return_state.getOrDefault(k, [])
-            def currentKeyList = currentKey instanceof List ? currentKey : [currentKey]
-            currentKeyList.add(v)
-            return_state[k] = currentKeyList
+          return old_state + state_to_add.collectEntries{k, v -> 
+            if (!multipleArgs.contains(k)) {
+              // if the key is not a multiple argument, we expect only one value
+              if (old_state.containsKey(k)) {
+                assert old_state[k] == v : "ID $id: multiple entries for argument $k were emitted."
+              }
+              [k, v]
+            } else {
+              // if the key is a multiple argument, append the different values into one list
+              def prevValue = old_state.getOrDefault(k, [])
+              def prevValueAsList = prevValue instanceof List ? prevValue : [prevValue]
+              [k, prevValueAsList + v]
+            }
           }
-          return return_state
         }
 
         _checkAllRequiredOuputsPresent(newState, meta.config, id, key_)
