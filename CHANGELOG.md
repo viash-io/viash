@@ -1,10 +1,16 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
 
-TODO add summary
+The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
+This release supports this change by using reflection to detect the available class.
 
 ## BUG FIXES
 
 * `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #817). Backport from Viash 0.9.3 (PR #812).
+  This fix uses reflection to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
+
+* `NextflowRunner`: Backport path handling for `meta.resources_dir` for when symlinks are used (PR #817).
 
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
