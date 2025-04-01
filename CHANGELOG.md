@@ -11,11 +11,11 @@ TODO add summary
 
 * `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` (PR #792).
 
-* `WorkflowHelper.nf` for the `Nextflow` runner: remove `DataflowHelper` functions: 
-  `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`,
-  `passthroughFlatMap` and `passthroughFilter` (PR #792).
+* `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap` and `passthroughFilter` (PR #792).
 
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
+
+* `Nextflow` runner: remove deprecated `runComponents` (PR #811).
 
 # Viash 0.9.3 (yyyy-MM-dd): TODO Add title
 
