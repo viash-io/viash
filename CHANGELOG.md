@@ -2,7 +2,7 @@
 
 ## BUG FIXES
 
-* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #xxx).
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823).
 
 # Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
 
