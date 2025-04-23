@@ -213,14 +213,19 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
 
 
   test("Whether integers can be converted to doubles", NextflowTest) {
+    // create params.yaml file
+    val paramsPath = temporaryFolder.resolve("params.yaml")
+    val paramsStr = """id: foo
+      |input: resources/lines3.txt
+      |double: 10
+      |publish_dir: integerAsDouble
+      |""".stripMargin
+    Files.write(paramsPath, paramsStr.getBytes(StandardCharsets.UTF_8))
+
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/integer_as_double/main.nf",
-      args = List(
-        "--id", "foo",
-        "--input", "resources/lines3.txt",
-        "--double", "10", // this should be an integer
-        "--publish_dir", "integerAsDouble"
-      ),
+      args = Nil,
+      paramsFile = Some(paramsPath.toString()),
       cwd = tempFolFile
     )
 
