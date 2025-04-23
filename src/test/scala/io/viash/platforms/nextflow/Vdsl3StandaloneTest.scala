@@ -211,6 +211,41 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+
+  test("Whether integers can be converted to doubles", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/integer_as_double/main.nf",
+      args = List(
+        "--id", "foo",
+        "--input", "resources/lines3.txt",
+        "--double", "10", // this should be an integer
+        "--publish_dir", "integerAsDouble"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val expectedFiles =
+      Map(
+        "state" -> "state.yaml",
+        "output" -> "output.txt", 
+      ).map{ case (id, suffix) =>
+        val path = temporaryFolder.resolve("integerAsDouble/foo.integer_as_double." + suffix)
+        (id, path)
+      }
+
+    // check if files exist
+    
+    val src = Source.fromFile(tempFolStr + "/integerAsDouble/foo.integer_as_double.output.txt")
+    try {
+      val moduleOut = src.getLines().mkString(",")
+      assert(moduleOut.equals("one,two,three,Double: 10.0"), s"Expected output 'one,two,three,10.0' but got '$moduleOut'")
+    } finally {
+      src.close()
+    }
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
