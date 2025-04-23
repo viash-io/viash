@@ -661,6 +661,7 @@ object Main extends Logging {
     val etag_path = path.resolve(s"$cacheIdentifier.etag")
     val dirPath = path.resolve(cacheIdentifier)
 
+    Files.createDirectories(path)
     val etag = Try(Source.fromFile(etag_path.toString).getLines().next()).toOption
 
     val anc = AutoNetConfig.fetch("api-dev.viash-hub.dev")
