@@ -1,3 +1,9 @@
+# Viash 0.8.8 (xxxx-xx-xx): xxxx
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #xxx).
+
 # Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
 
 The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
