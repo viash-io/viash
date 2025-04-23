@@ -106,10 +106,10 @@ def _checkArgumentType(String stage, Map par, Object value, String errorIdentifi
         // do nothing
       }
     }
-    if (value instanceof java.math.BigDecimal) {
+    if (value instanceof java.math.BigDecimal || value instanceof java.math.BigInteger) {
       value = value.doubleValue()
     }
-    if (value instanceof Float) {
+    if (value instanceof Float || value instanceof Integer || value instanceof Long) {
       value = value.toDouble()
     }
     expectedClass = value instanceof Double ? null : "Double"
