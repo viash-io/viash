@@ -66,64 +66,56 @@ def _checkArgumentType(String stage, Map par, Object value, String errorIdentifi
       foundClass = "List[${e.foundClass}]"
     }
   } else if (par.type == "string") {
-    // cast to string if need be
+    // cast to string if need be. only cast if the value is a GString
     if (value instanceof GString) {
-      value = value.toString()
+      value = value as String
     }
     expectedClass = value instanceof String ? null : "String"
   } else if (par.type == "integer") {
     // cast to integer if need be
-    if (value instanceof String) {
+    if (value !instanceof Integer) {
       try {
-        value = value.toInteger()
+        value = value as Integer
       } catch (NumberFormatException e) {
-        // do nothing
+        expectedClass = "Integer"
       }
     }
-    if (value instanceof java.math.BigInteger) {
-      value = value.intValue()
-    }
-    expectedClass = value instanceof Integer ? null : "Integer"
   } else if (par.type == "long") {
     // cast to long if need be
-    if (value instanceof String) {
+    if (value !instanceof Long) {
       try {
-        value = value.toLong()
+        value = value as Long
       } catch (NumberFormatException e) {
-        // do nothing
+        expectedClass = "Long"
       }
     }
-    if (value instanceof Integer) {
-      value = value.toLong()
-    }
-    expectedClass = value instanceof Long ? null : "Long"
   } else if (par.type == "double") {
     // cast to double if need be
-    if (value instanceof String) {
+    if (value !instanceof Double) {
       try {
-        value = value.toDouble()
+        value = value as Double
       } catch (NumberFormatException e) {
-        // do nothing
+        expectedClass = "Double"
       }
     }
-    if (value instanceof java.math.BigDecimal || value instanceof java.math.BigInteger) {
-      value = value.doubleValue()
+  } else if (par.type == "float") {
+    // cast to float if need be
+    if (value !instanceof Float) {
+      try {
+        value = value as Float
+      } catch (NumberFormatException e) {
+        expectedClass = "Float"
+      }
     }
-    if (value instanceof Float || value instanceof Integer || value instanceof Long) {
-      value = value.toDouble()
-    }
-    expectedClass = value instanceof Double ? null : "Double"
   } else if (par.type == "boolean" | par.type == "boolean_true" | par.type == "boolean_false") {
     // cast to boolean if need be
-    if (value instanceof String) {
-      def valueLower = value.toLowerCase()
-      if (valueLower == "true") {
-        value = true
-      } else if (valueLower == "false") {
-        value = false
+    if (value !instanceof Boolean) {
+      try {
+        value = value as Boolean
+      } catch (Exception e) {
+        expectedClass = "Boolean"
       }
     }
-    expectedClass = value instanceof Boolean ? null : "Boolean"
   } else if (par.type == "file" && (par.direction == "input" || stage == "output")) {
     // cast to path if need be
     if (value instanceof String) {
@@ -135,10 +127,13 @@ def _checkArgumentType(String stage, Map par, Object value, String errorIdentifi
     expectedClass = value instanceof Path ? null : "Path"
   } else if (par.type == "file" && stage == "input" && par.direction == "output") {
     // cast to string if need be
-    if (value instanceof GString) {
-      value = value.toString()
+    if (value !instanceof String) {
+      try {
+        value = value as String
+      } catch (Exception e) {
+        expectedClass = "String"
+      }
     }
-    expectedClass = value instanceof String ? null : "String"
   } else {
     // didn't find a match for par.type
     expectedClass = par.type
