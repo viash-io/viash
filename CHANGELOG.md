@@ -1,6 +1,10 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 
-TODO add summary
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #823, PR #824).
 
 # Viash 0.9.3 (2025-03-31): Support upcoming version of Nextflow
 
@@ -211,6 +215,28 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 * `json schema`: Change the '$schema' field to 'http://' instead of 'https://' (PR #768). (Some?) Json validators use this value as a token and not as a URL.
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
+
+# Viash 0.8.8 (2025-04-24): Hotfix for Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823).
+
+# Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
+
+The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
+This release supports this change by using reflection to detect the available class.
+
+## BUG FIXES
+
+* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #817). Backport from Viash 0.9.3 (PR #812).
+  This fix uses reflection to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
+
+* `NextflowRunner`: Backport path handling for `meta.resources_dir` for when symlinks are used (PR #817).
 
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
