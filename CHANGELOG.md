@@ -1,10 +1,10 @@
-# Viash 0.9.4 (yyyy-MM-dd): TODO Add title
+# Viash 0.9.4 (2025-04-24): Hotfix for how Nextflow edge
 
-TODO add summary
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
 
 ## BUG FIXES
 
-* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823, PR #824).
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #823, PR #824).
 
 # Viash 0.9.3 (2025-03-31): Support upcoming version of Nextflow
 
