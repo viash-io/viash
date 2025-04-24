@@ -15,17 +15,21 @@ e.g. from `version := "0.7.2-dev"` to `version := "0.7.2"`
 
 # Merge PR to main
 
-## Add a tag on main with the new version number
+# Release Viash
 
-# Create GitHub release
+## Run 'Prepare Viash Release' workflow on GitHub
 
-Title: 'Viash 0.7.2'
-Content: Add the full changelog entry of this release
+Select the `main` branch
 
-# Build viash and viash_install and add to the release
+## Release the prepared release
 
-Create the binaries with `make && make tools`.
-Add the files `bin/viash` and `bin/viash_install`.
+Head over releases and select the prepared release.
+
+Double check the tag version.
+
+Add the title from the changelog.md into the release notes.
+
+Select the necessary prerelease or latest release options and hit the 'publish release' button.
 
 # Update the website
 

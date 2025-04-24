@@ -1,3 +1,11 @@
+# Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #823, PR #824).
+
 # Viash 0.9.3 (2025-03-31): Support upcoming version of Nextflow
 
 The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
@@ -207,6 +215,14 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 * `json schema`: Change the '$schema' field to 'http://' instead of 'https://' (PR #768). (Some?) Json validators use this value as a token and not as a URL.
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
+
+# Viash 0.8.8 (2025-04-24): Hotfix for Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823).
 
 # Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
 
