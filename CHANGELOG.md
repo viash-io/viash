@@ -1,4 +1,6 @@
-# Viash 0.8.8 (xxxx-xx-xx): xxxx
+# Viash 0.8.8 (2025-04-24): Hotfix for how Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
 
 ## BUG FIXES
 
