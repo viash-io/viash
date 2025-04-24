@@ -216,6 +216,14 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
 
+# Viash 0.8.8 (2025-04-24): Hotfix for how Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823).
+
 # Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
 
 The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
