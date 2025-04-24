@@ -216,7 +216,7 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
 
-# Viash 0.8.8 (2025-04-24): Hotfix for how Nextflow edge
+# Viash 0.8.8 (2025-04-24): Hotfix for Nextflow edge
 
 This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
 
