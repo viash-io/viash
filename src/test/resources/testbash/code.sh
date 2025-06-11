@@ -13,7 +13,6 @@ par_multiple_output="output*.txt"
 par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
-meta_functionality_name="testbash"
 meta_resources_dir="."
 # VIASH END
 

@@ -12,7 +12,6 @@ par_output="output.txt"
 par_log="log.txt"
 par_optional="help"
 par_optional_with_default="me"
-meta_functionality_name="testbash"
 meta_resources_dir="."
 # VIASH END
 
@@ -61,7 +60,6 @@ output "multiple: |$par_multiple|"
 output "multiple_pos: |$par_multiple_pos|"
 
 output "meta_name: |$meta_name|"
-output "meta_functionality_name: |$meta_functionality_name|"
 output "meta_resources_dir: |$meta_resources_dir|"
 output "meta_cpus: |$meta_cpus|"
 output "meta_memory_b: |$meta_memory_b|"
