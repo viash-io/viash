@@ -10,5 +10,7 @@ dependencies:
   - name: step1
   - name: step1
     alias: step1_alias
-platforms:
+engines:
+  - type: native
+runners:
   - type: nextflow
