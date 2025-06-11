@@ -24,11 +24,19 @@ import java.nio.file.{Path, Paths, Files}
 @description(
   """Specifies a repository where dependency components can be found.
     |
-    | - @[local](repo_local)
-    | - @[git](repo_git)
-    | - @[github](repo_github)
-    | - @[vsh](repo_vsh)
+    | - @[local](repo_local): This package (default).
+    | - @[git](repo_git): A remote git repository.
+    | - @[github](repo_github): A remote GitHub repository.
+    | - @[vsh](repo_vsh): A Viash Hub package.
     |""")
+@exampleWithDescription(
+  """repositories:
+    |  - name: biobox
+    |    type: vsh
+    |    tag: 0.3.0
+    |""",
+    "yaml",
+    "Definition of a Viash Hub package.")
 @exampleWithDescription(
   """repositories:
     |  - name: openpipelines-bio
@@ -40,6 +48,8 @@ import java.nio.file.{Path, Paths, Files}
     "Definition of a repository in the component config or package config.")
 @exampleWithDescription(
   """dependencies:
+    |  - name: arriba
+    |    repository: vsh://biobox@0.3.0
     |  - name: qc/multiqc
     |    repository: 
     |      type: github
