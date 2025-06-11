@@ -18,7 +18,6 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // which configs to test
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
-  private val configDeprecatedArgumentGroups = getClass.getResource(s"/testbash/config_deprecated_argument_groups.vsh.yaml").getPath
 
   private val temporaryFolder = IO.makeTemp("viash_tester")
   private val tempFolStr = temporaryFolder.toString
