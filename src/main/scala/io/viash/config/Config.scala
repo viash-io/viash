@@ -21,8 +21,6 @@ import io.viash.config_mods.ConfigModParser
 import arguments._
 import resources._
 import dependencies._
-import io.viash.functionality.Functionality
-import io.viash.platforms.Platform
 import io.viash.helpers.{Git, GitInfo, IO, Logging}
 import io.viash.helpers.circe._
 import io.viash.helpers.{status => BuildStatus};
@@ -385,14 +383,6 @@ case class Config(
   package_config: Option[PackageConfig] = None,
 ) {
   @description(
-    """The @[functionality](functionality) describes the behaviour of the script in terms of arguments and resources.
-      |By specifying a few restrictions (e.g. mandatory arguments) and adding some descriptions, Viash will automatically generate a stylish command-line interface for you.
-      |""")
-  @deprecated("Functionality level is deprecated, all functionality fields are now located on the top level of the config file.", "0.9.0", "0.10.0")
-  @default("")
-  private val functionality: Functionality = Functionality("foo")
-
-  @description(
     """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
       | - @[string](arg_string)
@@ -414,17 +404,6 @@ case class Config(
   @example("__merge__: ../api/common_interface.yaml", "yaml")
   @since("Viash 0.6.3")
   private val `__merge__`: Option[File] = None
-
-  @description(
-  """A list of platforms to generate target artifacts for.
-    |
-    | - @[Native](platform_native)
-    | - @[Docker](platform_docker)
-    | - @[Nextflow](platform_nextflow)
-    |""")
-  @default("Empty")
-  @deprecated("Use 'engines' and 'runners' instead.", "0.9.0", "0.10.0")
-  private val platforms: List[Platform] = Nil
   
   /**
     * Find the runner

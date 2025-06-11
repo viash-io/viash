@@ -23,7 +23,7 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
   test("makeTemp and deleteRecursively") {
     val temp = IO.makeTemp("foo")
     assert(Files.exists(temp) && Files.isDirectory(temp))
-    assert(temp.toString.matches(".*foo[\\w]+"), "Temporary directory name should be randomized, strategy can differ between platforms.")
+    assert(temp.toString.matches(".*foo[\\w]+"), "Temporary directory name should be randomized, strategy can differ between engines.")
 
     IO.deleteRecursively(temp)
     assert(!Files.exists(temp))

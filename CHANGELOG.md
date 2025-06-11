@@ -8,13 +8,11 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` (PR #792).
+* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` arguments (PR #792).
 
-* `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap` and `passthroughFilter` (PR #792).
+* `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap`,  `passthroughFilter`, `channelFromParams`, `runComponents` (PRs #792, #811).
 
-* `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
-
-* `Nextflow` runner: remove deprecated `runComponents` (PR #811).
+* Deprecate `functionality` and `platforms`.
 
 ## BUG FIXES
 
