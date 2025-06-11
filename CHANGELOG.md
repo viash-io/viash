@@ -18,6 +18,10 @@ TODO add summary
 
 * `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
 
+## MINOR FIXES
+
+* `Executable`: Add more info to the --help (PR #802).
+
 # Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 
 This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
