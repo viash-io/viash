@@ -1,6 +1,5 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-
 TODO add summary
 
 ## NEW FEATURES
@@ -16,6 +15,11 @@ TODO add summary
 * `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
 
 * `Nextflow` runner: remove deprecated `runComponents` (PR #811).
+
+## MINOR CHANGES
+
+* `Executable`: Add more info to the --help (PR #802).
+
 
 # Viash 0.9.3 (yyyy-MM-dd): TODO Add title
 
