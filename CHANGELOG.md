@@ -12,7 +12,7 @@ TODO add summary
 
 * `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap`,  `passthroughFilter`, `channelFromParams`, `runComponents` (PRs #792, #811).
 
-* Deprecate `functionality` and `platforms`.
+* Remove deprecated functionality `functionality` and `platforms` (PR #832).
 
 ## BUG FIXES
 
