@@ -53,20 +53,6 @@ final case class DockerEngine(
   @example("image: \"bash:4.0\"", "yaml")
   image: String,
 
-  @description("Name of a start container's [organization](https://docs.docker.com/docker-hub/orgs/).")
-  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
-  organization: Option[String],
-
-  @description("The URL to the a [custom Docker registry](https://docs.docker.com/registry/) where the start container is located.")
-  @example("registry: https://my-docker-registry.org", "yaml")
-  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
-  registry: Option[String] = None,
-
-  @description("Specify a Docker image based on its tag.")
-  @example("tag: 4.0", "yaml")
-  @deprecated("Use the full container name in `image` instead.", "0.9.0", "0.10.0")
-  tag: Option[String] = None,
-
   @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Advanced usage only.")
   @example("target_image: myfoo", "yaml")
   target_image: Option[String] = None,
@@ -199,13 +185,6 @@ final case class DockerEngine(
     )
 
     /* Fetch from image name */
-    // TODO: once registry, organization and tag are removed, `fromImageInfo.toString()` is always equal to `image` so it can be removed.
-    val fromImageInfo = Docker.getImageInfo(
-      name = Some(image),
-      registry = registry,
-      organization = organization,
-      tag = tag
-    )
 
     /* Construct Dockerfile */
     val requirements = setup ::: { if (testing) test_setup else Nil } ::: List(labelReq)
@@ -215,7 +194,7 @@ final case class DockerEngine(
     val entrypointStr = Docker.listifyOneOrMore(entrypoint).map(s => s"\nENTRYPOINT $s").getOrElse("")
     val cmdStr = Docker.listifyOneOrMore(cmd).map(s => s"\nCMD $s").getOrElse("")
 
-    s"""FROM $fromImageInfo$entrypointStr$cmdStr
+    s"""FROM $image$entrypointStr$cmdStr
         |${runCommands.mkString("\n")}
         |""".stripMargin
   }

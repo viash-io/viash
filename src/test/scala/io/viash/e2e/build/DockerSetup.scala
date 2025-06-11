@@ -148,7 +148,7 @@ class DockerSetup extends AnyFunSuite with BeforeAndAfterAll {
 
     // Run the code
     // prepare the environment
-    // override the functionality name & version so we don't have collisions with other docker images
+    // override the component name & version so we don't have collisions with other docker images
     val stdout = TestHelper.testMain(
       "build",
       "--engine", "docker",

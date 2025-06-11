@@ -10,5 +10,7 @@ dependencies:
   - name: step1
   - name: step2
   - name: step3
-platforms:
+engines:
+  - type: native
+runners:
   - type: nextflow

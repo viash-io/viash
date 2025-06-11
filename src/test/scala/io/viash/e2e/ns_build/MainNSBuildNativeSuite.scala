@@ -118,9 +118,8 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   test("Check uniqueness of component names, same name, different namespace") {
     val compStr =
-      """functionality:
-        |  name: comp
-        |  namespace: %s
+      """name: comp
+        |namespace: %s
         |""".stripMargin
     val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
     IO.write(compStr.format("ns1"), tempSrcDir.resolve("config1.vsh.yaml"))
@@ -140,9 +139,8 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   test("Check uniqueness of component names, different name, same namespace") {
     val compStr =
-      """functionality:
-        |  name: %s
-        |  namespace: ns
+      """name: %s
+        |namespace: ns
         |""".stripMargin
     val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
     IO.write(compStr.format("comp1"), tempSrcDir.resolve("config1.vsh.yaml"))
@@ -162,9 +160,8 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   test("Check uniqueness of component names, same name, same namespace") {
     val compStr =
-      """functionality:
-        |  name: %s
-        |  namespace: ns
+      """name: %s
+        |namespace: ns
         |""".stripMargin
     val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
     IO.write(compStr.format("comp"), tempSrcDir.resolve("config1.vsh.yaml"))
@@ -184,9 +181,8 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
   test("Check uniqueness of component names, same name, same namespace - multiple duplicates") {
     val compStr =
-      """functionality:
-        |  name: %s
-        |  namespace: ns
+      """name: %s
+        |namespace: ns
         |""".stripMargin
     val tempSrcDir = IO.makeTemp("viash_ns_build_check_uniqueness_src")
     IO.write(compStr.format("comp1"), tempSrcDir.resolve("config1.vsh.yaml"))

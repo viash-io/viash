@@ -39,7 +39,7 @@ class MainNSExecNativeSuite extends AnyFunSuite {
         "ns", "exec",
         "--apply_runner",
         "--apply_engine",
-        "echo _{functionality-name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
+        "echo _{name}_ -{dir}- !{path}! ~{engine}~ ={namespace}=+\\;"
       )
     val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
     val stderr = testOutput.stderr.replaceAll(nsPath, "[nsPath]")
@@ -88,7 +88,7 @@ class MainNSExecNativeSuite extends AnyFunSuite {
     val testOutput = TestHelper.testMain(
       workingDir = Some(workingDir),
       "ns", "exec",
-      "echo {} {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {functionality-name} {name} {namespace}"
+      "echo {} {path} {abs-path} {dir} {abs-dir} {main-script} {abs-main-script} {name} {namespace}"
     )
 
     val stdout = testOutput.stdout.replaceAll(nsPath, "[nsPath]")
@@ -99,7 +99,7 @@ class MainNSExecNativeSuite extends AnyFunSuite {
         s"""src/$component/$configYaml src/$component/$configYaml $nsPathRegex/src/$component/$configYaml
            |src/$component $nsPathRegex/src/$component
            |src/$component/code\\.py $nsPathRegex/src/$component/code\\.py
-           |$component $component testns
+           |$component testns
            |""".stripMargin.replace("\n", " ").strip()
       )
       assert(stderrRegex.findFirstIn(stderr).isDefined, s"\nRegex: $stderrRegex; text: \n$stderr")

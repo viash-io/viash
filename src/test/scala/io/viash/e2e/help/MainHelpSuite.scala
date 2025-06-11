@@ -41,7 +41,7 @@ class MainHelpSuite extends AnyFunSuite{
     assert(!testOutput.stdout.contains("testbash"))
   }
 
-  test("viash config view with trailing help after platform argument") {
+  test("viash config view with trailing help after runner argument") {
     val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
@@ -53,7 +53,7 @@ class MainHelpSuite extends AnyFunSuite{
     assert(!testOutput.stdout.contains("testbash"))
   }
 
-  test("viash config view with trailing help before platform argument") {
+  test("viash config view with trailing help before runner argument") {
     val testOutput = TestHelper.testMainException[ExitException](
       "config", "view",
       configFile,
