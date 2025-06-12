@@ -32,7 +32,6 @@ grep -q 'optional_with_default: |bar|' output.txt
 grep -q 'multiple: |one;two|' output.txt
 grep -q 'multiple_pos: |a;b;c;d;e;f|' output.txt
 grep -q 'meta_name: |test_languages_.*|' output.txt
-grep -q 'meta_functionality_name: |test_languages_.*|' output.txt
 grep -q 'meta_resources_dir: |..*|' output.txt
 grep -q 'meta_cpus: |2|' output.txt
 grep -q 'meta_memory_b: |2000000000|' output.txt
@@ -80,7 +79,6 @@ grep -q 'multiple: ||' output2.txt
 grep -q 'multiple_pos: ||' output2.txt
 
 grep -q 'meta_name: |test_languages_.*|' output2.txt
-grep -q 'meta_functionality_name: |test_languages_.*|' output2.txt
 grep -q 'meta_resources_dir: |..*|' output2.txt
 grep -q 'meta_cpus: |666|' output2.txt
 grep -q 'meta_memory_b: |100000000000000000|' output2.txt

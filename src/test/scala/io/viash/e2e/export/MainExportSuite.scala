@@ -39,28 +39,6 @@ class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
     val lines = helpers.IO.read(tempFile.toUri())
     assert(lines.contains("def readConfig("))
   }
-
-  test("viash export resource legacy") {
-    val testOutput = TestHelper.testMain(
-      "export", "resource", "platforms/nextflow/WorkflowHelper.nf"
-    )
-
-    assert(testOutput.stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
-
-    assert(testOutput.stdout.contains("def readConfig("))
-  }
-
-  test("viash export resource to file legacy") {
-    val testOutput = TestHelper.testMain(
-      "export", "resource", "platforms/nextflow/WorkflowHelper.nf",
-      "--output", tempFile.toString
-    )
-
-    assert(testOutput.stderr.contains("WARNING: The 'platforms/' prefix is deprecated. Please use 'runners/' instead."))
-
-    val lines = helpers.IO.read(tempFile.toUri())
-    assert(lines.contains("def readConfig("))
-  }
   
   test("viash export cli_schema") {
     val testOutput = TestHelper.testMain(

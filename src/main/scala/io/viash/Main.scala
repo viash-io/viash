@@ -198,36 +198,6 @@ object Main extends Logging {
         }
       case _ => 
     }
-
-    // backwards compability for --platform
-    cli.subcommands.lastOption match {
-      case Some(x: ViashCommand) => 
-        if (x.platform.isDefined) {
-          if (x.runner.isDefined || x.engine.isDefined) {
-            throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
-          }
-          warn("Warning: --platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0. Use --runner or --engine instead.")
-        }
-      case Some(x: ViashNs) =>
-        if (x.platform.isDefined) {
-          if (x.runner.isDefined || x.engine.isDefined) {
-            throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
-          }
-          warn("Warning: --platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0. Use --runner or --engine instead.")
-        }
-      case _ => 
-    }
-    // backwards compability for --apply_platform
-    cli.subcommands match {
-      case List(cli.namespace, cli.namespace.exec) =>
-        if (cli.namespace.exec.applyPlatform()) {
-          if (cli.namespace.exec.applyRunner() || cli.namespace.exec.applyEngine()) {
-            throw new IllegalArgumentException("Error: --platform cannot be used together with --runner or --engine.")
-          }
-          warn("Warning: --apply_platform is deprecated in Viash 0.9.0, will be removed in Viash 0.10.0n. Use --apply_runner or --apply_engine instead.")
-        }
-      case _ =>
-    }
     
     // see if there are package overrides passed to the viash command
     val packSrc = cli.subcommands.lastOption match {
@@ -337,8 +307,8 @@ object Main extends Logging {
           cli.namespace.list,
           packageConfig = pack1,
           addOptMainScript = false, 
-          applyRunner = cli.namespace.list.runner.isDefined || cli.namespace.list.platform.isDefined,
-          applyEngine = cli.namespace.list.engine.isDefined || cli.namespace.list.platform.isDefined
+          applyRunner = cli.namespace.list.runner.isDefined,
+          applyEngine = cli.namespace.list.engine.isDefined
         )
         val configs2 = namespaceDependencies(configs, None, pack1.rootDir)
         ViashNamespace.list(
@@ -351,8 +321,8 @@ object Main extends Logging {
         val configs = readConfigs(
           cli.namespace.exec, 
           packageConfig = pack1, 
-          applyRunner = cli.namespace.exec.applyRunner() || cli.namespace.exec.applyPlatform(),
-          applyEngine = cli.namespace.exec.applyEngine() || cli.namespace.exec.applyPlatform()
+          applyRunner = cli.namespace.exec.applyRunner(),
+          applyEngine = cli.namespace.exec.applyEngine()
         )
         ViashNamespace.exec(
           configs = configs,
@@ -371,7 +341,7 @@ object Main extends Logging {
           cli.config.view,
           packageConfig = pack1,
           addOptMainScript = false,
-          applyRunnerAndEngine = cli.config.view.platform.isDefined || cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
+          applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
         )
         val config2 = DependencyResolver.modifyConfig(config.config, None, pack1.rootDir)
         ViashConfig.view(
@@ -480,11 +450,8 @@ object Main extends Logging {
       viashPackage = Some(packageConfig)
     )
     if (applyRunnerAndEngine) {
-      val runnerStr = subcommand.runner.toOption orElse subcommand.platform.toOption
-      val engineStr = subcommand.engine.toOption orElse subcommand.platform.toOption
-      
-      val runner = config.findRunner(runnerStr)
-      val engines = config.findEngines(engineStr)
+      val runner = config.findRunner(subcommand.runner.toOption)
+      val engines = config.findEngines(subcommand.engine.toOption)
 
       processConfigWithRunnerAndEngine(
         appliedConfig = config,
@@ -509,8 +476,8 @@ object Main extends Logging {
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
     val queryConfig = subcommand.query_config.toOption
-    val runnerStr = subcommand.runner.toOption orElse subcommand.platform.toOption
-    val engineStr = subcommand.engine.toOption orElse subcommand.platform.toOption
+    val runnerStr = subcommand.runner.toOption
+    val engineStr = subcommand.engine.toOption
     val configMods = packageConfig.config_mods
 
     val configs0 = Config.readConfigs(

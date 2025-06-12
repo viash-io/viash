@@ -100,27 +100,3 @@ private _channelFromParams(Map params, Map config) {
   def processedParams = _paramsToParamSets(params, config)
   return Channel.fromList(processedParams)
 }
-
-/**
- * Parse nextflow parameters based on settings defined in a viash config 
- * and return a nextflow channel.
- * 
- * @param params Input parameters. Can optionaly contain a 'param_list' key that
- *               provides a list of arguments that can be split up into multiple events
- *               in the output channel possible formats of param_lists are: a csv file, 
- *               json file, a yaml file or a yaml blob. Each parameters set (event) must
- *               have a unique ID.
- * @param config A Map of the Viash configuration. This Map can be generated from the config file
- *               using the readConfig() function.
- * 
- * @return A nextflow Channel with events. Events are formatted as a tuple that contains 
- *         first contains the ID of the event and as second element holds a parameter map.
- *       
- *
- */
-def channelFromParams(Map params, Map config) {
-  log.warn "channelFromParams is deprecated and will be removed in Viash 0.10.0. ",
-    "Nextflow workflows can now be built into standalone components where parsed parameters ",
-    "are automatically provided to the input channel."
-  return _channelFromParams(params, config) 
-}
