@@ -266,7 +266,7 @@ object DependencyResolver extends Logging {
   }
 
   // Read a config file from a built target. Extract dependencies 'writtenPath'.
-  def getSparseDependencyInfo(configPath: String): List[String] = {
+  def getSparseDependencyInfo(configPath: String): (List[String], String) = {
     try {
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
@@ -275,15 +275,18 @@ object DependencyResolver extends Logging {
       val dependencies =
         if (legacyMode) {
           val jsonVec = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-          jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+          val depList = jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
+          (depList, "")
         }
         else {
           val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
-          jsonVec.flatMap(_.hcursor.as[String].toOption).toList
+          val depList = jsonVec.flatMap(_.hcursor.as[String].toOption).toList
+          val outputPath = json.hcursor.downField("build_info").downField("output").as[String].toOption.get
+          (depList, outputPath)
         }
       dependencies
     } catch {
-      case _: Throwable => Nil
+      case _: Throwable => (Nil, "")
     }
   }
 
@@ -296,19 +299,38 @@ object DependencyResolver extends Logging {
   }
 
   // Handle dependencies of dependencies. For a given already built component, get their dependencies, copy them to our new target folder and recurse into these.
-  def recurseBuiltDependencies(output: Path, repoPath: Path, builtDependencyPath: String, dependency: Dependency, depth: Int = 0): Unit = {
+  def recurseBuiltDependencies(output: Path, repoPath: Path, builtDependencyPath: String, dependency: Dependency, dependencySourcePath: Option[Path] = None, depth: Int = 0): Unit = {
+    import scala.jdk.CollectionConverters._
 
     // Limit recursion depth to prevent infinite loops in e.g. cross dependencies (TODO)
     if (depth > 10)
       throw new RuntimeException("Copying dependencies traces too deep. Possibibly caused by a cross dependency.")
 
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
-    val dependencyPaths = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
+    val (dependencyPaths, relativeOutput) = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
+    logger.debug(s"Paths to relativize: dependencySourcePath: $dependencySourcePath, relativeOutput: $relativeOutput")
+    
+    // remove the trailing path parts as far as relativeOutputPath matches the dependencySourcePath
+    // baseDependencySourcePath: a/b/c/d/e
+    // relativeOutputPath: c'/d/e
+    // output: a/b/c & c'
+    val dependencySourceParts = dependencySourcePath.map { dsp =>
+      val dspParts = dsp.iterator().asScala.toList.map(p => Some(p)).reverse
+      val relativeOutputPath = Paths.get(relativeOutput).iterator().asScala.toList.map(p => Some(p)).reverse
+      // Find the first part that is not in the relative output path
+      val commonParts = dspParts.zipAll(relativeOutputPath, None, None).dropWhile{ case (a, b) => a == b }
+
+      val leftPath = commonParts.flatMap(_._1).reverse.fold(dsp.getRoot())((p1, p2) => p1.resolve(p2))
+      val rightPath = commonParts.flatMap(_._2).reverse.reduce((p1, p2) => p1.resolve(p2))
+      
+      (leftPath, rightPath)
+    }
+    logger.debug(s"dependencySourceParts: $dependencySourceParts")
 
     for (dp <- dependencyPaths) {
       // Get the source & destination path for the dependency, functionality depends whether it was a previous dependency or not.
       // Paths are relativized depending the original dependency.
-      val (sourcePath, destPath) = Dependency.getSourceAndDestinationFromWrittenPath(dp, output, repoPath, dependency)
+      val (sourcePath, destPath) = Dependency.getSourceAndDestinationFromWrittenPath(dp, output, repoPath, dependency, dependencySourceParts)
 
       // Make sure the destination is clean so first remove the destination folder if it exists
       if (destPath.toFile().exists())
@@ -319,7 +341,7 @@ object DependencyResolver extends Logging {
       IO.copyFolder(sourcePath, destPath)
 
       // Check for more dependencies
-      recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, depth + 1)
+      recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, Some(sourcePath), depth + 1)
     }
   }
 
