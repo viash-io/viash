@@ -162,10 +162,14 @@ object Dependency extends Logging {
       // If the dependencyPath is a valid path, use it as source
       defaultSourcePath
     } else if (remoteLocalDependencyResolver.isDefined) {
+      // This is empty if we're resolving the first level of dependencies.
+      // For the most part we should not end up here, but there is an edge case where we have to resolve a local dependency for a dependency of a dependency.
+      // In this case, we don't have the context of the location where the dependency is stored under the dependency folder, however we know where the dependant is stored,
+      // so we can use the remote local dependency resolver to find the source path.
       logger.debug(s"Couldn't find sourcePath, using remote local dependency resolver for $dependencyPath")
       logger.debug(s"Remote local dependency resolver: $remoteLocalDependencyResolver")
-      val alternativeSourcePath = remoteLocalDependencyResolver.get._1
-      val alternativeTargetPath = remoteLocalDependencyResolver.get._2
+      val alternativeSourcePath = remoteLocalDependencyResolver.get._1 // This is the path where the dependant is located
+      val alternativeTargetPath = remoteLocalDependencyResolver.get._2 // This is the relative path of the dependant in the target folder
 
       // strips alternativeTargetPath from dependencyPath
       val targetIter = alternativeTargetPath.iterator().asScala.toList.map(p => Some(p))
@@ -173,13 +177,13 @@ object Dependency extends Logging {
       val zipped = depIter.zipAll(targetIter, None, None).dropWhile {
         case (depPart, targetPart) => depPart == targetPart
       }
-      val relativePath = Paths.get(zipped.flatMap(_._1).mkString("/"))
+      val relativePath = zipped.flatMap(_._1).reduce((p1, p2) => p1.resolve(p2))
       logger.debug(s"relativePath: $relativePath")
       val res = alternativeSourcePath.resolve(relativePath)
       logger.debug(s"Using alternative source path: $res")
       res
     } else {
-      // Otherwise, throw an error
+      // Otherwise, throw an error. We shouldn't end up here.
       throw new MissingBuildYamlException(defaultSourcePath, mainDependency)
     }
     // Split the path into chunks so we can manipulate them more easily

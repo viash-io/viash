@@ -311,9 +311,13 @@ object DependencyResolver extends Logging {
     logger.debug(s"Paths to relativize: dependencySourcePath: $dependencySourcePath, relativeOutput: $relativeOutput")
     
     // remove the trailing path parts as far as relativeOutputPath matches the dependencySourcePath
-    // baseDependencySourcePath: a/b/c/d/e
+    // dependencySourcePath: a/b/c/d/e
     // relativeOutputPath: c'/d/e
     // output: a/b/c & c'
+    // dependencySourcePath contains a tuple of:
+    //   - left: the the path where the dependency is stored down to common root, matching to 'target'
+    //   - right: the original 'target' folder name
+    // this is needed to relativize paths correctly when resolving a local dependency of this dependency
     val dependencySourceParts = dependencySourcePath.map { dsp =>
       val dspParts = dsp.iterator().asScala.toList.map(p => Some(p)).reverse
       val relativeOutputPath = Paths.get(relativeOutput).iterator().asScala.toList.map(p => Some(p)).reverse
