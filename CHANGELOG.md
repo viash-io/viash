@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.5 (2025-07-15): Bugfix for dependency resolving
 
-TODO add summary
+Fix an issue for deeply nested dependencies.
 
 ## BUG FIXES
 
