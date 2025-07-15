@@ -24,6 +24,7 @@ import java.nio.file.Files
 import io.viash.ViashNamespace
 import io.viash.exceptions.MissingBuildYamlException
 import io.viash.config.ScopeEnum
+import io.viash.helpers.Logging
 
 @description(
   """Specifies a Viash component (script or executable) that should be made available for the code defined in the component.
@@ -140,7 +141,7 @@ case class Dependency(
   }.getOrElse(false)
 }
 
-object Dependency {
+object Dependency extends Logging {
 
   /**
     * Relativize the writtenPath info from a dependency to a source and destination path so it can be copied.
@@ -153,10 +154,39 @@ object Dependency {
     * @param mainDependency Top level dependency for which optionally dependencies of dependencies are being resolved. Used to relativize paths
     * @return Tuple with source and destination paths, relativized to current repository locations, ready to be copied
     */
-  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency): (Path, Path) = {
+  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency, remoteLocalDependencyResolver: Option[(Path, Path)]): (Path, Path) = {
     import scala.jdk.CollectionConverters._
 
-    val sourcePath = repoPath.resolve(dependencyPath)
+    val defaultSourcePath = repoPath.resolve(dependencyPath)
+    val sourcePath = if (defaultSourcePath.toFile().exists()) {
+      // If the dependencyPath is a valid path, use it as source
+      defaultSourcePath
+    } else if (remoteLocalDependencyResolver.isDefined) {
+      // This is empty if we're resolving the first level of dependencies.
+      // For the most part we should not end up here, but there is an edge case where we have to resolve a local dependency for a dependency of a dependency.
+      // In this case, we don't have the context of the location where the dependency is stored under the dependency folder, however we know where the dependant is stored,
+      // so we can use the remote local dependency resolver to find the source path.
+      logger.debug(s"Couldn't find sourcePath, using remote local dependency resolver for $dependencyPath")
+      logger.debug(s"Remote local dependency resolver: $remoteLocalDependencyResolver")
+      val alternativeSourcePath = remoteLocalDependencyResolver.get._1 // This is the path where the dependant is located
+      val alternativeTargetPath = remoteLocalDependencyResolver.get._2 // This is the relative path of the dependant in the target folder
+
+      // strips alternativeTargetPath from dependencyPath
+      // ie. `target` from `target/foo/bar` so that it can be added to alternativeSourcePath as it doesn't contain the `target` folder anymore at this point
+      val targetIter = alternativeTargetPath.iterator().asScala.toList.map(p => Some(p))
+      val depIter = Paths.get(dependencyPath).iterator().asScala.toList.map(p => Some(p))
+      val zipped = depIter.zipAll(targetIter, None, None).dropWhile {
+        case (depPart, targetPart) => depPart == targetPart
+      }
+      val relativePath = zipped.flatMap(_._1).reduce((p1, p2) => p1.resolve(p2))
+      logger.debug(s"relativePath: $relativePath")
+      val res = alternativeSourcePath.resolve(relativePath)
+      logger.debug(s"Using alternative source path: $res")
+      res
+    } else {
+      // Otherwise, throw an error. We shouldn't end up here.
+      throw new MissingBuildYamlException(defaultSourcePath, mainDependency)
+    }
     // Split the path into chunks so we can manipulate them more easily
     val pathParts = Paths.get(dependencyPath).iterator().asScala.toList.map(p => p.toString())
 
