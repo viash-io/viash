@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## BUG FIXES
+
+* `Dependencies`: Fix an issue where deeply nested dependencies are not resolvable if they require a local dependency (PR #838).
+
 # Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 
 This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
