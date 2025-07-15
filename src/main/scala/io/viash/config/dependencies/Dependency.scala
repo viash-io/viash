@@ -172,6 +172,7 @@ object Dependency extends Logging {
       val alternativeTargetPath = remoteLocalDependencyResolver.get._2 // This is the relative path of the dependant in the target folder
 
       // strips alternativeTargetPath from dependencyPath
+      // ie. `target` from `target/foo/bar` so that it can be added to alternativeSourcePath as it doesn't contain the `target` folder anymore at this point
       val targetIter = alternativeTargetPath.iterator().asScala.toList.map(p => Some(p))
       val depIter = Paths.get(dependencyPath).iterator().asScala.toList.map(p => Some(p))
       val zipped = depIter.zipAll(targetIter, None, None).dropWhile {
