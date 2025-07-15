@@ -265,7 +265,8 @@ object DependencyResolver extends Logging {
     }
   }
 
-  // Read a config file from a built target. Extract dependencies 'writtenPath'.
+  // Read a config file from a built target. Extract dependencies 'writtenPath' and the `output` path of the component.
+  // In 'legacy mode', the output path is not properly sanitized and thus useless, so we return an empty string instead.
   def getSparseDependencyInfo(configPath: String): (List[String], String) = {
     try {
       val yamlText = IO.read(IO.uri(configPath))
