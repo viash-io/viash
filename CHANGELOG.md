@@ -1,6 +1,12 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-TODO add summary
+## INTERNAL
+
+* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #)
+
+# Viash 0.9.5 (2025-07-15): Bugfix for dependency resolving
+
+Fix an issue for deeply nested dependencies.
 
 ## BUG FIXES
 
