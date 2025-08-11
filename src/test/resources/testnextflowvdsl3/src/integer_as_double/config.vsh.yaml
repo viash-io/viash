@@ -1,18 +1,19 @@
-name: multiple_output
+name: integer_as_double
 arguments:
   - name: "--input"
     type: file
-    multiple: true
     required: true
     example: input.txt
-    multiple_sep: ";"
   - name: "--output"
     type: file
     required: true
     direction: output
-    multiple: true
-    multiple_sep: ";"
-    example: output_*.txt
+    example: output.txt
+  - name: "--double"
+    type: double
+    required: true
+    direction: input
+    example: 10.5
 resources:
   - type: bash_script
     path: script.sh

@@ -31,7 +31,6 @@ final case class NsExecData(
   absoluteDir: String,
   mainScript: String,
   absoluteMainScript: String,
-  functionalityName: String,
   name: String,
   namespace: Option[String],
   runnerId: Option[String],
@@ -51,8 +50,7 @@ final case class NsExecData(
       case "abs-dir" => Some(this.absoluteDir)
       case "main-script" => Some(this.mainScript)
       case "abs-main-script" => Some(this.absoluteMainScript)
-      case "functionality-name" => Some(this.functionalityName)
-      case "name" => Some(this.functionalityName)
+      case "name" => Some(this.name)
       case "namespace" => this.namespace
       case "runner" => this.runnerId
       case "engine" => this.engineId
@@ -93,7 +91,6 @@ object NsExecData {
       absoluteDir = dirPathAbs.toString,
       mainScript = mainScriptRel.map(_.toString).getOrElse(""),
       absoluteMainScript = mainScriptAbs.map(_.toString).getOrElse(""),
-      functionalityName = config.name,
       name = config.name,
       namespace = config.namespace,
       runnerId = runner.map(_.id),
@@ -111,7 +108,6 @@ object NsExecData {
       absoluteDir = data.map(_.absoluteDir).mkString(" "),
       mainScript = data.map(_.mainScript).mkString(" "),
       absoluteMainScript = data.map(_.absoluteMainScript).mkString(" "),
-      functionalityName = data.map(_.functionalityName).mkString(" "),
       name = data.map(_.name).mkString(" "),
       namespace = Some(data.flatMap(_.namespace).mkString(" ")),
       runnerId = Some(data.flatMap(_.runnerId).mkString(" ")),

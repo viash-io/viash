@@ -8,5 +8,7 @@ resources:
   - path: ../../../resources
 dependencies:
   - name: sub_workflow
-platforms:
+engines:
+  - type: native
+runners:
   - type: nextflow

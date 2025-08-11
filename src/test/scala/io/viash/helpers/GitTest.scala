@@ -191,7 +191,7 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
     val gitTagOut1 = Exec.runCatch(List("git", "tag", "-a", "0.1.1", "-m", "first tag"), cwd = Some(tempDir))
     assert(gitTagOut1.exitValue == 0, s"git tag: ${gitTagOut1.output}")
 
-    val gitTagOut2 = Exec.runCatch(List("git", "tag", "0.1.2"), cwd = Some(tempDir))
+    val gitTagOut2 = Exec.runCatch(List("git", "tag", "0.1.2", "-m", "second tag"), cwd = Some(tempDir))
     assert(gitTagOut2.exitValue == 0, s"git tag: ${gitTagOut2.output}")
 
     val tag1 = Git.hasTag("0.1.1", tempDir)

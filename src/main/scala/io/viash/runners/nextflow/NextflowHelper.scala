@@ -73,12 +73,12 @@ object NextflowHelper {
       .replace("'''", "\\'\\'\\'")
 
     // IMPORTANT! difference between code below and BashWrapper:
-    // script is stored as `.viash_script.sh`.
+    // script is stored as `.viash_script.${ext}`.
     val scriptPath = "$tempscript"
 
     val executionCode = 
       s"""set -e
-        |tempscript=".viash_script.sh"
+        |tempscript=".viash_script.${res.companion.extension}"
         |cat > "$scriptPath" << VIASHMAIN
         |$escapedCode
         |VIASHMAIN

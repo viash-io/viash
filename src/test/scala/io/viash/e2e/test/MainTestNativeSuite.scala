@@ -86,7 +86,7 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, false)
   }
 
-  test("Check test output when no tests are specified in the functionality file") {
+  test("Check test output when no tests are specified in the component config") {
     val newConfigFilePath = configDeriver.derive("del(.test_resources)", "no_tests")
     val testOutput = TestHelper.testMain(
       "test",
@@ -201,23 +201,6 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(testOutput.stdout.isEmpty)
   }
 
-  test("Check invalid platform type") {
-    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "foo" }]""", "invalid_platform_type")
-    val testOutput = TestHelper.testMainException[ConfigParserException](
-      "test",
-      "--engine", "native",
-      "--runner", "executable",
-      newConfigFilePath
-    )
-
-    assert(testOutput.exceptionText.get.contains("Type 'foo' is not recognised. Valid types are 'docker', 'native', and 'nextflow'."))
-    assert(testOutput.exceptionText.get.contains(
-      """{
-        |  "type" : "foo"
-        |}""".stripMargin))
-    assert(testOutput.stdout.isEmpty)
-  }
-
   test("Check invalid field in runner") {
     val newConfigFilePath = configDeriver.derive(""".runners += { type: "executable", foo: "bar" }""", "invalid_runner_field")
     val testOutput = TestHelper.testMainException[ConfigParserException](
@@ -246,24 +229,6 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(testOutput.exceptionText.get.contains("Invalid data fields for NativeEngine."))
-    assert(testOutput.exceptionText.get.contains(
-      """{
-        |  "type" : "native",
-        |  "foo" : "bar"
-        |}""".stripMargin))
-    assert(testOutput.stdout.isEmpty)
-  }
-
-  test("Check invalid field in platform") {
-    val newConfigFilePath = configDeriver.derive(""".platforms := [{ type: "native", foo: "bar" }]""", "invalid_platform_field")
-    val testOutput = TestHelper.testMainException[ConfigParserException](
-      "test",
-      "--engine", "native",
-      "--runner", "executable",
-      newConfigFilePath
-    )
-
-    assert(testOutput.exceptionText.get.contains("Invalid data fields for NativePlatform."))
     assert(testOutput.exceptionText.get.contains(
       """{
         |  "type" : "native",

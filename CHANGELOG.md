@@ -1,8 +1,6 @@
 # Viash 0.x.x (yyyy-MM-dd): TODO Add title
 
-
 TODO add summary
-
 
 ## NEW FEATURES
 
@@ -14,20 +12,39 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` (PR #792).
+* `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` arguments (PR #792).
 
-* `WorkflowHelper.nf` for the `Nextflow` runner: remove `DataflowHelper` functions: 
-  `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`,
-  `passthroughFlatMap` and `passthroughFilter` (PR #792).
+* `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap`,  `passthroughFilter`, `channelFromParams`, `runComponents` (PRs #792, #811).
 
-* `Nextflow` runner: `channelFromParams` is now deprecated (PR #792).
+* Remove deprecated functionality `functionality` and `platforms` (PR #832).
 
-# Viash 0.9.3 (yyyy-MM-dd): TODO Add title
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
+
+## MINOR FIXES
+
+* `Executable`: Add more info to the --help (PR #802).
+
+# Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #823, PR #824).
+
+# Viash 0.9.3 (2025-03-31): Support upcoming version of Nextflow
+
+The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
+This release supports this change by using reflection to detect the available class.
 
 ## BUG FIXES
 
 * `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #812). This fix uses reflection
   to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
+
+* `NextflowRunner`: Make sure scripts are generated with the right extension (PR #815).
 
 # Viash 0.9.2 (2025-03-04): Bug fix release
 
@@ -40,7 +57,6 @@ This release fixes an edge case where output arguments for subworkflows were mal
 ## BUG FIXES
 
 * `NextflowRunner`: Fix issue where output arguments for subworkflows were being returned as nested arrays instead of simple arrays (PR #798, PR #800).
-
 
 # Viash 0.9.1 (2024-12-16): Enhanced nextflow support and Scala 3 update
 
@@ -227,6 +243,28 @@ Implemented a proper way of caching dependency repositories. The cache is stored
 * `json schema`: Change the '$schema' field to 'http://' instead of 'https://' (PR #768). (Some?) Json validators use this value as a token and not as a URL.
 
 * `viash test`: Fix an issue where the tests would not copy package config settings to determine the docker image name (PR #767).
+
+# Viash 0.8.8 (2025-04-24): Hotfix for Nextflow edge
+
+This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
+
+## BUG FIXES
+
+* `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (PR #823).
+
+# Viash 0.8.7 (2025-04-01): Backport support upcoming version of Nextflow
+
+The upcoming release of Nextflow introduces a new class for loading scripts and renamed the old class.
+This release supports this change by using reflection to detect the available class.
+
+## BUG FIXES
+
+* `viash build`: Fix error handling of non-generic errors in the build process or while pushing docker containers (PR #696).
+
+* `NextflowRunner`: ScriptParser was renamed to ScriptLoaderV1 in Nextflow 25.02.0-edge (PR #817). Backport from Viash 0.9.3 (PR #812).
+  This fix uses reflection to detect whether ScriptParser exists -- if not the ScriptLoaderFactory is used instead.
+
+* `NextflowRunner`: Backport path handling for `meta.resources_dir` for when symlinks are used (PR #817).
 
 # Viash 0.8.6 (2024-04-26): Bug fixes and improvements for CI
 
