@@ -19,7 +19,7 @@ jobs:
           - { ver: '21', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - uses: viash-io/viash-actions/project/update-docker-engine@v6
       if: runner.os == 'Linux'
