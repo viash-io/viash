@@ -43,7 +43,7 @@ import io.viash.config.ScopeEnum
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |    repository: "github://openpipelines-bio/modules:0.3.0"
+    |    repository: "github://openpipelines-bio/modules@0.3.0"
     |""",
   "yaml",
   "Definition of a dependency with a repository using sugar syntax."

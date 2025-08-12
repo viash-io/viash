@@ -451,11 +451,12 @@ object Main extends Logging {
     applyRunnerAndEngine: Boolean = true,
     allowPackageBundle: Boolean = false
   ): AppliedConfig = {
-    val packageBundleRegex = raw"vsh://(\w+)/([\w\-\.]+)/(.*)".r
+    val packageBundleRegex = raw"vsh://(\w+)(@[A-Za-z0-9][\w\-\./]*)?/(.*)".r
     val configPath = subcommand.config() match {
       case packageBundleRegex(package_, version, component) => 
         if allowPackageBundle then
-          fetchPackageBundle(package_, version, component)
+          val versionStr = if (version == null) "latest" else version.stripPrefix("@")
+          fetchPackageBundle(package_, versionStr, component)
         else 
           throw new IllegalArgumentException("Error: Package bundles are not allowed in this context.")
       case str => str
