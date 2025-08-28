@@ -45,95 +45,26 @@ case class ScalaScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val quo = "\"'\"\"\"'\""
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-      val parClassTypes = params.map { par =>
-        val classType = par match {
-          case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
-          case a: IntegerArgument if a.multiple => "List[Int]"
-          case a: LongArgument if a.multiple => "List[Long]"
-          case a: DoubleArgument if a.multiple => "List[Double]"
-          case a: FileArgument if a.multiple => "List[String]"
-          case a: StringArgument if a.multiple => "List[String]"
-          // we could argue about whether these should be options or not
-          case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
-          case a: IntegerArgument if !a.required => "Option[Int]"
-          case a: LongArgument if !a.required => "Option[Long]"
-          case a: DoubleArgument if !a.required => "Option[Double]"
-          case a: FileArgument if !a.required => "Option[String]"
-          case a: StringArgument if !a.required => "Option[String]"
-          case _: BooleanArgumentBase => "Boolean"
-          case _: IntegerArgument => "Int"
-          case _: LongArgument => "Long"
-          case _: DoubleArgument => "Double"
-          case _: FileArgument => "String"
-          case _: StringArgument => "String"
-          }
-          par.plainName + ": " + classType
-        }
-        val parSet = params.map { par =>
-          // val env_name = par.VIASH_PAR
-          val env_name = Bash.getEscapedArgument(par.VIASH_PAR, quo, """\"""", """\"\"\"+\"\\\"\"+\"\"\"""")
-
-          val parse = { par match {
-            case a: BooleanArgumentBase if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLowerCase.toBoolean).toList"""
-            case a: IntegerArgument if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toInt).toList"""
-            case a: LongArgument if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toLong).toList"""
-            case a: DoubleArgument if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).map(_.toDouble).toList"""
-            case a: FileArgument if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-            case a: StringArgument if a.multiple =>
-              s"""$env_name.split($quo${a.multiple_sep}$quo).toList"""
-            case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => s"""Some($env_name.toLowerCase.toBoolean)"""
-            case a: IntegerArgument if !a.required => s"""Some($env_name.toInt)"""
-            case a: LongArgument if !a.required => s"""Some($env_name.toLong)"""
-            case a: DoubleArgument if !a.required => s"""Some($env_name.toDouble)"""
-            case a: FileArgument if !a.required => s"""Some($env_name)"""
-            case a: StringArgument if !a.required => s"""Some($env_name)"""
-            case _: BooleanArgumentBase => s"""$env_name.toLowerCase.toBoolean"""
-            case _: IntegerArgument => s"""$env_name.toInt"""
-            case _: LongArgument => s"""$env_name.toLong"""
-            case _: DoubleArgument => s"""$env_name.toDouble"""
-            case _: FileArgument => s"""$env_name"""
-            case _: StringArgument => s"""$env_name"""
-          }}
-          
-          // Todo: set as None if multiple is undefined
-          val notFound = par match {
-            case a: Argument[_] if a.multiple => Some("Nil")
-            case a: BooleanArgumentBase if a.flagValue.isDefined => None
-            case a: Argument[_] if !a.required => Some("None")
-            case _: Argument[_] => None
-          }
-
-          notFound match {
-            case Some(nf) =>
-              s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
-            case None => 
-              parse.replaceAll(quo, "\"\"\"") // undo quote escape as string is not part of echo
-          }
-        }
-
-      s"""case class Viash${dest.capitalize}(
-        |  ${parClassTypes.mkString(",\n  ")}
-        |)
-        |val $dest = Viash${dest.capitalize}(
-        |  ${parSet.mkString(",\n  ")}
-        |)
-        |""".stripMargin
+    // Extract only the object and functions, not the main execution part
+    val helperFunctions = language.viashParseYamlCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (sys.props.get(\"viash.run.main\").contains(\"true\")"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse YAML once and extract all sections
+      val parseOnce = "// Parse YAML parameters once and extract all sections\nval _viashYamlData = ViashYamlParser.parseYaml()\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"val $dest = _viashYamlData.getOrElse(\"$dest\", Map.empty[String, Any])"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
     }
 
-    ScriptInjectionMods(params = paramsCode.mkString)
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
   }
-}
-
-object ScalaScript extends ScriptCompanion {
-  val commentStr = "//"
-  val extension = "scala"
-  val `type` = "scala_script"
-  val executor = Seq("scala", "-nc")
 }

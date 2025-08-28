@@ -48,10 +48,3 @@ case class Executable(
 
   override def command(script: String): String = script
 }
-
-object Executable extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "*"
-  val `type` = "executable"
-  val executor = Nil
-}

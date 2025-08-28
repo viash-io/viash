@@ -45,48 +45,28 @@ case class JavaScriptScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-    val parSet = params.map { par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "String.raw`", "`", """`""", """`+\"`\"+String.raw`""")
-
-      val parse = par match {
-        case a: BooleanArgumentBase if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
-        case a: IntegerArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
-        case a: LongArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
-        case a: DoubleArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseFloat(x))"""
-        case a: FileArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case a: StringArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case _: BooleanArgumentBase => s"""$env_name.toLowerCase() === 'true'"""
-        case _: IntegerArgument => s"""parseInt($env_name)"""
-        case _: LongArgument => s"""parseInt($env_name)"""
-        case _: DoubleArgument => s"""parseFloat($env_name)"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
-      }
-
-      val notFound = "undefined"
-
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
+    // Extract only the functions, not the main execution part or module exports
+    // TODO: remove this part
+    val helperFunctions = language.viashParseYamlCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (require.main === module)"))
+      .filterNot(line => line.contains("if (typeof module !== 'undefined' && module.exports)"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse YAML once and extract all sections
+      val parseOnce = "// Parse YAML parameters once and extract all sections\nlet _viashYamlData = viashParseYaml();\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"let $dest = _viashYamlData['$dest'] || {};"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
     }
-    s"""let $dest = {
-      |  ${parSet.mkString(",\n  ")}
-      |};
-      |""".stripMargin
-    }
-    ScriptInjectionMods(params = paramsCode.mkString)
+    
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
   }
-}
-
-object JavaScriptScript extends ScriptCompanion {
-  val commentStr = "//"
-  val extension = "js"
-  val `type` = "javascript_script"
-  val executor = Seq("node")
 }

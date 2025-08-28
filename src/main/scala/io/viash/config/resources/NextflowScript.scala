@@ -56,11 +56,3 @@ case class NextflowScript(
     ScriptInjectionMods()
   }
 }
-
-object NextflowScript extends ScriptCompanion {
-  val commentStr = "//"
-  val extension = "nf"
-  val `type` = "nextflow_script"
-  val executor = Seq("nextflow", "run", ".", "-main-script")
-
-}
