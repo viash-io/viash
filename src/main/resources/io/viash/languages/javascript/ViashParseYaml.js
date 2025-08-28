@@ -26,12 +26,22 @@ function viashParseYaml(yamlContent = null) {
     const result = {};
     const lines = yamlContent.trim().split('\n');
     let i = 0;
+    let currentSection = null;
     
     while (i < lines.length) {
         const line = lines[i].trimEnd();
         
         // Skip empty lines and comments
         if (!line.trim() || line.trim().startsWith('#')) {
+            i++;
+            continue;
+        }
+        
+        // Check for top-level sections (section name followed by colon)
+        const sectionMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*):\s*$/);
+        if (sectionMatch) {
+            currentSection = sectionMatch[1];
+            result[currentSection] = {};
             i++;
             continue;
         }
@@ -44,7 +54,6 @@ function viashParseYaml(yamlContent = null) {
             const cleanValue = value.trim();
             
             if (!cleanValue) {
-                // This might be the start of an array
                 // Look ahead to see if next lines are array items
                 let j = i + 1;
                 const arrayItems = [];
@@ -73,17 +82,32 @@ function viashParseYaml(yamlContent = null) {
                 }
                 
                 if (arrayItems.length > 0) {
-                    result[cleanKey] = arrayItems;
+                    // Store the array in the current section or root
+                    if (currentSection) {
+                        result[currentSection][cleanKey] = arrayItems;
+                    } else {
+                        result[cleanKey] = arrayItems;
+                    }
                     i = j;
                     continue;
                 } else {
                     // Empty value
-                    result[cleanKey] = null;
+                    if (currentSection) {
+                        result[currentSection][cleanKey] = null;
+                    } else {
+                        result[cleanKey] = null;
+                    }
                     i++;
                     continue;
                 }
             } else {
-                result[cleanKey] = parseValue(cleanValue);
+                // Regular key-value pair - store in current section or root
+                const parsedValue = parseValue(cleanValue);
+                if (currentSection) {
+                    result[currentSection][cleanKey] = parsedValue;
+                } else {
+                    result[cleanKey] = parsedValue;
+                }
                 i++;
                 continue;
             }
@@ -109,9 +133,16 @@ function parseValue(value) {
     } else if (value === 'false') {
         return false;
     } else if (value.match(/^"(.*)"$/)) {
-        // Quoted string - unescape
+        // Double quoted string - unescape
         let unquoted = value.slice(1, -1);
         unquoted = unquoted.replace(/\\"/g, '"');
+        unquoted = unquoted.replace(/\\n/g, '\n');
+        unquoted = unquoted.replace(/\\\\/g, '\\');
+        return unquoted;
+    } else if (value.match(/^'(.*)'$/)) {
+        // Single quoted string - unescape
+        let unquoted = value.slice(1, -1);
+        unquoted = unquoted.replace(/\\'/g, "'");
         unquoted = unquoted.replace(/\\n/g, '\n');
         unquoted = unquoted.replace(/\\\\/g, '\\');
         return unquoted;

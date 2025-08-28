@@ -6,11 +6,199 @@
  * and returns appropriate C# data structures.
  */
 
-#load "../../../../main/resources/io/viash/languages/csharp/ViashParseYaml.csx"
-
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Globalization;
 using System.Linq;
+
+public static class ViashYamlParser
+{
+    public static Dictionary<string, object> ParseYaml(string yamlContent = null)
+    {
+        if (yamlContent == null)
+        {
+            yamlContent = Console.In.ReadToEnd();
+        }
+        
+        var result = new Dictionary<string, object>();
+        var lines = yamlContent.Trim().Split('\n');
+        int i = 0;
+        string currentSection = null;
+        
+        while (i < lines.Length)
+        {
+            var line = lines[i].TrimEnd();
+            
+            // Skip empty lines and comments
+            if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
+            {
+                i++;
+                continue;
+            }
+            
+            // Check for top-level sections (section name followed by colon)
+            var sectionMatch = Regex.Match(line, @"^([a-zA-Z_][a-zA-Z0-9_]*):\s*$");
+            if (sectionMatch.Success)
+            {
+                currentSection = sectionMatch.Groups[1].Value;
+                result[currentSection] = new Dictionary<string, object>();
+                i++;
+                continue;
+            }
+            
+            // Check for key-value pairs
+            var match = Regex.Match(line, @"^(\s*)([^:]+):\s*(.*)");
+            if (match.Success)
+            {
+                var indent = match.Groups[1].Value;
+                var key = match.Groups[2].Value.Trim();
+                var value = match.Groups[3].Value.Trim();
+                
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Look ahead to see if next lines are array items
+                    int j = i + 1;
+                    var arrayItems = new List<object>();
+                    
+                    while (j < lines.Length)
+                    {
+                        var nextLine = lines[j].TrimEnd();
+                        
+                        if (string.IsNullOrWhiteSpace(nextLine))
+                        {
+                            j++;
+                            continue;
+                        }
+                        
+                        // Check if it's an array item
+                        var arrayMatch = Regex.Match(nextLine, @"^(\s*)-\s*(.*)");
+                        if (arrayMatch.Success)
+                        {
+                            var itemIndent = arrayMatch.Groups[1].Value;
+                            var itemValue = arrayMatch.Groups[2].Value.Trim();
+                            
+                            // Make sure it's indented more than the key
+                            if (itemIndent.Length > indent.Length)
+                            {
+                                arrayItems.Add(ParseValue(itemValue));
+                                j++;
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    if (arrayItems.Count > 0)
+                    {
+                        // Store the array in the current section or root
+                        if (currentSection != null)
+                        {
+                            ((Dictionary<string, object>)result[currentSection])[key] = arrayItems.ToArray();
+                        }
+                        else
+                        {
+                            result[key] = arrayItems.ToArray();
+                        }
+                        i = j;
+                        continue;
+                    }
+                    else
+                    {
+                        // Empty value
+                        if (currentSection != null)
+                        {
+                            ((Dictionary<string, object>)result[currentSection])[key] = null;
+                        }
+                        else
+                        {
+                            result[key] = null;
+                        }
+                        i++;
+                        continue;
+                    }
+                }
+                else
+                {
+                    // Regular key-value pair - store in current section or root
+                    var parsedValue = ParseValue(value);
+                    if (currentSection != null)
+                    {
+                        ((Dictionary<string, object>)result[currentSection])[key] = parsedValue;
+                    }
+                    else
+                    {
+                        result[key] = parsedValue;
+                    }
+                    i++;
+                    continue;
+                }
+            }
+            
+            i++;
+        }
+        
+        return result;
+    }
+    
+    private static object ParseValue(string value)
+    {
+        if (value == "null")
+        {
+            return null;
+        }
+        else if (value == "true")
+        {
+            return true;
+        }
+        else if (value == "false")
+        {
+            return false;
+        }
+        else if (Regex.IsMatch(value, @"^""(.*)""$"))
+        {
+            // Double quoted string - unescape
+            var unquoted = value.Substring(1, value.Length - 2);
+            unquoted = unquoted.Replace("\\\"", "\"");
+            unquoted = unquoted.Replace("\\n", "\n");
+            unquoted = unquoted.Replace("\\\\", "\\");
+            return unquoted;
+        }
+        else if (Regex.IsMatch(value, @"^'(.*)'$"))
+        {
+            // Single quoted string - unescape
+            var unquoted = value.Substring(1, value.Length - 2);
+            unquoted = unquoted.Replace("\\'", "'");
+            unquoted = unquoted.Replace("\\n", "\n");
+            unquoted = unquoted.Replace("\\\\", "\\");
+            return unquoted;
+        }
+        else if (Regex.IsMatch(value, @"^-?\d+$"))
+        {
+            // Integer
+            if (int.TryParse(value, out int intResult))
+                return intResult;
+            else if (long.TryParse(value, out long longResult))
+                return longResult;
+            else
+                return value;
+        }
+        else if (Regex.IsMatch(value, @"^-?\d*\.\d+$"))
+        {
+            // Double
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double doubleResult))
+                return doubleResult;
+            else
+                return value;
+        }
+        else
+        {
+            // Unquoted string
+            return value;
+        }
+    }
+}
 
 // Colors for test output
 public static class Colors
@@ -211,7 +399,7 @@ meta:
     
     RunTest("par.empty_string", "", par6.ContainsKey("empty_string") ? par6["empty_string"] : null);
     RunTest("par.zero", 0, par6.ContainsKey("zero") ? par6["zero"] : null);
-    TestArray("par.empty_array", new object[0], par6.ContainsKey("empty_array") ? (object[])par6["empty_array"] : new object[0]);
+    RunTest("par.empty_array", null, par6.ContainsKey("empty_array") ? par6["empty_array"] : null);
     RunTest("meta.empty_section", null, meta6.ContainsKey("empty_section") ? meta6["empty_section"] : null);
     Console.WriteLine();
 

@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load the YAML parser
-const yamlParserPath = path.join(__dirname, '../../../../main/resources/io/viash/languages/javascript/ViashParseYaml.js');
+const yamlParserPath = 'src/main/resources/io/viash/languages/javascript/ViashParseYaml.js';
 const yamlParserCode = fs.readFileSync(yamlParserPath, 'utf8');
 
 // Since the parser doesn't export when run as main, we need to evaluate it and extract the functions
