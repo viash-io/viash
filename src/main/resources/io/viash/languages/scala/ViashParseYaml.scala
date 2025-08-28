@@ -152,29 +152,3 @@ object ViashYamlParser {
     }
   }
 }
-
-// If run as script, parse YAML from stdin and print result
-if (sys.props.get("viash.run.main").contains("true") || !Thread.currentThread.getStackTrace.exists(_.getClassName.contains("sbt"))) {
-  val result = ViashYamlParser.parseYaml()
-  
-  // Print in a format that can be used in Scala
-  println("// Parsed YAML parameters:")
-  result.foreach { case (key, value) =>
-    value match {
-      case None => println(s"val $key: Option[Any] = None")
-      case Some(v) => println(s"val $key: Option[Any] = Some($v)")
-      case s: String => println(s"val $key: String = ${'"'}${s.replace("\"", "\\\"")}${'"'}")
-      case b: Boolean => println(s"val $key: Boolean = $b")
-      case i: Int => println(s"val $key: Int = $i")
-      case l: Long => println(s"val $key: Long = ${l}L")
-      case d: Double => println(s"val $key: Double = $d")
-      case list: List[_] =>
-        val items = list.map {
-          case s: String => s"${'"'}${s.replace("\"", "\\\"")}${'"'}"
-          case other => other.toString
-        }.mkString(", ")
-        println(s"val $key: List[Any] = List($items)")
-      case other => println(s"val $key: Any = $other")
-    }
-  }
-}

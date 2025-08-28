@@ -24,6 +24,7 @@ viash_parse_yaml <- function(yaml_content = NULL) {
   result <- list()
   lines <- strsplit(yaml_content, "\n")[[1]]
   i <- 1
+  current_section <- NULL
   
   while (i <= length(lines)) {
     line <- trimws(lines[i], which = "right")
@@ -32,6 +33,17 @@ viash_parse_yaml <- function(yaml_content = NULL) {
     if (nchar(trimws(line)) == 0 || grepl("^\\s*#", line)) {
       i <- i + 1
       next
+    }
+    
+    # Check for top-level sections (section name followed by colon)
+    if (grepl("^([a-zA-Z_][a-zA-Z0-9_]*):\\s*$", line)) {
+      section_match <- regmatches(line, regexec("^([a-zA-Z_][a-zA-Z0-9_]*):\\s*$", line))[[1]]
+      if (length(section_match) >= 2) {
+        current_section <- section_match[2]
+        result[[current_section]] <- list()
+        i <- i + 1
+        next
+      }
     }
     
     # Check for key-value pairs using base R regex
@@ -44,8 +56,7 @@ viash_parse_yaml <- function(yaml_content = NULL) {
         value <- trimws(matches[4])
         
         if (nchar(value) == 0) {
-          # This might be the start of an array
-          # Look ahead to see if next lines are array items
+          # This might be the start of an array - look ahead for array items
           j <- i + 1
           array_items <- c()
           
@@ -77,17 +88,32 @@ viash_parse_yaml <- function(yaml_content = NULL) {
           }
           
           if (length(array_items) > 0) {
-            result[[key]] <- array_items
+            # Store the array in the current section or root
+            if (!is.null(current_section)) {
+              result[[current_section]][[key]] <- array_items
+            } else {
+              result[[key]] <- array_items
+            }
             i <- j
             next
           } else {
             # Empty value
-            result[[key]] <- NULL
+            if (!is.null(current_section)) {
+              result[[current_section]][[key]] <- NULL
+            } else {
+              result[[key]] <- NULL
+            }
             i <- i + 1
             next
           }
         } else {
-          result[[key]] <- .parse_yaml_value(value)
+          # Regular key-value pair - store in current section or root
+          parsed_value <- .parse_yaml_value(value)
+          if (!is.null(current_section)) {
+            result[[current_section]][[key]] <- parsed_value
+          } else {
+            result[[key]] <- parsed_value
+          }
           i <- i + 1
           next
         }
@@ -127,28 +153,5 @@ viash_parse_yaml <- function(yaml_content = NULL) {
   } else {
     # Unquoted string
     return(value)
-  }
-}
-
-# If run as script, parse YAML from stdin and print result
-if (!interactive() && identical(environment(), globalenv())) {
-  result <- viash_parse_yaml()
-  
-  # Print in a format that can be sourced in R
-  cat("# Parsed YAML parameters:\n")
-  for (name in names(result)) {
-    value <- result[[name]]
-    if (is.null(value)) {
-      cat(sprintf("%s <- NULL\n", name))
-    } else if (is.logical(value) && length(value) == 1) {
-      cat(sprintf("%s <- %s\n", name, ifelse(value, "TRUE", "FALSE")))
-    } else if (is.numeric(value) && length(value) == 1) {
-      cat(sprintf("%s <- %s\n", name, value))
-    } else if (is.character(value) && length(value) == 1) {
-      cat(sprintf("%s <- %s\n", name, deparse(value)))
-    } else {
-      # Vector or list
-      cat(sprintf("%s <- %s\n", name, deparse(value)))
-    }
   }
 }

@@ -126,27 +126,3 @@ function parseValue(value) {
         return value;
     }
 }
-
-// If run as script, parse YAML from stdin and print result
-if (require.main === module) {
-    const result = viashParseYaml();
-    
-    // Print in a format that can be eval'd in JavaScript
-    console.log('// Parsed YAML parameters:');
-    for (const [key, value] of Object.entries(result)) {
-        if (typeof value === 'string') {
-            console.log(`let ${key} = ${JSON.stringify(value)};`);
-        } else if (Array.isArray(value)) {
-            console.log(`let ${key} = ${JSON.stringify(value)};`);
-        } else if (value === null) {
-            console.log(`let ${key} = null;`);
-        } else {
-            console.log(`let ${key} = ${value};`);
-        }
-    }
-}
-
-// Export for use as module
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { viashParseYaml, parseValue };
-}

@@ -106,8 +106,40 @@ def viash_parse_yaml(yaml_content=None):
                                 # This is nested content
                                 next_key = next_key.strip()
                                 next_value = next_value.strip()
-                                nested_dict[next_key] = _parse_value(next_value)
-                                j += 1
+                                
+                                if not next_value:
+                                    # This might be an array within the nested section
+                                    k = j + 1
+                                    nested_array_items = []
+                                    
+                                    while k < len(lines):
+                                        array_line = lines[k].rstrip()
+                                        if not array_line.strip():
+                                            k += 1
+                                            continue
+                                        
+                                        nested_array_match = re.match(r'^(\s*)-\s*(.*)', array_line)
+                                        if nested_array_match:
+                                            nested_item_indent_str, nested_item_val = nested_array_match.groups()
+                                            if len(nested_item_indent_str) > next_indent_level:
+                                                nested_array_items.append(_parse_value(nested_item_val.strip()))
+                                                k += 1
+                                            else:
+                                                break
+                                        else:
+                                            break
+                                    
+                                    if nested_array_items:
+                                        nested_dict[next_key] = nested_array_items
+                                        j = k
+                                    else:
+                                        # Empty value, could be empty array or empty object
+                                        # For now, treat as empty object unless there's array syntax following
+                                        nested_dict[next_key] = None
+                                        j += 1
+                                else:
+                                    nested_dict[next_key] = _parse_value(next_value)
+                                    j += 1
                             else:
                                 # This is at the same or less indentation - end of nested content
                                 break
@@ -138,9 +170,19 @@ def _parse_value(value):
     elif value == 'false':
         return False
     elif value.startswith('"') and value.endswith('"'):
-        return value[1:-1]  # Remove quotes
+        # Remove quotes and process escape sequences
+        unquoted = value[1:-1]
+        unquoted = unquoted.replace('\\"', '"')
+        unquoted = unquoted.replace('\\n', '\n')
+        unquoted = unquoted.replace('\\\\', '\\')
+        return unquoted
     elif value.startswith("'") and value.endswith("'"):
-        return value[1:-1]  # Remove quotes
+        # Remove quotes and process escape sequences  
+        unquoted = value[1:-1]
+        unquoted = unquoted.replace("\\'", "'")
+        unquoted = unquoted.replace('\\n', '\n')
+        unquoted = unquoted.replace('\\\\', '\\')
+        return unquoted
     else:
         # Try to parse as number
         try:
@@ -150,9 +192,3 @@ def _parse_value(value):
                 return int(value)
         except ValueError:
             return value  # Return as string if not a number
-
-if __name__ == "__main__":
-    import sys
-    parsed = viash_parse_yaml()
-    import json
-    print(json.dumps(parsed, indent=2))
