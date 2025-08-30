@@ -217,7 +217,7 @@ object BashWrapper {
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
         val code = res.readWithInjection(argsMetaAndDeps, config)
-        val escapedCode = Bash.escapeString(code, allowUnescape = true)
+        val escapedCode = code// Bash.escapeString(code, allowUnescape = true)
 
         s"""
           |set -e
@@ -231,28 +231,17 @@ object BashWrapper {
         val code = res.readWithInjection(argsMetaAndDeps, config)
         val escapedCode = Bash.escapeString(code, allowUnescape = true)
 
-        // check whether the script can be written to a temprorary location or
-        // whether it needs to be a specific path
-        val scriptSetup =
-          s"""
-            |tempscript=\\$$(mktemp "$$VIASH_META_TEMP_DIR/viash-run-${config.name}-XXXXXX").${res.companion.extension}
-            |function clean_up {
-            |  rm "\\$$tempscript"
-            |}
-            |function interrupt {
-            |  echo -e "\\nCTRL-C Pressed..."
-            |  exit 1
-            |}
-            |trap clean_up EXIT
-            |trap interrupt INT SIGINT""".stripMargin
-        val scriptPath = "\\$tempscript"
-
+        // Create script file in work directory for both Docker and native execution
+        val scriptPath = s"$$VIASH_WORK_DIR/script.${res.companion.extension}"
         s"""
-          |set -e$scriptSetup
+          |set -e
+          |# Create script file in work directory
           |cat > "$scriptPath" << 'VIASHMAIN'
           |${escapePipes(escapedCode)}
-          |VIASHMAIN$cdToResources
-          |${res.command(scriptPath)} &
+          |VIASHMAIN
+          |chmod +x "$scriptPath"$cdToResources
+          |# Execute script with YAML parameters via stdin
+          |${res.command(scriptPath)} < "$$VIASH_WORK_PARAMS" &
           |wait "\\$$!"
           |""".stripMargin
     }
@@ -261,7 +250,7 @@ object BashWrapper {
     val (heredocStart, heredocEnd) = mainResource match {
       case None => ("", "")
       case Some(_: Executable) => ("", "")
-      case _ => ("cat << VIASHEOF | ", "\nVIASHEOF")
+      case _ => ("", "")  // No HEREDOC needed since script is created as separate file
     }
 
     // generate script modifiers
@@ -989,8 +978,6 @@ object BashWrapper {
          |touch "$$VIASH_WORK_PARAMS"
          |
          |${renderStrs.mkString("\n\n")}
-         |
-         |cat "$$VIASH_WORK_PARAMS" # cat it for now
          |""".stripMargin
     // todo: generate script here as well?
     BashWrapperMods(
