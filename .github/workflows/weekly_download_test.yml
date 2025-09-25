@@ -1,0 +1,52 @@
+name: Weekly Download Test
+
+on:
+  schedule:
+    # Run every Sunday at 02:00 UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  download-install-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Test viash download and installation
+      run: |
+        echo "Testing viash download from https://dl.viash.io"
+        
+        # Download viash
+        if [[ "${{ matrix.os }}" =~ ^ubuntu.*$ ]]; then
+          curl -fsSL https://dl.viash.io | bash
+        elif [[ "${{ matrix.os }}" =~ ^macos.*$ ]]; then
+          curl -fsSL https://dl.viash.io | bash
+        fi
+        
+        # Verify installation
+        if command -v viash &> /dev/null; then
+          echo "✅ viash command is available"
+          viash --version
+          echo "✅ viash version check successful"
+        else
+          echo "❌ viash command not found after installation"
+          exit 1
+        fi
+        
+        # Test basic functionality
+        echo "Testing basic viash functionality..."
+        viash --help > /dev/null
+        echo "✅ viash help command works"
+
+    - name: Notify download test failure
+      if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
+      run: |
+        curl -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 *Viash Download Test Failed*\n\n• **OS**: ${{ matrix.os }}\n• **Issue**: Failed to download/install viash from https://dl.viash.io\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+          }' \
+          "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"

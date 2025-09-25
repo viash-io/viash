@@ -1,0 +1,112 @@
+name: Weekly Branch Tests
+
+on:
+  schedule:
+    # Run every Sunday at 02:30 UTC (30 minutes after download test)
+    - cron: '30 2 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  weekly-test:
+    runs-on: ${{ matrix.config.os }}
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: 'ubuntu_latest', os: ubuntu-latest }
+          - { name: 'macos_latest', os: macos-latest }
+        java:
+          - { ver: '11', run_nextflow: true, run_coverage: false, nxf_ver: "22.04.5" }
+          - { ver: '17', run_nextflow: true, run_coverage: true, nxf_ver: latest }
+          - { ver: '21', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
+        branch:
+          - main
+          - develop
+          - develop_0_9
+
+    steps:
+    - name: Checkout ${{ matrix.branch }} branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ matrix.branch }}
+
+    - uses: viash-io/viash-actions/project/update-docker-engine@v6
+      if: runner.os == 'Linux'
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        use-public-rspm: true
+
+    - name: Set up R dependencies
+      uses: r-lib/actions/setup-r-dependencies@v2
+      with:
+        packages: |
+          processx
+          testthat
+
+    - name: Set up java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.java.ver }}
+
+    - name: Set up sbt
+      uses: sbt/setup-sbt@v1
+
+    - name: Set up Scala
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          brew install scala
+        else
+          sudo apt-get update
+          sudo apt-get install -y scala
+        fi
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Set up Nextflow
+      if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
+      uses: nf-core/setup-nextflow@v2
+      with:
+        version: ${{ matrix.java.nxf_ver }}
+
+    - name: Run tests
+      run: |
+        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
+          # only run coverage on main runner
+          sbt clean coverage test coverageReport
+        elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
+          sbt 'testOnly -- -l io.viash.NextflowTest'
+        elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          # macOS on github actions does not have Docker, so skip those
+          sbt 'testOnly -- -l io.viash.DockerTest -l io.viash.NextflowTest'
+        else
+          sbt test
+        fi
+
+    - name: Upload coverage on success
+      if: ${{ matrix.java.run_coverage }}
+      run: bash <(curl -s https://codecov.io/bash)
+
+    - name: Upload check results on fail
+      if: failure()
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ matrix.config.name }}_${{ matrix.branch }}_${{ matrix.java.ver }}_results
+        path: check
+
+    - name: Notify on failure
+      if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
+      run: |
+        curl -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 *Weekly Tests Failed*\n\n• **Branch**: ${{ matrix.branch }}\n• **OS**: ${{ matrix.config.name }}\n• **Java**: ${{ matrix.java.ver }}\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+          }' \
+          "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
