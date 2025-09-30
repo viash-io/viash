@@ -41,12 +41,12 @@ jobs:
         viash --help > /dev/null
         echo "✅ viash help command works"
 
-    # - name: Notify download test failure
-    #   if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
-    #   run: |
-    #     curl -X POST \
-    #       -H 'Content-Type: application/json' \
-    #       -d '{
-    #         "text": "🚨 *Viash Download Test Failed*\n\n• **OS**: ${{ matrix.os }}\n• **Issue**: Failed to download/install viash from https://dl.viash.io\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
-    #       }' \
-    #       "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
+    - name: Notify download test failure
+      if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
+      run: |
+        curl -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 *Viash Download Test Failed*\n\n• **OS**: ${{ matrix.os }}\n• **Issue**: Failed to download/install viash from https://dl.viash.io\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+          }' \
+          "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"

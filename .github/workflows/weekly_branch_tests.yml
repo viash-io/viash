@@ -101,12 +101,12 @@ jobs:
         name: ${{ matrix.config.name }}_${{ matrix.branch }}_${{ matrix.java.ver }}_results
         path: check
 
-    # - name: Notify on failure
-    #   if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
-    #   run: |
-    #     curl -X POST \
-    #       -H 'Content-Type: application/json' \
-    #       -d '{
-    #         "text": "🚨 *Weekly Tests Failed*\n\n• **Branch**: ${{ matrix.branch }}\n• **OS**: ${{ matrix.config.name }}\n• **Java**: ${{ matrix.java.ver }}\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
-    #       }' \
-    #       "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
+    - name: Notify on failure
+      if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
+      run: |
+        curl -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 *Weekly Tests Failed*\n\n• **Branch**: ${{ matrix.branch }}\n• **OS**: ${{ matrix.config.name }}\n• **Java**: ${{ matrix.java.ver }}\n• **Repository**: ${{ github.repository }}\n• **Run**: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+          }' \
+          "${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
