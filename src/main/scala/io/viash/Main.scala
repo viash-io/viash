@@ -632,7 +632,7 @@ object Main extends Logging {
     Files.createDirectories(path)
     val etag = Try(Source.fromFile(etag_path.toString).getLines().next()).toOption
 
-    val anc = AutoNetConfig.fetch("api-dev.viash-hub.dev")
+    val anc = AutoNetConfig.fetch("viash-hub.com")
     if (anc.isEmpty) {
       throw new RuntimeException("Error: Could not fetch ANC")
     }
