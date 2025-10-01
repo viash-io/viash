@@ -216,7 +216,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
       """Executes a Viash component from the provided Viash config file. Viash generates a temporary executable and immediately executes it with the given parameters.
         |Alternatively, a component can be fetched directly for Viash-Hub by specifying the package name, package version and component name.""".stripMargin,
       """viash run config.vsh.yaml [-p docker] [-k true/false]  -- [arguments for script]
-        |viash run vsh://toolbox/v0.1.0/yq -- --input input.yaml --output output.yaml --eval '.name'""".stripMargin)
+        |viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml --eval '.name'""".stripMargin)
 
     footer(
       s"""  -- param1 param2 ...    Extra parameters to be passed to the component itself.

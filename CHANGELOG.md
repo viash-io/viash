@@ -8,7 +8,7 @@ TODO add summary
 
 * `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
   This allows for running a component without having to build it first.
-  Example: `viash run vsh://toolbox/v0.1.0/yq -- --input input.yaml --output output.yaml`.
+  Example: `viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml`.
 
 ## BREAKING CHANGES
 
