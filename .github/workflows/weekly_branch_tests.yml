@@ -102,7 +102,7 @@ jobs:
         path: check
 
     - name: Notify on failure
-      if: failure() && secrets.GOOGLE_CHAT_WEBHOOK_URL != ''
+      if: failure() && ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL != '' }}
       run: |
         curl -X POST \
           -H 'Content-Type: application/json' \
