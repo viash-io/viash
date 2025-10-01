@@ -637,7 +637,7 @@ object Main extends Logging {
       throw new RuntimeException("Error: Could not fetch ANC")
     }
     val hosts = anc.get.hosts
-    val protocol = hosts.back_protocol
+    val protocol = hosts.back_protocol.toString().toLowerCase()
     val host = hosts.back
 
     val uri = new URI(s"$protocol://$host/package-bundle/${`package`}/$version/$component?runner=executable")
@@ -687,7 +687,7 @@ object Main extends Logging {
     }
     
     val config = findRemoteConfig(dirPath.toString(), component, Some("executable"))
-    infoOut(s"Config file: $config")
+    debug(s"Config file: $config")
 
     config match {
       case Some(c) => c._1
