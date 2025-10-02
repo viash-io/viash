@@ -23,7 +23,6 @@ jobs:
           - { ver: '21', run_nextflow: true, run_coverage: false, nxf_ver: latest-edge }
         branch:
           - main
-          - develop
           - develop_0_9
 
     steps:
