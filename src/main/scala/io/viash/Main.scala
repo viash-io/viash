@@ -19,7 +19,7 @@ package io.viash
 
 import java.io.{File, FileNotFoundException}
 import java.nio.file.{Path, Paths, Files, NoSuchFileException, FileSystemNotFoundException}
-import java.net.URI
+import java.net.{URI, HttpURLConnection}
 import sys.process.{Process, ProcessLogger}
 
 import config.Config
@@ -35,6 +35,12 @@ import io.viash.runners.Runner
 import io.viash.config.AppliedConfig
 import io.viash.engines.Engine
 import io.viash.helpers.data_structures.*
+import java.io.{BufferedOutputStream, FileOutputStream}
+import io.viash.helpers.DependencyResolver.findRemoteConfig
+import sys.process._
+import scala.jdk.CollectionConverters._
+import scala.io.Source
+import io.viash.helpers.autonetconfig.AutoNetConfig
 
 object Main extends Logging {
   private val pkg = getClass.getPackage
@@ -223,7 +229,7 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(cli.run, packageConfig = pack1)
+        val config = readConfig(cli.run, packageConfig = pack1, allowPackageBundle = true)
         ViashRun(
           appliedConfig = config,
           args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
@@ -341,7 +347,8 @@ object Main extends Logging {
           cli.config.view,
           packageConfig = pack1,
           addOptMainScript = false,
-          applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined
+          applyRunnerAndEngine = cli.config.view.runner.isDefined || cli.config.view.engine.isDefined,
+          allowPackageBundle = true
         )
         val config2 = DependencyResolver.modifyConfig(config.config, None, pack1.rootDir)
         ViashConfig.view(
@@ -441,11 +448,22 @@ object Main extends Logging {
     subcommand: ViashCommand,
     packageConfig: PackageConfig,
     addOptMainScript: Boolean = true,
-    applyRunnerAndEngine: Boolean = true
+    applyRunnerAndEngine: Boolean = true,
+    allowPackageBundle: Boolean = false
   ): AppliedConfig = {
+    val packageBundleRegex = raw"vsh://(\w+)(@[A-Za-z0-9][\w\-\./]*)?/(.*)".r
+    val configPath = subcommand.config() match {
+      case packageBundleRegex(package_, version, component) => 
+        if allowPackageBundle then
+          val versionStr = if (version == null) "latest" else version.stripPrefix("@")
+          fetchPackageBundle(package_, versionStr, component)
+        else 
+          throw new IllegalArgumentException("Error: Package bundles are not allowed in this context.")
+      case str => str
+    }
     
     val config = Config.read(
-      configPath = subcommand.config(),
+      configPath = configPath,
       addOptMainScript = addOptMainScript,
       viashPackage = Some(packageConfig)
     )
@@ -592,5 +610,88 @@ object Main extends Logging {
         })
     }
   }
-  
+
+  /**
+    * Fetch a package bundle from Viash Hub, always fetches the executable version
+    *
+    * @param package package name
+    * @param version package version
+    * @param component component name
+    * @return the path to the config file matched 
+    */
+  def fetchPackageBundle(`package`: String, version: String, component: String): String = {
+    debug(s"Fetching package bundle: ${`package`}/$version/$component")
+
+    val cacheIdentifier = s"${`package`}-$version-$component-executable"
+    debug(s"Cache identifier: $cacheIdentifier")
+    val path = Paths.get(SysEnv.viashHome).resolve("package-bundle-cache")
+    val tarballPath = path.resolve(s"$cacheIdentifier.tar.gz")
+    val etag_path = path.resolve(s"$cacheIdentifier.etag")
+    val dirPath = path.resolve(cacheIdentifier)
+
+    Files.createDirectories(path)
+    val etag = Try(Source.fromFile(etag_path.toString).getLines().next()).toOption
+
+    val anc = AutoNetConfig.fetch("viash-hub.com")
+    if (anc.isEmpty) {
+      throw new RuntimeException("Error: Could not fetch ANC")
+    }
+    val hosts = anc.get.hosts
+    val protocol = hosts.back_protocol.toString().toLowerCase()
+    val host = hosts.back
+
+    val uri = new URI(s"$protocol://$host/package-bundle/${`package`}/$version/$component?runner=executable")
+    infoOut(s"Fetching package bundle from: $uri")
+    
+    val url = uri.toURL()
+
+    val connection = url.openConnection().asInstanceOf[HttpURLConnection]
+    connection.setConnectTimeout(5000)
+    connection.setReadTimeout(60000)
+    if (etag.isDefined)
+      connection.setRequestProperty("If-None-Match", etag.get)
+    connection.connect()
+
+    if (connection.getResponseCode >= 400) {
+      errorOut(s"Error downloading $uri")
+      throw new RuntimeException(s"Error: ${connection.getResponseCode()} ${connection.getResponseMessage()}")
+    }
+    else if (connection.getResponseCode() == 304)
+      infoOut("Not modified")
+    else {
+      val headers = connection.getHeaderFields()
+      val headersScala = headers.asScala
+      debug(s"Headers: $headers")
+      val etag = headersScala.get("etag").flatMap(_.asScala.headOption)
+      debug(s"ETag: $etag")
+
+      // save tarball
+      (url #> tarballPath.toFile()).!!
+
+      // save etag
+      if (etag.isDefined) {
+        val out = new BufferedOutputStream(new FileOutputStream(etag_path.toFile))
+        out.write(etag.get.getBytes())
+        out.close()
+      }
+
+      if (dirPath.toFile().exists()) {
+        debug(s"Removing old cache directory: $dirPath")
+        IO.deleteRecursively(dirPath)
+      }
+
+      // extract the tarball using library
+      debug(s"Extract package bundle to: $dirPath")
+      val cmd = Array("tar", "-xzf", tarballPath.toString, "-C", path.toString)
+      Process(cmd).!!
+    }
+    
+    val config = findRemoteConfig(dirPath.toString(), component, Some("executable"))
+    debug(s"Config file: $config")
+
+    config match {
+      case Some(c) => c._1
+      case None => throw new RuntimeException("Error: Could not find config file in package bundle")
+    }
+  }
 }
