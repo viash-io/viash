@@ -63,59 +63,6 @@ class Vdsl3ModuleTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(!lines2.isDefined)
   }
 
-  test("Test map/mapData/id arguments", DockerTest, NextflowTest) {
-
-    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline1/main.nf",
-      entry = Some("test_map_mapdata_mapid_arguments"),
-      args = List("--publish_dir", "output"),
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-  }
-
-
-  test("Check whether --help is same as Viash's --help", NextflowTest) {
-    // except that WorkflowHelper.nf will not print alternatives, and
-    // will always prefix argument names with -- (so --foo, not -f or foo).
-
-    // run WorkflowHelper's --help
-    val (exitCode, stdOut1, stdErr1) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
-      args = List("--help"),
-      quiet = true,
-      cwd = tempFolFile
-    )
-
-    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut1\nStd error:\n$stdErr1")
-
-    // explicitly remove defaults set by output files
-    // these defaults make sense in nextflow but not in viash
-    val correctedStdOut1 = stdOut1.replaceAll("        default: \\$id\\.\\$key\\.[^\n]*\n", "")
-    // explicitly remove global arguments
-    // these arguments make sense in nextflow but not in viash
-    import java.util.regex.Pattern
-    val regex = Pattern.compile("\nNextflow input-output arguments:.*", Pattern.DOTALL)
-    val correctedStdOut2 = regex.matcher(correctedStdOut1).replaceAll("")
-
-    // run Viash's --help
-    val testOutput = TestHelper.testMain(
-      "run", workflowsPath + "/pipeline3/config.vsh.yaml",
-      "--", "--help"
-    )
-    
-    // explicitly remove triple dash parameters
-    // these make sense when running from command line, not when running in nextflow
-    val correctedTestOutput = testOutput.stdout.replaceAll("""\n\nViash built in .*(\n\s{4}---.*\n(\s{8}.*)+)*""", "")
-
-
-    assert(testOutput.exitCode == Some(0))
-
-    // check if they are the same
-    assert(correctedStdOut2 == correctedTestOutput)
-  }
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)

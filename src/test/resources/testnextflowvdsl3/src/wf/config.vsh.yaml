@@ -35,5 +35,7 @@ dependencies:
 repositories:
   - name: mylocal
     type: local
-platforms:
+engines:
+  - type: native
+runners:
   - type: nextflow

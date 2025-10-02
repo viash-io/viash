@@ -69,8 +69,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
   test("Run config pipeline", NextflowTest) {
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--id", "foo",
         "--input", "resources/lines3.txt",
@@ -100,8 +99,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
       "{id: bar, input: resources/lines5.txt, real_number: 0.5, optional: bar, reality: true}"
 
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--param_list", s"[$fooArgs, $barArgs]",
         "--real_number", "10.5",
@@ -134,8 +132,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     val param_list_file =
       Paths.get(resourcesPath, "pipeline3.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
@@ -169,8 +166,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     NextflowTest
   ) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "../workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "../target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--param_list", "pipeline3.yaml",
         "--real_number", "10.5",
@@ -202,8 +198,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     val param_list_file =
       Paths.get(resourcesPath, "pipeline3.json").toFile.toString
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
@@ -236,8 +231,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     val param_list_file =
       Paths.get(resourcesPath, "pipeline3.csv").toFile.toString
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       args = List(
         "--param_list", param_list_file,
         "--real_number", "10.5",
@@ -273,8 +267,7 @@ class WorkflowHelperTest extends AnyFunSuite with BeforeAndAfterAll {
     val param_list_file =
       Paths.get(resourcesPath, "pipeline3.asis.yaml").toFile.toString
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
-      mainScript = "workflows/pipeline3/main.nf",
-      entry = Some("base"),
+      mainScript = "target/nextflow/test_wfs/empty_workflow/main.nf",
       paramsFile = Some(param_list_file),
       args = List(
         "--real_number", "10.5",

@@ -28,9 +28,6 @@ import io.circe.syntax._
 # setting a value
 .version := "0.3.0"
 
-# setting a value after subsetting a list
-.platforms[.type == "docker"].container_registry := "itx-aiv"
-
 # add something to a list
 .authors += { name: "Mr. T", role: "sponsor" }
 
@@ -38,7 +35,7 @@ import io.circe.syntax._
 .authors +0= { name: "Mr. T", role: "sponsor" }
 
 # apply config mod before parsing the json
-<preparse> .platforms[.type == "nextflow"].variant := "vdsl3"
+<preparse> .runners[.type == "nextflow"].id := "foo"
 
 # delete a value
 del(.version)
@@ -307,7 +304,7 @@ object ConfigModParser extends RegexParsers {
     * 
     * Examples of 'block':
     *   "del(.key); .foo := 'bar'"
-    *   "<preparse> .platforms[.type == 'nextflow'].variant := 'vdsl3'"
+    *   "<preparse> .runners[.type == 'nextflow'].id := 'foo'"
     */
   def command: Parser[(Boolean, Command)] = opt("<preparse>") ~ (delete | assign | append | prepend) ^^ {
     case maybePreparse ~ cm => (maybePreparse.isDefined, cm)

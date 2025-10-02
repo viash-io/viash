@@ -24,18 +24,6 @@ import io.viash.helpers.Logging
 
 trait ViashCommand {
   this: DocumentedSubcommand =>
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
-    default = None,
-    descr =
-      "Deprecated. Use --runner and --engine instead. " +
-      "Specifies which platform amongst those specified in the config to use. " +
-      "If this is not provided, the first platform will be used. " +
-      "If no platforms are defined in the config, the native platform will be used. " +
-      "In addition, the path to a platform yaml file can also be specified.",
-    required = false
-  )
   val runner = registerOpt[String](
     name = "runner",
     default = None,
@@ -56,7 +44,7 @@ trait ViashCommand {
   )
   val config = registerTrailArg[String](
     name = "config",
-    descr = "A viash config file (example: `config.vsh.yaml`). This argument can also be a script with the config as a header.",
+    descr = "A Viash config file (example: `config.vsh.yaml`). This argument can also be a script with the config as a header.",
     default = Some("config.vsh.yaml"),
     required = true
   )
@@ -65,7 +53,7 @@ trait ViashCommand {
     short = Some('c'),
     default = Some(Nil),
 
-    descr = "Modify a viash config at runtime using @[dynamic config modding](config_mod)."
+    descr = "Modify a Viash config at runtime using @[dynamic config modding](config_mod)."
   )
 }
 trait ViashRunner {
@@ -110,20 +98,8 @@ trait ViashNs {
   val src = registerOpt[String](
     name = "src",
     short = Some('s'),
-    descr = "A source directory containing viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
+    descr = "A source directory containing Viash config files, possibly structured in a hierarchical folder structure. Default: src/.",
     default = None
-  )
-  val platform = registerOpt[String](
-    name = "platform",
-    short = Some('p'),
-    descr =
-      "Deprecated. Use --runner and --engine instead. " +
-      "Acts as a regular expression to filter the platform ids specified in the found config files. " +
-        "If this is not provided, all platforms will be used. " +
-        "If no platforms are defined in a config, the native platform will be used. " +
-        "In addition, the path to a platform yaml file can also be specified.",
-    default = None,
-    required = false
   )
   val runner = registerOpt[String](
     name = "runner",
@@ -153,7 +129,7 @@ trait ViashNs {
     name = "config_mod",
     short = Some('c'),
     default = Some(Nil),
-    descr = "Modify a viash config at runtime using @[dynamic config modding](config_mod)."
+    descr = "Modify a Viash config at runtime using @[dynamic config modding](config_mod)."
   )
 }
 
@@ -237,12 +213,14 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
   val run = new DocumentedSubcommand("run") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
     banner(
       "viash run",
-      "Executes a viash component from the provided viash config file. viash generates a temporary executable and immediately executes it with the given parameters.",
-      "viash run config.vsh.yaml [-p docker] [-k true/false]  -- [arguments for script]")
+      """Executes a Viash component from the provided Viash config file. Viash generates a temporary executable and immediately executes it with the given parameters.
+        |Alternatively, a component can be fetched directly for Viash-Hub by specifying the package name, package version and component name.""".stripMargin,
+      """viash run config.vsh.yaml [-p docker] [-k true/false]  -- [arguments for script]
+        |viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml --eval '.name'""".stripMargin)
 
     footer(
       s"""  -- param1 param2 ...    Extra parameters to be passed to the component itself.
-         |                          -- is used to separate viash arguments from the arguments
+         |                          -- is used to separate Viash arguments from the arguments
          |                          of the component.
          |
          |The temporary directory can be altered by setting the VIASH_TEMP directory. Example:
@@ -253,7 +231,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
   object build extends DocumentedSubcommand("build") with ViashCommand with ViashLogger {
     banner(
       "viash build",
-      "Build an executable from the provided viash config file.",
+      "Build an executable from the provided Viash config file.",
       "viash build config.vsh.yaml -o output [-p docker] [-m] [-s]")
 
     val output = registerOpt[String](
@@ -279,7 +257,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
   object test extends DocumentedSubcommand("test") with ViashCommand with WithTemporary with ViashRunner with ViashLogger {
     banner(
       "viash test",
-      "Test the component using the tests defined in the viash config file.",
+      "Test the component using the tests defined in the Viash config file.",
       "viash test config.vsh.yaml [-p docker] [-k true/false] [--setup cachedbuild]")
 
     val setup = registerOpt[String](
@@ -347,7 +325,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object build extends DocumentedSubcommand("build") with ViashNs with ViashNsBuild with ViashLogger {
       banner(
         "viash ns build",
-        "Build a namespace from many viash config files.",
+        "Build a namespace from many Viash config files.",
         "viash ns build [-n nmspc] [-s src] [-t target] [-p docker] [--setup] [--push] [--parallel] [--flatten]")
 
       val setup = registerOpt[String](
@@ -371,7 +349,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object test extends DocumentedSubcommand("test") with ViashNs with WithTemporary with ViashRunner with ViashLogger {
       banner(
         "viash ns test",
-        "Test a namespace containing many viash config files.",
+        "Test a namespace containing many Viash config files.",
         "viash ns test [-n nmspc] [-s src] [-p docker] [--parallel] [--tsv file.tsv] [--setup cachedbuild] [--append]")
 
       val setup = registerOpt[String](
@@ -408,7 +386,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object list extends DocumentedSubcommand("list") with ViashNs with ViashLogger {
       banner(
         "viash ns list",
-        "List a namespace containing many viash config files.",
+        "List a namespace containing many Viash config files.",
         "viash ns list [-n nmspc] [-s src] [-p docker]")
 
       val format = registerChoice(
@@ -440,7 +418,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           | * `{main-script}`: path to the main script (if any)
           | * `{abs-main-script}`: absolute path to the main script (if any)
           | * `{name}`: name of the component
-          | * `{functionality-name}`: name of the component (deprecated)
           | * `{namespace}`: namespace of the component
           | * `{runner}`: selected runner id (only when --apply_runner is used)
           | * `{engine}`: selected engine id (only when --apply_engine is used)
@@ -452,16 +429,6 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
           |command for all Viash components.""".stripMargin,
         """viash ns exec 'echo {path} \\;'
           |viash ns exec 'chmod +x {main-script} +'""".stripMargin
-      )
-      val applyPlatform = registerOpt[Boolean] (
-        name = "apply_platform",
-        short = Some('a'),
-        default = Some(false),
-        descr = 
-          """Deprecated. Use --apply_runner and --apply_engine instead.
-            |Fills in the {platform} and {output} field by applying each platform to the
-            |config separately. Note that this results in the provided command being applied
-            |once for every platform that matches the --platform regex.""".stripMargin
       )
       val applyRunner = registerOpt[Boolean] (
         name = "apply_runner",
@@ -491,7 +458,7 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
 
       val cmd = registerTrailArg[String](
         name = "cmd",
-        descr = "The command to execute for each viash config file in the namespace.",
+        descr = "The command to execute for each Viash config file in the namespace.",
         required = true
       )
     }
@@ -511,8 +478,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object resource extends DocumentedSubcommand("resource") with ViashLogger {
       banner(
         "viash export resource",
-        """Export an internal resource file""".stripMargin,
-        """viash export resource runners/nextflow/WorkflowHelper.nf [--output foo.nf]""".stripMargin
+        """Export an internal resource file""",
+        """viash export resource runners/nextflow/WorkflowHelper.nf [--output foo.nf]"""
       )
 
       val path = registerTrailArg[String](
@@ -531,8 +498,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object cli_schema extends DocumentedSubcommand("cli_schema") with ViashLogger {
       banner(
         "viash export cli_schema",
-        """Export the schema of the Viash CLI as a JSON""".stripMargin,
-        """viash export cli_schema [--output file.json] [--format json]""".stripMargin
+        """Export the schema of the Viash CLI as a JSON""",
+        """viash export cli_schema [--output file.json] [--format json]"""
       )
       val output = registerOpt[String](
         name = "output",
@@ -551,8 +518,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object cli_autocomplete extends DocumentedSubcommand("cli_autocomplete") with ViashLogger {
       banner(
         "viash export bash_autocomplete",
-        """Export the autocomplete script as to be used in Bash or Zsh""".stripMargin,
-        """viash export bash_autocomplete [--output viash_autocomplete_bash] [--zsh]""".stripMargin
+        """Export the autocomplete script as to be used in Bash or Zsh""",
+        """viash export bash_autocomplete [--output viash_autocomplete_bash] [--zsh]"""
       )
       val output = registerOpt[String](
         name = "output",
@@ -571,8 +538,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object config_schema extends DocumentedSubcommand("config_schema") with ViashLogger {
       banner(
         "viash export config_schema",
-        """Export the schema of a Viash config as a JSON""".stripMargin,
-        """viash export config_schema [--output file.json] [--format json]""".stripMargin
+        """Export the schema of a Viash config as a JSON""",
+        """viash export config_schema [--output file.json] [--format json]"""
       )
       val output = registerOpt[String](
         name = "output",
@@ -591,8 +558,8 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
     object json_schema extends DocumentedSubcommand("json_schema") with ViashLogger {
       banner(
         "viash export json_schema",
-        """Export the json schema to validate a Viash config""".stripMargin,
-        """viash export json_schema [--output file.json] [--format json]""".stripMargin
+        """Export the json schema to validate a Viash config""",
+        """viash export json_schema [--output file.json] [--format json]"""
       )
       val output = registerOpt[String](
         name = "output",

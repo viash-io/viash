@@ -21,19 +21,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
       | _debug(workflowArgs, "input")
       | map { tuple ->
         tuple = deepClone(tuple)
-        
-        if (workflowArgs.map) {
-          tuple = workflowArgs.map(tuple)
-        }
-        if (workflowArgs.mapId) {
-          tuple[0] = workflowArgs.mapId(tuple[0])
-        }
-        if (workflowArgs.mapData) {
-          tuple[1] = workflowArgs.mapData(tuple[1])
-        }
-        if (workflowArgs.mapPassthrough) {
-          tuple = tuple.take(2) + workflowArgs.mapPassthrough(tuple.drop(2))
-        }
 
         // check tuple
         assert tuple instanceof List : 
@@ -73,33 +60,6 @@ def workflowFactory(Map args, Map defaultWfArgs, Map meta) {
           "  Example: [\"id\", [input: file('foo.txt'), arg: 10]].\n" +
           "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
 
-        // rename keys of data field in tuple
-        if (workflowArgs.renameKeys) {
-          assert workflowArgs.renameKeys instanceof Map : 
-              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class: Map. Found: renameKeys.getClass() is ${workflowArgs.renameKeys.getClass()}"
-          assert tuple[1] instanceof Map : 
-              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
-              "  Expected class: Map. Found: tuple[1].getClass() is ${tuple[1].getClass()}"
-
-          // TODO: allow renameKeys to be a function?
-          workflowArgs.renameKeys.each { newKey, oldKey ->
-            assert newKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class of newKey: String. Found: newKey.getClass() is ${newKey.getClass()}"
-            assert oldKey instanceof CharSequence : 
-              "Error renaming data keys in module '${key_}' id '${tuple[0]}'.\n" +
-              "  Example: renameKeys: ['new_key': 'old_key'].\n" +
-              "  Expected class of oldKey: String. Found: oldKey.getClass() is ${oldKey.getClass()}"
-            assert tuple[1].containsKey(oldKey) : 
-              "Error renaming data keys in module '${key}' id '${tuple[0]}'.\n" +
-              "  Key '$oldKey' is missing in the data map. tuple[1].keySet() is '${tuple[1].keySet()}'"
-            tuple[1].put(newKey, tuple[1][oldKey])
-          }
-          tuple[1].keySet().removeAll(workflowArgs.renameKeys.collect{ newKey, oldKey -> oldKey })
-        }
         tuple
       }
 

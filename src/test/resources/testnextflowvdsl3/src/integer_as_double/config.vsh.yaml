@@ -1,25 +1,26 @@
-functionality:
-  name: integer_as_double
-  arguments:
-    - name: "--input"
-      type: file
-      required: true
-      example: input.txt
-    - name: "--output"
-      type: file
-      required: true
-      direction: output
-      example: output.txt
-    - name: "--double"
-      type: double
-      required: true
-      direction: input
-      example: 10.5
-  resources:
-    - type: bash_script
-      path: script.sh
-platforms:
+name: integer_as_double
+arguments:
+  - name: "--input"
+    type: file
+    required: true
+    example: input.txt
+  - name: "--output"
+    type: file
+    required: true
+    direction: output
+    example: output.txt
+  - name: "--double"
+    type: double
+    required: true
+    direction: input
+    example: 10.5
+resources:
+  - type: bash_script
+    path: script.sh
+engines:
   - type: native
   - type: docker
     image: nextflow/bash:latest
+runners:
+  - type: executable
   - type: nextflow

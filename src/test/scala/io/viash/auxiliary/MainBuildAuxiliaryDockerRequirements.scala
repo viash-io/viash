@@ -477,7 +477,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
 
     assert(testOutput.exitCode == Some(1))
     assert(testOutput.stdout.contains("Error: Failed to install 'non-existing-package' from CRAN"))
-    assert(testOutput.stdout.contains("ERROR: failed to solve"))
+    assert(testOutput.stdout.contains("ERROR: failed to solve:") || testOutput.stdout.contains("ERROR: failed to build: failed to solve:"))
   }
 }
 

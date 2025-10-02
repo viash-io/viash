@@ -74,14 +74,6 @@ workflow {
 
 - `auto.transcript`: If `true`, the module's transcript will be published to the `params.transcriptDir` folder. Default: `false` (inherited from Viash config).
 
-- `map` (`Function`): Apply a map over the incoming tuple. Example: `{ tup -> [ tup[0], [input: tup[1].output] ] + tup.drop(2) }`. Default: `null`.
-
-- `mapId` (`Function`): Apply a map over the ID element of a tuple (i.e. the first element). Example: `{ id -> id + "_foo" }`. Default: `null`.
-
-- `mapData` (`Function`): Apply a map over the data element of a tuple (i.e. the second element). Example: `{ data -> [ input: data.output ] }`. Default: `null`.
-
-- `mapPassthrough` (`Function`): Apply a map over the passthrough elements of a tuple (i.e. the tuple excl. the first two elements). Example: `{ pt -> pt.drop(1) }`. Default: `null`.
-
 - `filter` (`Function`): Filter the channel. Example: `{ tup -> tup[0] == "foo" }`. Default: `null`.
 
 - `fromState`: Fetch data from the state and pass it to the module without altering the current state. `fromState` should be `null`, `List[String]`, `Map[String, String]` or a function. 

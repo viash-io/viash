@@ -21,5 +21,7 @@ resources:
     entrypoint: base
 dependencies:
   - name: step1
-platforms:
+engines:
+  - type: native
+runners:
   - type: nextflow

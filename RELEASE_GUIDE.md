@@ -27,7 +27,7 @@ Head over releases and select the prepared release.
 
 Double check the tag version.
 
-Add the title from the changelog.md into the release notes.
+Add the title from the relevant `CHANGELOGS/CHANGELOG_x.x.md` into the release notes.
 
 Select the necessary prerelease or latest release options and hit the 'publish release' button.
 
@@ -59,7 +59,7 @@ Short summary if you already have an operational envirionment:
 
 Under the `develop` branch,
 - Update the version in `build.sbt` to the next version with a `-dev` suffix.
-- Add a placeholder entry in `CHANGELOG.md` for a future release.
+- Add a placeholder entry in `CHANGELOGS/CHANGELOG_x.x.md` for a future release.
 
 Template:
 

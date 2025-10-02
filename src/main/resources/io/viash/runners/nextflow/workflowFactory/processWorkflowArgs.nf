@@ -14,7 +14,7 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
   assert key ==~ /^[a-zA-Z_]\w*$/ : "Error in module '$key': Expected process argument 'key' to consist of only letters, digits or underscores. Found: ${key}"
 
   // check for any unexpected keys
-  def expectedKeys = ["key", "directives", "auto", "map", "mapId", "mapData", "mapPassthrough", "filter", "runIf", "fromState", "toState", "args", "renameKeys", "debug"]
+  def expectedKeys = ["key", "directives", "auto", "filter", "runIf", "fromState", "toState", "args", "debug"]
   def unexpectedKeys = workflowArgs.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Error in module '$key': unexpected arguments to the '.run()' function: '${unexpectedKeys.join("', '")}'"
 
@@ -74,16 +74,9 @@ def processWorkflowArgs(Map args, Map defaultWfArgs, Map meta) {
     workflowArgs.directives.keySet().removeAll(["publishDir", "cpus", "memory", "label"])
   }
 
-  for (nam in ["map", "mapId", "mapData", "mapPassthrough", "filter", "runIf"]) {
+  for (nam in ["filter", "runIf"]) {
     if (workflowArgs.containsKey(nam) && workflowArgs[nam]) {
       assert workflowArgs[nam] instanceof Closure : "Error in module '$key': Expected process argument '$nam' to be null or a Closure. Found: class ${workflowArgs[nam].getClass()}"
-    }
-  }
-
-  // TODO: should functions like 'map', 'mapId', 'mapData', 'mapPassthrough' be deprecated as well?
-  for (nam in ["map", "mapData", "mapPassthrough", "renameKeys"]) {
-    if (workflowArgs.containsKey(nam) && workflowArgs[nam] != null) {
-      log.warn "module '$key': workflow argument '$nam' is deprecated and will be removed in Viash 0.9.0. Please use 'fromState' and 'toState' instead."
     }
   }
 
@@ -117,12 +110,16 @@ def _processFromState(fromState, key_, config_) {
     assert fromState.values().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all values are Strings"
     assert fromState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': fromState is a Map, but not all keys are Strings"
     def fromStateMap = fromState.clone()
-    def requiredInputNames = meta.config.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
+    def allArgumentNames = config_.allArguments.collect{it.plainName}
+    def requiredInputNames = config_.allArguments.findAll{it.required && it.direction == "Input"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     fromState = { it ->
       def state = it[1]
       assert state instanceof Map : "Error in module '$key_': the state is not a Map"
       def data = fromStateMap.collectMany{newkey, origkey ->
+        if (!allArgumentNames.contains(newkey)) {
+          throw new Exception("Error processing fromState for '$key_': invalid argument '$newkey'")
+        }
         // check whether newkey corresponds to a required argument
         if (state.containsKey(origkey)) {
           [[newkey, state[origkey]]]
@@ -161,6 +158,7 @@ def _processToState(toState, key_, config_) {
     assert toState.values().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all values are Strings"
     assert toState.keySet().every{it instanceof CharSequence} : "Error in module '$key_': toState is a Map, but not all keys are Strings"
     def toStateMap = toState.clone()
+    def allArgumentNames = config_.allArguments.collect{it.plainName}
     def requiredOutputNames = config_.allArguments.findAll{it.required && it.direction == "Output"}.collect{it.plainName}
     // turn the map into a closure to be used later on
     toState = { it ->
@@ -169,6 +167,9 @@ def _processToState(toState, key_, config_) {
       assert output instanceof Map : "Error in module '$key_': the output is not a Map"
       assert state instanceof Map : "Error in module '$key_': the state is not a Map"
       def extraEntries = toStateMap.collectMany{newkey, origkey ->
+        if (!allArgumentNames.contains(origkey)) {
+          throw new Exception("Error processing toState for '$key_': invalid argument '$origkey'")
+        }
         // check whether newkey corresponds to a required argument
         if (output.containsKey(origkey)) {
           [[newkey, output[origkey]]]

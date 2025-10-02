@@ -201,6 +201,33 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   } 
 
 
+  test("Test invalid argument in fromState map", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/invalid_fromstate_argument/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 1, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    assert(stdOut.contains("Error processing fromState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
+  } 
+
+  test("Test invalid argument in toState map", DockerTest, NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/test_wfs/invalid_tostate_argument/main.nf",
+      args = List(
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 1, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    assert(stdOut.contains("Error processing toState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
+  }
+
+
   test("Run multiple output channels standalone", NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/multiple_emit_channels/main.nf",

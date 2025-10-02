@@ -57,7 +57,7 @@ def findStates(Map params, Map config) {
     helpMessage(auto_config)
 
     output_ch = 
-      channelFromParams(auto_params, auto_config)
+      _channelFromParams(auto_params, auto_config)
         | flatMap { autoId, args ->
 
           def globalSettings = args.settings ? readYamlBlob(args.settings) : [:]
