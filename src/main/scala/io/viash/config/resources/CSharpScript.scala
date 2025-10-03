@@ -45,75 +45,27 @@ case class CSharpScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val quo = "\"'\"'\""
+    // Extract only the class and functions, not the main execution part
+    // TODO: remove takewhile
+    val helperFunctions = language.viashParseYamlCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (Args.Length == 0)"))
+      .mkString("\n")
     
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-    val parSet = params.map{ par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "@\"'\"'\"", quo, """\"""", """\"\"""")
-      val parse = { par match {
-        case a: BooleanArgumentBase if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => bool.Parse(x.ToLower())).ToArray()"""
-        case a: IntegerArgument if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt32(x)).ToArray()"""
-        case a: LongArgument if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToInt64(x)).ToArray()"""
-        case a: DoubleArgument if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).Select(x => Convert.ToDouble(x)).ToArray()"""
-        case a: FileArgument if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
-        case a: StringArgument if a.multiple =>
-          s"""$env_name.Split($quo${a.multiple_sep}$quo).ToArray()"""
-        case _: BooleanArgumentBase => s"""bool.Parse($env_name.ToLower())"""
-        case _: IntegerArgument => s"""Convert.ToInt32($env_name)"""
-        case _: LongArgument => s"""Convert.ToInt64($env_name)"""
-        case _: DoubleArgument => s"""Convert.ToDouble($env_name)"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
-      }}
-
-      val class_ = par match {
-        case _: BooleanArgumentBase => "bool"
-        case _: IntegerArgument => "int"
-        case _: LongArgument => "long"
-        case _: DoubleArgument => "double"
-        case _: FileArgument => "string"
-        case _: StringArgument => "string"
-      }
-
-      // TODO: set as null if not found, not an empty array
-      val notFound = par match {
-        //case a: Argument[_] if a.multiple => Some(s"new $class_[0]")
-        case a: Argument[_] if a.multiple => Some(s"(${class_}) null")
-        case a: StringArgument if !a.required => Some(s"(${class_}) null")
-        case a: FileArgument if !a.required => Some(s"(${class_}) null")
-        case a: Argument[_] if !a.required => Some(s"(${class_}?) null")
-        case _: Argument[_] => None
-      }
-
-      val setter = notFound match {
-        case Some(nf) =>
-          s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo "$nf"; fi )"""
-        case None => parse.replaceAll(quo, "\"")
-      }
-
-      s"${par.plainName} = $setter"
-      }
-
-      s"""var $dest = new {
-      |  ${parSet.mkString(",\n  ")}
-      |};
-      |""".stripMargin
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse YAML once and extract all sections
+      val parseOnce = "// Parse YAML parameters once and extract all sections\nvar _viashYamlData = ViashYamlParser.ParseYaml();\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"var $dest = _viashYamlData.ContainsKey(\"$dest\") ? (Dictionary<string, object>)_viashYamlData[\"$dest\"] : new Dictionary<string, object>();"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
     }
 
-    ScriptInjectionMods(params = paramsCode.mkString)
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
   }
 }
-
-object CSharpScript extends ScriptCompanion {
-  val commentStr = "//"
-  val extension = "csx"
-  val `type` = "csharp_script"
-  val executor = Seq("dotnet", "script")
-}
-

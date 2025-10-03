@@ -45,60 +45,36 @@ case class RScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-
-      val parSet = params.map { par =>
-
-        // todo: escape multiple_sep?
-        val (lhs, rhs) = par match {
-          case a: BooleanArgumentBase if a.multiple =>
-            ("as.logical(strsplit(toupper(", s"), split = '${a.multiple_sep}')[[1]])")
-          case a: IntegerArgument if a.multiple =>
-            ("as.integer(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: LongArgument if a.multiple =>
-            ("bit64::as.integer64(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: DoubleArgument if a.multiple =>
-            ("as.numeric(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: FileArgument if a.multiple =>
-            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
-          case a: StringArgument if a.multiple =>
-            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
-          case _: BooleanArgumentBase => ("as.logical(toupper(", "))")
-          case _: IntegerArgument => ("as.integer(", ")")
-          case _: LongArgument => ("bit64::as.integer64(", ")")
-          case _: DoubleArgument => ("as.numeric(", ")")
-          case _: FileArgument => ("", "")
-          case _: StringArgument => ("", "")
-        }
-        val sl = "\\VIASH_SLASH\\" // used instead of "\\", as otherwise the slash gets escaped automatically.
-
-        val notFound = "NULL"
-        
-        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo $notFound; fi )"""
-      }
-
-      s"""$dest <- list(
-        |  ${parSet.mkString(",\n  ")}
-        |)
-        |""".stripMargin
+    // Extract only the functions, not the main execution part  
+    val helperFunctions = language.viashParseYamlCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (!interactive() && identical(environment(), globalenv()))"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse YAML once and extract all sections
+      val parseOnce = "# Parse YAML parameters once and extract all sections\n.viash_yaml_data <- viash_parse_yaml()\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"$dest <- if (is.null(.viash_yaml_data[['$dest']])) list() else .viash_yaml_data[['$dest']]"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
     }
 
     val outCode = s"""# treat warnings as errors
        |.viash_orig_warn <- options(warn = 2)
        |
-       |${paramsCode.mkString}
+       |$helperFunctions
+       |
+       |$paramsCode
        |
        |# restore original warn setting
        |options(.viash_orig_warn)
        |rm(.viash_orig_warn)
+       |rm(.viash_yaml_data)
        |""".stripMargin
     ScriptInjectionMods(params = outCode)
   }
-}
-
-object RScript extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "R"
-  val `type` = "r_script"
-  val executor = Seq("Rscript")
 }

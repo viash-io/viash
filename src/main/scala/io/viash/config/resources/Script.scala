@@ -20,9 +20,10 @@ package io.viash.config.resources
 import java.net.URI
 import io.viash.config.arguments.Argument
 import io.viash.config.Config
+import io.viash.language.Language
 
 trait Script extends Resource {
-  val companion: ScriptCompanion
+  val language: Language
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
 
@@ -85,30 +86,14 @@ trait Script extends Resource {
   def commandSeq(script: String): Seq[String] = companion.executor ++ Seq(script)
 }
 
-trait ScriptCompanion {
-  val commentStr: String
-  val extension: String
-  val `type`: String
-  val executor: Seq[String]
-  // def apply(
-  //   path: Option[String] = None,
-  //   text: Option[String] = None,
-  //   dest: Option[String] = None,
-  //   is_executable: Option[Boolean] = Some(true),
-  //   parent: Option[URI] = None,
-  //   entrypoint: Option[String] = None,
-  //   `type`: String = `type`
-  // ): Script
-}
-
 object Script {
-  val companions = List(BashScript, PythonScript, RScript, JavaScriptScript, NextflowScript, ScalaScript, CSharpScript)
+  val languages = List(Bash, Python, R, JavaScript, Nextflow, Scala, CSharp)
   val extensions =
-    companions
+    languages
       .map(x => (x.extension.toLowerCase, x))
       .toMap
 
-  def fromExt(extension: String): ScriptCompanion = {
+  def fromExt(extension: String): Language = {
     extensions(extension.toLowerCase)
   }
 

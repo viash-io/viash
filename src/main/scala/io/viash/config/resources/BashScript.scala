@@ -45,19 +45,13 @@ case class BashScript(
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val parSet = argsMetaAndDeps.values.flatten.map { par =>
-      val slash = "\\VIASH_SLASH\\"
-      s"""$$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$${${par.VIASH_PAR}}" | sed "s#'#'$slash"'$slash"'#g;s#.*#${par.par}='&'#" ; else echo "# ${par.par}="; fi )"""
-    }
 
-    val paramsCode = parSet.mkString("", "\n", "\n")
-    ScriptInjectionMods(params = paramsCode)
+    val fullCode = s"""${language.viashParseYamlCode}
+
+_viash_yaml_content=$$(cat)
+ViashParseYamlBash <<< "$$_viash_yaml_content"
+
+"""
+    ScriptInjectionMods(params = fullCode)
   }
-}
-
-object BashScript extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "sh"
-  val `type` = "bash_script"
-  val executor = Seq("bash")
 }
