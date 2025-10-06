@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `Vsh repository`: Add support for overriding host resolving (PR #xxx). This is meant for internal usage and testing and will be replaced in the near future.
+* `Vsh repository`: Add support for overriding host resolving (PR #854). This is meant for internal usage and testing and will be replaced in the near future.
 
 ## BUG FIXES
 
