@@ -24,6 +24,7 @@ import java.net.URI
 import _root_.io.viash.helpers.Bash
 import io.viash.schemas._
 import io.viash.config.Config
+import io.viash.languages.Python
 
 @description("""An executable Python script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,60 +38,34 @@ case class PythonScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a Python script.")
-  `type`: String = PythonScript.`type`
+  `type`: String = "python_script"
 ) extends Script {
-  val companion = PythonScript
+  val language = Python
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-      val parSet = params.map { par =>
-        // val env_name = par.VIASH_PAR
-        val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "r'", "'", """\'""", """\'\"\'\"r\'""")
-
-        val parse = par match {
-          case a: BooleanArgumentBase if a.multiple =>
-            s"""list(map(lambda x: (x.lower() == 'true'), $env_name.split('${a.multiple_sep}')))"""
-          case a: IntegerArgument if a.multiple =>
-            s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
-          case a: LongArgument if a.multiple =>
-            s"""list(map(int, $env_name.split('${a.multiple_sep}')))"""
-          case a: DoubleArgument if a.multiple =>
-            s"""list(map(float, $env_name.split('${a.multiple_sep}')))"""
-          case a: FileArgument if a.multiple =>
-            s"""$env_name.split('${a.multiple_sep}')"""
-          case a: StringArgument if a.multiple =>
-            s"""$env_name.split('${a.multiple_sep}')"""
-          case _: BooleanArgumentBase => s"""$env_name.lower() == 'true'"""
-          case _: IntegerArgument => s"""int($env_name)"""
-          case _: LongArgument => s"""int($env_name)"""
-          case _: DoubleArgument => s"""float($env_name)"""
-          case _: FileArgument => s"""$env_name"""
-          case _: StringArgument => s"""$env_name"""
-        }
-
-        val notFound = "None"
-
-        s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
-      }
-
-      s"""$dest = {
-        |  ${parSet.mkString(",\n  ")}
-        |}
-        |""".stripMargin
+    // Extract only the functions, not the main execution part
+    val helperFunctions = language.viashParseJsonCode
+      .split("\n")
+      .takeWhile(line => !line.startsWith("if __name__ == \"__main__\":"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse JSON once and extract all sections
+      val parseOnce = "# Parse JSON parameters once and extract all sections\n_viash_json_data = viash_parse_json()\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"$dest = _viash_json_data.get('$dest', {})"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
     }
 
-    ScriptInjectionMods(params = paramsCode.mkString)
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
   }
-}
-
-object PythonScript extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "py"
-  val `type` = "python_script"
-  // The -B argument stops Python from creating .pyc or .pyo files
-  // on importing functions from other files.
-  val executor = Seq("python", "-B")
 }
