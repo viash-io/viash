@@ -1,6 +1,7 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.5 (2025-10-06): Hotfix for internal CI usage
 
-TODO add summary
+This is a hotfix release to support internal CI usage and testing.
+There is no functionality change for regular users.
 
 ## MINOR CHANGES
 
@@ -9,6 +10,7 @@ TODO add summary
 ## BUG FIXES
 
 * `Dependencies`: Fix an issue where deeply nested dependencies are not resolvable if they require a local dependency (PR #838).
+  This solves a build issue, some issues still remain with running components with such dependencies.
 
 # Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 
