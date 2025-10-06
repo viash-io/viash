@@ -48,8 +48,8 @@ trait ViashhubRepositoryTrait extends AbstractGitRepository {
     Some(s"viashhub-${fullRepo.replace("/", "-")}${tag.map(_.prepended('-')).getOrElse("")}")
 
   // TODO: replace by using anc
-  val server = sys.env.getOrElse("VIASH_VSH_HOST", "packages.viash-hub.com")
-  assert(server.matches("^[\\w\\.\\-\\/]*$"), s"VIASH_VSH_HOST should not contain protocol or user information, got: $server")
+  val server = sys.env.getOrElse("VIASH_HUB_HOST", "packages.viash-hub.com")
+  assert(server.matches("^[\\w\\.\\-\\/]*$"), s"VIASH_HUB_HOST should not contain protocol or user information, got: $server")
 
   val uri = s"https://$server/$fullRepo.git"
   lazy val uri_ssh = s"git@$server:$fullRepo.git"
