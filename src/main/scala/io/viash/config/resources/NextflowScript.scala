@@ -29,6 +29,7 @@ import io.circe.syntax._
 import io.viash.helpers.circe._
 import io.viash.ViashNamespace
 import io.viash.config.dependencies.Dependency
+import io.viash.languages.Nextflow
 
 @description("""A Nextflow script. Work in progress; added mainly for annotation at the moment.""")
 @subclass("nextflow_script")
@@ -43,10 +44,10 @@ case class NextflowScript(
   entrypoint: String,
 
   @description("Specifies the resource as a Nextflow script.")
-  `type`: String = NextflowScript.`type`
+  `type`: String = "nextflow_script"
 ) extends Script {
 
-  val companion = NextflowScript
+  val language = Nextflow
 
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)

@@ -101,7 +101,8 @@ package object resources {
           case Right("executable") => decodeExecutable.widen
           case Right("file") => decodePlainFile.widen
           case Right(typ) => 
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, Script.companions.map(c => c.`type`) ++ List("executable", "file")).widen
+            val validTypes = Script.languages.map(lang => lang.id + "_script") :+ "file"
+            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, validTypes).widen
           case Left(_) => decodePlainFile.widen // default is a simple file
         }
 

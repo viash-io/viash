@@ -24,6 +24,7 @@ import io.viash.schemas._
 
 import java.net.URI
 import io.viash.config.Config
+import io.viash.languages.R
 
 @description("""An executable R script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,25 +38,25 @@ case class RScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a R script.")
-  `type`: String = RScript.`type`
+  `type`: String = "r_script"
 ) extends Script {
-  val companion = RScript
+  val language = R
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // Extract only the functions, not the main execution part  
-    val helperFunctions = language.viashParseYamlCode
+    val helperFunctions = language.viashParseJsonCode
       .split("\n")
       .takeWhile(line => !line.contains("if (!interactive() && identical(environment(), globalenv()))"))
       .mkString("\n")
     
     val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse YAML once and extract all sections
-      val parseOnce = "# Parse YAML parameters once and extract all sections\n.viash_yaml_data <- viash_parse_yaml()\n"
+      // Parse JSON once and extract all sections
+      val parseOnce = "# Parse JSON parameters once and extract all sections\n.viash_json_data <- viash_parse_json()\n"
       val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"$dest <- if (is.null(.viash_yaml_data[['$dest']])) list() else .viash_yaml_data[['$dest']]"
+        s"$dest <- if (is.null(.viash_json_data[['$dest']])) list() else .viash_json_data[['$dest']]"
       }.mkString("\n")
       
       parseOnce + extractSections
@@ -73,7 +74,7 @@ case class RScript(
        |# restore original warn setting
        |options(.viash_orig_warn)
        |rm(.viash_orig_warn)
-       |rm(.viash_yaml_data)
+       |rm(.viash_json_data)
        |""".stripMargin
     ScriptInjectionMods(params = outCode)
   }

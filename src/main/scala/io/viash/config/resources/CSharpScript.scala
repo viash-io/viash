@@ -24,6 +24,7 @@ import io.viash.schemas._
 import java.net.URI
 import io.viash.helpers.Bash
 import io.viash.config.Config
+import io.viash.languages.CSharp
 
 @description("""An executable C# script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,26 +38,25 @@ case class CSharpScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a C# script.")
-  `type`: String = CSharpScript.`type`
+  `type`: String = "csharp_script"
 ) extends Script {
-  val companion = CSharpScript
+  val language = CSharp
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // Extract only the class and functions, not the main execution part
-    // TODO: remove takewhile
-    val helperFunctions = language.viashParseYamlCode
+    val helperFunctions = language.viashParseJsonCode
       .split("\n")
       .takeWhile(line => !line.contains("if (Args.Length == 0)"))
       .mkString("\n")
     
     val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse YAML once and extract all sections
-      val parseOnce = "// Parse YAML parameters once and extract all sections\nvar _viashYamlData = ViashYamlParser.ParseYaml();\n"
+      // Parse JSON once and extract all sections
+      val parseOnce = "// Parse JSON parameters once and extract all sections\nvar _viashJsonData = ViashJsonParser.ParseJson();\n"
       val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"var $dest = _viashYamlData.ContainsKey(\"$dest\") ? (Dictionary<string, object>)_viashYamlData[\"$dest\"] : new Dictionary<string, object>();"
+        s"var $dest = _viashJsonData.ContainsKey(\"$dest\") ? (Dictionary<string, object>)_viashJsonData[\"$dest\"] : new Dictionary<string, object>();"
       }.mkString("\n")
       
       parseOnce + extractSections

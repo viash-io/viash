@@ -612,7 +612,8 @@ object Config extends Logging {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
+      val scriptType = s"${scriptObj.id}_script"
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptType)
 
       (yaml, Some(script))
     } else {

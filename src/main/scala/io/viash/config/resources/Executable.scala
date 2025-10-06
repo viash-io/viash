@@ -22,6 +22,7 @@ import java.nio.file.Path
 import io.viash.config.arguments.Argument
 import io.viash.schemas._
 import io.viash.config.Config
+import io.viash.languages.Language
 
 @description("An executable file.")
 @subclass("executable")
@@ -35,7 +36,7 @@ case class Executable(
   @description("Specifies the resource as an executable.")
   `type`: String = "executable"
 ) extends Script {
-  val companion = Executable
+  val language: Language = null // todo: deprecate executable
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }

@@ -24,6 +24,7 @@ import io.viash.schemas._
 import java.net.URI
 import io.viash.helpers.Bash
 import io.viash.config.Config
+import io.viash.languages.{Bash => BashLang}
 
 @description("""An executable Bash script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,19 +38,20 @@ case class BashScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a Bash script.")
-  `type`: String = BashScript.`type`
+  `type`: String = "bash_script"
 ) extends Script {
-  val companion = BashScript
+  val language = BashLang
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
 
-    val fullCode = s"""${language.viashParseYamlCode}
+    val fullCode = s"""${language.viashParseJsonCode}
 
-_viash_yaml_content=$$(cat)
-ViashParseYamlBash <<< "$$_viash_yaml_content"
+# Parse JSON parameters
+_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
+ViashParseJsonBash <<< "$$_viash_json_content"
 
 """
     ScriptInjectionMods(params = fullCode)

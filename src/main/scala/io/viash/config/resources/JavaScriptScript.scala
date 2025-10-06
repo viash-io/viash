@@ -24,6 +24,7 @@ import java.net.URI
 import io.viash.helpers.Bash
 import io.viash.config.Config
 import io.viash.config.arguments.{Argument, StringArgument, IntegerArgument, BooleanArgumentBase, LongArgument, DoubleArgument, FileArgument}
+import io.viash.languages.JavaScript
 
 @description("""An executable JavaScript script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,27 +38,26 @@ case class JavaScriptScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a JavaScript script.")
-  `type`: String = JavaScriptScript.`type`
+  `type`: String = "javascript_script"
 ) extends Script {
-  val companion = JavaScriptScript
+  val language = JavaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // Extract only the functions, not the main execution part or module exports
-    // TODO: remove this part
-    val helperFunctions = language.viashParseYamlCode
+    val helperFunctions = language.viashParseJsonCode
       .split("\n")
       .takeWhile(line => !line.contains("if (require.main === module)"))
-      .filterNot(line => line.contains("if (typeof module !== 'undefined' && module.exports)"))
+      .filterNot(line => line.contains("module.exports"))
       .mkString("\n")
     
     val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse YAML once and extract all sections
-      val parseOnce = "// Parse YAML parameters once and extract all sections\nlet _viashYamlData = viashParseYaml();\n"
+      // Parse JSON once and extract all sections
+      val parseOnce = "// Parse JSON parameters once and extract all sections\nconst _viashJsonData = viashParseJson();\n"
       val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"let $dest = _viashYamlData['$dest'] || {};"
+        s"const $dest = _viashJsonData['$dest'] || {};"
       }.mkString("\n")
       
       parseOnce + extractSections
