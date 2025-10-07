@@ -4,7 +4,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `Dependencies`: Fix an issue when trying to relativize a relative path results in an empty array (PR #xxx). The empty array then throws an error when trying to reduce it.
+* `Dependencies`: Fix an issue when trying to relativize a relative path results in an empty array (PR #857). The empty array then throws an error when trying to reduce it.
 
 # Viash 0.9.5 (2025-10-06): Hotfix for internal CI usage
 
