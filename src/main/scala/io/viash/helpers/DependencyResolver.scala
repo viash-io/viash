@@ -326,12 +326,7 @@ object DependencyResolver extends Logging {
       val commonParts = dspParts.zipAll(relativeOutputPath, None, None).dropWhile{ case (a, b) => a == b }
 
       val leftPath = commonParts.flatMap(_._1).reverse.fold(dsp.getRoot())((p1, p2) => p1.resolve(p2))
-      // val rightPath = commonParts.flatMap(_._2).reverse.reduce((p1, p2) => p1.resolve(p2))
-      val rightPath = 
-        if (commonParts.flatMap(_._2).isEmpty)
-          Paths.get("") // if there is no right part, use empty path
-        else
-          commonParts.flatMap(_._2).reverse.reduce((p1, p2) => p1.resolve(p2))
+      val rightPath = commonParts.flatMap(_._2).reverse.reduceOption((p1, p2) => p1.resolve(p2)).getOrElse(Paths.get("")) // if there is no right part, use empty path
       
       (leftPath, rightPath)
     }
