@@ -1,6 +1,6 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
-TODO add summary
+This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
 
 ## BUG FIXES
 
