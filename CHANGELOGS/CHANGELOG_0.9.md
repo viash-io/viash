@@ -1,3 +1,17 @@
+# Viash 0.9.5 (2025-10-06): Hotfix for internal CI usage
+
+This is a hotfix release to support internal CI usage and testing.
+There is no functionality change for regular users.
+
+## MINOR CHANGES
+
+* `Vsh repository`: Add support for overriding host resolving (PR #854). This is meant for internal usage and testing and will be replaced in the near future.
+
+## BUG FIXES
+
+* `Dependencies`: Fix an issue where deeply nested dependencies are not resolvable if they require a local dependency (PR #838).
+  This solves a build issue, some issues still remain with running components with such dependencies.
+
 # Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 
 This is a hotfix release for the changes in Nextflow edge's handling of double arguments.
