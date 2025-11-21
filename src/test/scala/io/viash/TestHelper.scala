@@ -99,7 +99,7 @@ object TestHelper {
     )
 
     println(out)
-    val regex = s"$name\\s*$tag".r
+    val regex = s"$name(\\s*:?)$tag".r
 
     regex.findFirstIn(out.output).isDefined
   }
