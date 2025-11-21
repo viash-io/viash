@@ -98,7 +98,7 @@ object TestHelper {
       Seq("docker", "images", name)
     )
 
-    // print(out)
+    println(out)
     val regex = s"$name\\s*$tag".r
 
     regex.findFirstIn(out.output).isDefined
