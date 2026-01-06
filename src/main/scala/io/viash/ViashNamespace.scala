@@ -98,7 +98,6 @@ object ViashNamespace extends Logging {
           val funName = ac.config.name
           val ns = ac.config.namespace
           val runnerId = ac.runner.get.id
-          // val engineId = ac.platform.get.id
           val out = 
             if (flatten) {
               target

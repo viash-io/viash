@@ -20,10 +20,8 @@ package io.viash.schemas
 import io.circe.{Encoder, Printer => JsonPrinter}
 import io.circe.syntax.EncoderOps
 
-import io.viash.functionality._
 import io.viash.runners._
 import io.viash.engines._
-import io.viash.platforms._
 import io.circe.Json
 import io.viash.config.Config
 import io.viash.config.BuildInfo
@@ -70,7 +68,6 @@ object CollectedSchemas {
       getMembers[BuildInfo](),
       getMembers[SysEnvCC](),
 
-      getMembers[Functionality](),
       getMembers[Author](),
       getMembers[ComputationalRequirements](),
       getMembers[ArgumentGroup](),
@@ -84,12 +81,7 @@ object CollectedSchemas {
 
       getMembers[Engine](),
       getMembers[NativeEngine](),
-      getMembers[DockerEngine](),
-
-      getMembers[Platform](),
-      getMembers[NativePlatform](),
-      getMembers[DockerPlatform](),
-      getMembers[NextflowPlatform](),
+      getMembers[DockerEngine]()
     )
   }
   object memberData_part2 { 

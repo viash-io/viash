@@ -31,7 +31,6 @@ object BashWrapper {
   val metaArgs: List[Argument[_]] = {
     List(
       StringArgument("name", required = true, dest = "meta"),
-      StringArgument("functionality_name", required = true, dest = "meta"),
       // filearguments set to 'must_exist = false, create_parent = false' because of config inject
       FileArgument("resources_dir", required = true, dest = "meta", must_exist = false, create_parent = false),
       FileArgument("executable", required = true, dest = "meta", must_exist = false, create_parent = false),
@@ -311,7 +310,6 @@ object BashWrapper {
        |
        |# define meta fields
        |VIASH_META_NAME="${config.name}"
-       |VIASH_META_FUNCTIONALITY_NAME="${config.name}"
        |VIASH_META_EXECUTABLE="$$VIASH_META_RESOURCES_DIR/$$VIASH_META_NAME"
        |VIASH_META_CONFIG="$$VIASH_META_RESOURCES_DIR/${ConfigMeta.metaFilename}"
        |VIASH_META_TEMP_DIR="$$VIASH_TEMP"
@@ -806,9 +804,11 @@ object BashWrapper {
     val helpStrings = 
       """Viash built in Computational Requirements:
         |    ---cpus=INT
-        |        Number of CPUs to use
+        |        Number of CPUs to use.
         |    ---memory=STRING
         |        Amount of memory to use. Examples: 4GB, 3MiB.
+        |    $VIASH_TEMP
+        |        The temporary directory to use.
         |""".stripMargin
 
     val compArgs = List(

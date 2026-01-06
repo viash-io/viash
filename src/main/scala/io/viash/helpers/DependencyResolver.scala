@@ -178,7 +178,7 @@ object DependencyResolver extends Logging {
           case (k, Some(s: String)) => (k, s)
           case (k, None) => (k, "")
         }.toMap
-      // Add the functionality name and namespace to it
+      // Add the component name and namespace to it
       val map2 = Map(
         ("name" -> c.name),
         ("namespace" -> c.namespace.getOrElse(""))
@@ -212,18 +212,16 @@ object DependencyResolver extends Logging {
       }
       .filter{
         case(scriptPath, info) =>
-          (runnerId, info.get("runner"), info.get("platform")) match { // also try matching on platform as fallback, fetch it already
-            case (None, _, _) => true // if we don't filter for the incoming runnerId, we want all the output runners
-            case (Some(id), Some(runner), _) => runner == id // default behaviour, filter for the incoming runnerId
-            case (Some("executable"), _, Some("native")) => true // legacy code for platform, match executable runner to native platform
-            case (Some(id), _, Some(plat)) => plat == id // legacy code for platform, filter for the incoming runnerId matching platform id
+          (runnerId, info.get("runner")) match {
+            case (None, _) => true // if we don't filter for the incoming runnerId, we want all the output runners
+            case (Some(id), Some(runner)) => runner == id // default behaviour, filter for the incoming runnerId
             case _ => false
           }
       }
       .headOption
   }
 
-  // Read a config file from a built target. Get meta info, functionality name & namespace
+  // Read a config file from a built target. Get meta info, component name & namespace
   def getSparseConfigInfo(configPath: String): Map[String, String] = {
     try {
       // No support for package configs, config mods, ...
@@ -231,26 +229,15 @@ object DependencyResolver extends Logging {
       // We're also assuming that the file will be proper yaml and an actual viash config file
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
-      val legacyMode = json.hcursor.downField("functionality").succeeded
 
       def getName(json: Json): Option[String] = {
-        if (legacyMode)
-          json.hcursor.downField("functionality").downField("name").as[String].toOption
-        else
-          json.hcursor.downField("name").as[String].toOption
+        json.hcursor.downField("name").as[String].toOption
       }
       def getNamespace(json: Json): Option[String] = {
-        if (legacyMode)
-          json.hcursor.downField("functionality").downField("namespace").as[String].toOption
-        else
-          json.hcursor.downField("namespace").as[String].toOption
+        json.hcursor.downField("namespace").as[String].toOption
       }
       def getInfo(json: Json): Option[Map[String, String]] = {
-        val info = 
-          if (legacyMode)
-            json.hcursor.downField("info")
-          else
-            json.hcursor.downField("build_info")
+        val info = json.hcursor.downField("build_info")
         info.keys.map(_.map(k => (k, info.downField(k).as[String].toOption.getOrElse("Not a string"))).toMap)
       }
 
@@ -270,18 +257,8 @@ object DependencyResolver extends Logging {
     try {
       val yamlText = IO.read(IO.uri(configPath))
       val json = Convert.textToJson(yamlText, configPath)
-      val legacyMode = json.hcursor.downField("functionality").succeeded
-
-      val dependencies =
-        if (legacyMode) {
-          val jsonVec = json.hcursor.downField("functionality").downField("dependencies").focus.flatMap(_.asArray).get
-          jsonVec.flatMap(_.hcursor.downField("writtenPath").as[String].toOption).toList
-        }
-        else {
-          val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
-          jsonVec.flatMap(_.hcursor.as[String].toOption).toList
-        }
-      dependencies
+      val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
+      jsonVec.flatMap(_.hcursor.as[String].toOption).toList
     } catch {
       case _: Throwable => Nil
     }

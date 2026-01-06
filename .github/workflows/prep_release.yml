@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -39,11 +39,13 @@ jobs:
       id: get_version
       run: |
         viash_version=$(bin/viash --version | cut -d ' ' -f 2)
+        viash_minor_version=$(echo $viash_version | cut -d. -f1,2)
         echo "Detected Viash version: $viash_version"
+        echo "Detected Viash minor version: $viash_minor_version"
         echo "viash_version=$viash_version" >> "$GITHUB_OUTPUT"
         
         # fetch relevant changelog section
-        changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;next}/^# /{flag=0}flag" CHANGELOG.md)
+        changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;print;next}/^# /{flag=0}flag" CHANGELOGS/CHANGELOG_${viash_minor_version}.md)
         
         echo "changelog_section<<GITHUB_EOF" >> "$GITHUB_OUTPUT"
         echo "$changelog_section" >> "$GITHUB_OUTPUT"
