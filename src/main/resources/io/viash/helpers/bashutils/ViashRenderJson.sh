@@ -17,7 +17,7 @@ function ViashRenderJsonKeyValue {
   local multiple="$3"
   shift 3
 
-  local out="  \"${key}\":"
+  local out="    \"${key}\":"
 
   # Handle null case
   if [ $# -eq 1 ] && [ "$1" == "@@VIASH_UNDEFINED@@" ]; then
