@@ -136,86 +136,86 @@ def testType(testName: String, expectedType: String, actual: Any): Unit = {
     val par = parsed("par").asInstanceOf[Map[String, Any]]
     val meta = parsed("meta").asInstanceOf[Map[String, Any]]
 
-  // Test 1: Basic key-value pairs
-      println("=== Test 1: Basic key-value pairs ===")
-      runTest("par.input", "file.txt", par("input"))
-      runTest("par.number", 42, par("number"))
-      runTest("par.flag", true, par("flag"))
-      runTest("par.empty_value", "", par("empty_value"))
-      runTest("meta.name", "test_component", meta("name"))
-      runTest("meta.version", "1.0.0", meta("version"))
-      println()
+    // Test 1: Basic key-value pairs
+    println("=== Test 1: Basic key-value pairs ===")
+    runTest("par.input", "file.txt", par("input"))
+    runTest("par.number", 42, par("number"))
+    runTest("par.flag", true, par("flag"))
+    runTest("par.empty_value", "", par("empty_value"))
+    runTest("meta.name", "test_component", meta("name"))
+    runTest("meta.version", "1.0.0", meta("version"))
+    println()
+  
+    // Test 2: Arrays
+    println("=== Test 2: Arrays ===")
+    val arraySimple = par("array_simple").asInstanceOf[List[Any]]
+    runTest("par.array_simple length", 3, arraySimple.length)
+    runTest("par.array_simple[0]", "a", arraySimple(0))
+    runTest("par.array_simple[1]", "b", arraySimple(1))
+    runTest("par.array_simple[2]", "c", arraySimple(2))
     
-      // Test 2: Arrays
-      println("=== Test 2: Arrays ===")
-      val arraySimple = par("array_simple").asInstanceOf[List[Any]]
-      runTest("par.array_simple length", 3, arraySimple.length)
-      runTest("par.array_simple[0]", "a", arraySimple(0))
-      runTest("par.array_simple[1]", "b", arraySimple(1))
-      runTest("par.array_simple[2]", "c", arraySimple(2))
-      
-      val arrayNumbers = par("array_numbers").asInstanceOf[List[Any]]
-      runTest("par.array_numbers length", 3, arrayNumbers.length)
-      runTest("par.array_numbers[0]", 1, arrayNumbers(0))
-      runTest("par.array_numbers[1]", 2, arrayNumbers(1))
-      runTest("par.array_numbers[2]", 3, arrayNumbers(2))
-      
-      val arrayMixed = par("array_mixed").asInstanceOf[List[Any]]
-      runTest("par.array_mixed length", 3, arrayMixed.length)
-      println()
+    val arrayNumbers = par("array_numbers").asInstanceOf[List[Any]]
+    runTest("par.array_numbers length", 3, arrayNumbers.length)
+    runTest("par.array_numbers[0]", 1, arrayNumbers(0))
+    runTest("par.array_numbers[1]", 2, arrayNumbers(1))
+    runTest("par.array_numbers[2]", 3, arrayNumbers(2))
     
-      // Test 3: Nested structures
-      println("=== Test 3: Nested structures ===")
-      val nested = par("nested").asInstanceOf[Map[String, Any]]
-      val level1 = nested("level1").asInstanceOf[Map[String, Any]]
-      runTest("par.nested.level1.level2", "deep_value", level1("level2"))
-      println()
+    val arrayMixed = par("array_mixed").asInstanceOf[List[Any]]
+    runTest("par.array_mixed length", 3, arrayMixed.length)
+    println()
+  
+    // Test 3: Nested structures
+    println("=== Test 3: Nested structures ===")
+    val nested = par("nested").asInstanceOf[Map[String, Any]]
+    val level1 = nested("level1").asInstanceOf[Map[String, Any]]
+    runTest("par.nested.level1.level2", "deep_value", level1("level2"))
+    println()
+  
+    // Test 4: Quoted strings
+    println("=== Test 4: Quoted strings ===")
+    runTest("par.path_with_spaces", "/path/with spaces/file.txt", par("path_with_spaces"))
+    runTest("par.quotes", "He said \"hello\"", par("quotes"))
+    runTest("par.newlines", "line1\nline2", par("newlines"))
+    runTest("par.tabs", "col1\tcol2", par("tabs"))
+    println()
+  
+    // Test 5: Type conversions
+    println("=== Test 5: Type conversions ===")
+    testType("par.string", "String", par("string"))
+    testType("par.integer", "Int", par("integer"))
+    testType("par.float", "Double", par("float"))
+    testType("par.bool_true", "Boolean", par("bool_true"))
+    runTest("par.bool_false", false, par("bool_false"))
+    runTest("par.null_value", null, par("null_value"))
+    println()
+  
+    // Test 6: Root-level values
+    println("=== Test 6: Root-level values ===")
+    runTest("simple_key", "simple_value", parsed("simple_key"))
+    runTest("number_key", 123, parsed("number_key"))
+    runTest("bool_key", true, parsed("bool_key"))
+    println()
+  
+    // Test 7: Edge cases
+    println("=== Test 7: Edge cases ===")
+    runTest("par.empty_string", "", par("empty_string"))
+    runTest("par.zero", 0, par("zero"))
+    val emptyArray = par("empty_array").asInstanceOf[List[Any]]
+    runTest("par.empty_array length", 0, emptyArray.length)
+    testType("par.empty_object", "Map", par("empty_object"))
+    println()
     
-      // Test 4: Quoted strings
-      println("=== Test 4: Quoted strings ===")
-      runTest("par.path_with_spaces", "/path/with spaces/file.txt", par("path_with_spaces"))
-      runTest("par.quotes", "He said \"hello\"", par("quotes"))
-      runTest("par.newlines", "line1\nline2", par("newlines"))
-      runTest("par.tabs", "col1\tcol2", par("tabs"))
-      println()
-    
-      // Test 5: Type conversions
-      println("=== Test 5: Type conversions ===")
-      testType("par.string", "String", par("string"))
-      testType("par.integer", "Int", par("integer"))
-      testType("par.float", "Double", par("float"))
-      testType("par.bool_true", "Boolean", par("bool_true"))
-      runTest("par.bool_false", false, par("bool_false"))
-      runTest("par.null_value", null, par("null_value"))
-      println()
-    
-      // Test 6: Root-level values
-      println("=== Test 6: Root-level values ===")
-      runTest("simple_key", "simple_value", parsed("simple_key"))
-      runTest("number_key", 123, parsed("number_key"))
-      runTest("bool_key", true, parsed("bool_key"))
-      println()
-    
-      // Test 7: Edge cases
-      println("=== Test 7: Edge cases ===")
-      runTest("par.empty_string", "", par("empty_string"))
-      runTest("par.zero", 0, par("zero"))
-      val emptyArray = par("empty_array").asInstanceOf[List[Any]]
-      runTest("par.empty_array length", 0, emptyArray.length)
-      testType("par.empty_object", "Map", par("empty_object"))
-      println()
-    
-  // Summary
-  println("==================================================")
-  println(s"Tests completed: ${testsPass + testsFail}")
-  println(s"Tests passed: $testsPass")
-  if (testsFail > 0) {
-    println(s"${Colors.RED}Tests failed: $testsFail${Colors.NC}")
-    sys.exit(1)
-  } else {
-    println(s"${Colors.GREEN}All tests passed!${Colors.NC}")
-    sys.exit(0)
-  }
+    // Summary
+    println("==================================================")
+    println(s"Tests completed: ${testsPass + testsFail}")
+    println(s"Tests passed: $testsPass")
+    if (testsFail > 0) {
+      println(s"${Colors.RED}Tests failed: $testsFail${Colors.NC}")
+      sys.exit(1)
+    } else {
+      println(s"${Colors.GREEN}All tests passed!${Colors.NC}")
+      sys.exit(0)
+    }
   } finally {
     java.nio.file.Files.deleteIfExists(tempFile)
   }
