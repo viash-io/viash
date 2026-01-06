@@ -206,51 +206,54 @@ object BashWrapper {
       }
     val args = argsMetaAndDeps.flatMap(_._2).toList
 
+    // determine script extension
+    val scriptExtension = mainResource match {
+      case Some(res) => res.language.extensions.head
+      case None => "sh"
+    }
+    val scriptPath = s"$$VIASH_WORK_DIR/script${scriptExtension}"
+
+    // TODO: move script generation to config mod?
     // DETERMINE HOW TO RUN THE CODE
     val executionCode = mainResource match {
       // if mainResource is empty (shouldn't be the case)
       case None => ""
 
+      // TODO: disable Executable option?
       // if mainResource is simply an executable
       case Some(e: Executable) => " " + e.path.get + " $VIASH_EXECUTABLE_ARGS"
 
       // if we want to debug our code
       case Some(res) if debugPath.isDefined =>
         val code = res.readWithInjection(argsMetaAndDeps, config)
-        val escapedCode = code// Bash.escapeString(code, allowUnescape = true)
 
         s"""
-          |set -e
           |cat > "${debugPath.get}" << 'VIASHMAIN'
-          |${escapePipes(escapedCode)}
+          |${escapePipes(code)}
           |VIASHMAIN
           |""".stripMargin
 
       // if mainResource is a script
       case Some(res) =>
         val code = res.readWithInjection(argsMetaAndDeps, config)
-        val escapedCode = Bash.escapeString(code, allowUnescape = true)
-
         // Create script file in work directory for both Docker and native execution
-        val scriptPath = s"$$VIASH_WORK_DIR/script.${res.companion.extension}"
+        
         s"""
-          |set -e
           |# Create script file in work directory
-          |cat > "$scriptPath" << 'VIASHMAIN'
-          |${escapePipes(escapedCode)}
+          |ViashDebug "Creating script in work dir at $$VIASH_WORK_SCRIPT"
+          |cat > "$$VIASH_WORK_SCRIPT" << 'VIASHMAIN'
+          |${escapePipes(code)}
           |VIASHMAIN
-          |chmod +x "$scriptPath"$cdToResources
-          |# Execute script with YAML parameters via stdin
-          |${res.command(scriptPath)} < "$$VIASH_WORK_PARAMS" &
-          |wait "\\$$!"
+          |chmod +x "$$VIASH_WORK_SCRIPT"$cdToResources
+          |
+          |# Add context
+          |VIASH_RUN_CMD+=" -c 'VIASH_WORK_PARAMS=\\\"$$VIASH_WORK_DIR/params.json\\\" ${res.command(scriptPath).replace("\"", "\\\"")}'"
+          |
+          |# Run command
+          |ViashDebug "Running command: $$(echo $$VIASH_RUN_CMD)"
+          |eval $$VIASH_RUN_CMD &
+          |wait "$$!"
           |""".stripMargin
-    }
-
-    // generate bash document
-    val (heredocStart, heredocEnd) = mainResource match {
-      case None => ("", "")
-      case Some(_: Executable) => ("", "")
-      case _ => ("", "")  // No HEREDOC needed since script is created as separate file
     }
 
     // generate script modifiers
@@ -262,7 +265,7 @@ object BashWrapper {
       case _ => BashWrapperMods()
     }
     val depMods = generateDependencies(config)
-    val workDirMods = generateWorkDir(argsMetaAndDeps)
+    val workDirMods = generateWorkDir(config.name, scriptPath, argsMetaAndDeps)
 
     // combine
     val allMods = helpMods ++ parMods ++ mods ++ execMods ++ reqMods ++ depMods ++ workDirMods
@@ -297,7 +300,7 @@ object BashWrapper {
        |${Bash.ViashFindTargetDir}
        |${Bash.ViashLogging}
        |${Bash.ViashParseArgumentValue}
-       |${Bash.ViashRenderYaml}
+       |${Bash.ViashRenderJson}
        |# bash helper functions end -------------------------------------
        |
        |# find source folder of this component
@@ -364,8 +367,9 @@ object BashWrapper {
        |${spaceCode(allMods.preRun)}
        |# prerun bashwrapper mods end ----------------------------------
        |
-       |ViashDebug "Running command: ${executor.replaceAll("^eval (.*)", "\\$(echo $1)")}"
-       |$heredocStart$executor${escapePipes(executionCode)}$heredocEnd
+       |# execution code start -----------------------------------------
+       |$executionCode
+       |# execution code end -------------------------------------------
        |
        |# postrun bashwrapper mods start -------------------------------
        |${spaceCode(allMods.postRun)}
@@ -950,21 +954,47 @@ object BashWrapper {
     )
   }
   
-  private def generateWorkDir(argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
+  private def generateWorkDir(configName: String, scriptPath: String, argsMetaAndDeps: Map[String, List[Argument[_]]]): BashWrapperMods = {
     val renderStrs = argsMetaAndDeps.map{case (key, args) =>
-      val renderYamlStrs = args.map(arg => {
+      val renderJsonStrs = args.map(arg => {
         val multiple = arg.multiple && arg.direction == Input
         val value = s"$${${arg.VIASH_PAR}[@]:-@@VIASH_UNDEFINED@@}"
-        s"""ViashRenderYamlKeyValue '${arg.plainName}' '${arg.`type`}' "${multiple}" "${value}" >> "$$VIASH_WORK_PARAMS""""
+        s"""ViashRenderJsonKeyValue '${arg.plainName}' '${arg.`type`}' "${multiple}" "${value}""""
       })
-      s"""echo '${key}:' >> "$$VIASH_WORK_PARAMS"
-         |${renderYamlStrs.mkString("\n")}""".stripMargin
+      // Add section header with proper JSON object syntax
+      val sectionStart = s"""echo '  "${key}": {' >> "$$VIASH_WORK_PARAMS""""
+      val isLastSection = key == argsMetaAndDeps.keys.last
+      val sectionEnd = if (isLastSection) {
+        s"""echo '  }' >> "$$VIASH_WORK_PARAMS""""
+      } else {
+        s"""echo '  },' >> "$$VIASH_WORK_PARAMS""""
+      }
+      
+      // Join key-value pairs with commas except for the last one
+      val renderedWithCommas = renderJsonStrs.zipWithIndex.map { case (str, idx) =>
+        if (idx < renderJsonStrs.length - 1) {
+          s"""$str | sed 's/$$/,/' >> "$$VIASH_WORK_PARAMS""""
+        } else {
+          s"""$str >> "$$VIASH_WORK_PARAMS""""
+        }
+      }
+      
+      s"""$sectionStart
+         |${renderedWithCommas.mkString("\n")}
+         |$sectionEnd""".stripMargin
     }
-
-    val preRun = 
-      s"""VIASH_WORK_DIR=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viash-run-testbash-XXXXXX")
+    
+    val postParse =
+      s"""VIASH_WORK_DIR=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viash-run-${configName}-workdir-XXXXXX")
+         |VIASH_WORK_PARAMS="$$VIASH_WORK_DIR/params.json"
+         |VIASH_WORK_SCRIPT="${scriptPath}"
+         |
          |function clean_up {
-         |  rm -rf "$$VIASH_WORK_DIR"
+         |  if [ -z "$${VIASH_KEEP_WORK_DIR+x}" ]; then
+         |    rm -rf "$$VIASH_WORK_DIR"
+         |  else
+         |    ViashNotice "Keeping work directory at '$$VIASH_WORK_DIR' because VIASH_KEEP_WORK_DIR is set."
+         |  fi
          |}
          |function interrupt {
          |  echo -e "\nCTRL-C Pressed..."
@@ -972,15 +1002,21 @@ object BashWrapper {
          |}
          |trap clean_up EXIT
          |trap interrupt INT SIGINT
-         |
-         |# Create params yaml
-         |VIASH_WORK_PARAMS="$$VIASH_WORK_DIR/params.yaml"
-         |touch "$$VIASH_WORK_PARAMS"
-         |
-         |${renderStrs.mkString("\n\n")}
          |""".stripMargin
-    // todo: generate script here as well?
+
+    val preRun = 
+      s"""# Create params json
+         |ViashDebug "Creating params.json in work dir at $$VIASH_WORK_PARAMS"
+         |echo '{' > "$$VIASH_WORK_PARAMS"
+         |
+         |${renderStrs.mkString("\n")}
+         |
+         |echo '}' >> "$$VIASH_WORK_PARAMS"
+         |""".stripMargin
+
+    // TODO: generate script here as well?
     BashWrapperMods(
+      postParse = postParse,
       preRun = preRun
     )
   }

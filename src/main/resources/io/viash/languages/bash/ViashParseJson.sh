@@ -38,10 +38,10 @@ function ViashParseJsonBash {
       
       # Count braces to track when nested object ends
       if [[ "$line" =~ \{ ]]; then
-        ((nested_depth++))
+        ((nested_depth++)) || true
       fi
       if [[ "$line" =~ ^\}[[:space:]]*,?[[:space:]]*$ ]]; then
-        ((nested_depth--))
+        ((nested_depth--)) || true
         if [ $nested_depth -eq 0 ]; then
           # Nested object complete - store as JSON string
           local escaped="${nested_json//\'/\'\\\'\'}"
@@ -104,12 +104,12 @@ function ViashParseJsonBash {
     
     # Root level opening/closing braces
     if [[ "$line" =~ ^\{[[:space:]]*$ ]]; then
-      ((depth++))
+      ((depth++)) || true
       continue
     fi
     
     if [[ "$line" =~ ^\}[[:space:]]*,?[[:space:]]*$ ]]; then
-      ((depth--))
+      ((depth--)) || true
       if [ $depth -eq 1 ]; then
         current_section=""
       fi
@@ -123,7 +123,7 @@ function ViashParseJsonBash {
       if [ $depth -eq 1 ]; then
         # Top-level section (par, meta, dep)
         current_section="$key"
-        ((depth++))
+        ((depth++)) || true
       elif [ $depth -eq 2 ] && [ -n "$current_section" ]; then
         # Nested object - start collection
         in_nested=true

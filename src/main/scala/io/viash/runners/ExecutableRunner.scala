@@ -119,7 +119,7 @@ final case class ExecutableRunner(
     val mainScript = Some(BashScript(
       dest = Some(config.name),
       text = Some(BashWrapper.wrapScript(
-        executor = "eval $VIASH_CMD",
+        executor = "eval $VIASH_RUN_CMD",
         mods = mods,
         config = config
       ))
@@ -192,12 +192,12 @@ final case class ExecutableRunner(
   }
 
   private def nativeConfigMods(config: Config): BashWrapperMods = {
-    val engines = config.engines.flatMap{
+    val nativeEngines = config.engines.flatMap{
       case e: NativeEngine => Some(e)
       case _ => None
     }
 
-    if (engines.isEmpty) {
+    if (nativeEngines.isEmpty) {
       return BashWrapperMods()
     }
 
@@ -209,9 +209,9 @@ final case class ExecutableRunner(
 
     val preRun =
       s"""
-        |if ${oneOfEngines(engines)} ; then
+        |if ${oneOfEngines(nativeEngines)} ; then
         |  if [ "$$VIASH_MODE" == "run" ]; then
-        |    VIASH_CMD="$cmd"
+        |    VIASH_RUN_CMD="$cmd"
         |  else
         |    ViashError "Engine '$$VIASH_ENGINE_ID' does not support mode '$$VIASH_MODE'."
         |    exit 1
@@ -363,6 +363,7 @@ final case class ExecutableRunner(
         |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config).toString()}'""".stripMargin  
     }.mkString("if ", "\n  elif ", "\n  fi")
 
+    // NOTE: regarding ---debug, should we create the viash_work_dir already?
     val postParse =
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
@@ -383,9 +384,9 @@ final case class ExecutableRunner(
         |  
         |  # enter docker container
         |  elif [[ "$$VIASH_MODE" == "debug" ]]; then
-        |    VIASH_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
-        |    ViashNotice "+ $$VIASH_CMD"
-        |    eval $$VIASH_CMD
+        |    VIASH_DEBUG_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
+        |    ViashNotice "+ $$VIASH_DEBUG_CMD"
+        |    eval $$VIASH_DEBUG_CMD
         |    exit 
         |
         |  # build docker image
@@ -461,6 +462,10 @@ final case class ExecutableRunner(
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # detect volumes from file arguments
         |  VIASH_CHOWN_VARS=()${detectMounts.mkString("")}
+        |
+        |  # Add viash work dir to mounts
+        |  VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$VIASH_WORK_DIR")" )
+        |  VIASH_WORK_DIR=$$(ViashDockerAutodetectMount "$$VIASH_WORK_DIR")
         |  
         |  # get unique mounts
         |  VIASH_UNIQUE_MOUNTS=($$(for val in "$${VIASH_DIRECTORY_MOUNTS[@]}"; do echo "$$val"; done | sort -u))
@@ -515,9 +520,9 @@ final case class ExecutableRunner(
         |  function ViashPerformChown {
         |    if (( $${#VIASH_CHOWN_VARS[@]} )); then
         |      set +e
-        |      VIASH_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
-        |      ViashDebug "+ $$VIASH_CMD"
-        |      eval $$VIASH_CMD
+        |      VIASH_CHMOD_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
+        |      ViashDebug "+ $$VIASH_CHMOD_CMD"
+        |      eval $$VIASH_CHMOD_CMD
         |      set -e
         |    fi
         |  }
@@ -573,7 +578,7 @@ final case class ExecutableRunner(
     val preRun =
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
-        |  VIASH_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
+        |  VIASH_RUN_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
         |fi""".stripMargin
       
     BashWrapperMods(
