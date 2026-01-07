@@ -564,7 +564,7 @@ object Config extends Logging {
     val configUriStr = configUri.toString
 
     // get extension
-    val extension = configUriStr.substring(configUriStr.lastIndexOf(".") + 1).toLowerCase()
+    val extension = configUriStr.substring(configUriStr.lastIndexOf(".")).toLowerCase()
 
     // get basename
     val basenameRegex = ".*/".r
@@ -572,7 +572,7 @@ object Config extends Logging {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    if ((extension == "yml" || extension == "yaml") && configStr.contains("name:")) {
+    if ((extension == ".yml" || extension == ".yaml") && configStr.contains("name:")) {
       (configStr, None)
     } else if (Script.extensions.contains(extension)) {
       // detect scripting language from extension
@@ -591,7 +591,8 @@ object Config extends Logging {
       val yaml = header.map(s => s.drop(3)).mkString("\n")
       val code = body.mkString("\n")
 
-      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptObj.`type`)
+      val scriptType = s"${scriptObj.id}_script"
+      val script = Script(dest = Some(basename), text = Some(code), `type` = scriptType)
 
       (yaml, Some(script))
     } else {
