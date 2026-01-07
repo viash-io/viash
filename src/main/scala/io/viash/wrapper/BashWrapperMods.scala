@@ -25,6 +25,7 @@ case class BashWrapperMods(
   parsers: String = "",
   postParse: String = "",
   preRun: String = "",
+  run: String = "",
   postRun: String = "",
   last: String = "",
   extraParams: String = ""
@@ -36,6 +37,7 @@ case class BashWrapperMods(
       parsers = BashWrapper.joinSections(List(parsers, other.parsers), middle = "\n"),
       postParse = BashWrapper.joinSections(List(postParse, other.postParse)),
       preRun = BashWrapper.joinSections(List(preRun, other.preRun)),
+      run = BashWrapper.joinSections(List(run, other.run)),
       postRun = BashWrapper.joinSections(List(postRun, other.postRun)),
       last = BashWrapper.joinSections(List(last, other.last)),
       extraParams = extraParams + other.extraParams
