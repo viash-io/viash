@@ -245,7 +245,6 @@ object BashWrapper {
        |
        |# find source folder of this component
        |VIASH_META_RESOURCES_DIR=`ViashSourceDir $${BASH_SOURCE[0]}`
-       |VIASH_META_RESOURCES_DIR_ORIG="$$VIASH_META_RESOURCES_DIR"
        |
        |# find the root of the built components & dependencies
        |VIASH_TARGET_DIR=`ViashFindTargetDir $$VIASH_META_RESOURCES_DIR`
@@ -904,10 +903,7 @@ object BashWrapper {
     // check whether the wd needs to be set to the resources dir
     val cdToResources =
       if (config.set_wd_to_resources_dir) {
-        s"""
-          |# Change to resources dir
-          |cd "$$VIASH_META_RESOURCES_DIR_ORIG"
-          |""".stripMargin
+        "cd \"$VIASH_META_RESOURCES_DIR\"; "
       } else {
         ""
       }
@@ -921,8 +917,8 @@ object BashWrapper {
         // Execute the executable
         val runCode = s"""
           |# Add context
-          |VIASH_RUN_CMD+=" -c '${e.path.get} $$VIASH_EXECUTABLE_ARGS'"
-          |$cdToResources
+          |VIASH_RUN_CMD+=" -c '${cdToResources}${e.path.get} $$VIASH_EXECUTABLE_ARGS'"
+          |
           |# Run command
           |ViashDebug "Running command: $$(echo $$VIASH_RUN_CMD)"
           |eval $$VIASH_RUN_CMD &
@@ -1022,8 +1018,8 @@ object BashWrapper {
         // Execute the script
         val runCode = s"""
           |# Add context
-          |VIASH_RUN_CMD+=" -c 'VIASH_WORK_PARAMS=\\\"$$VIASH_WORK_DIR/params.json\\\" ${res.command(scriptPath).replace("\"", "\\\"")}'"
-          |$cdToResources
+          |VIASH_RUN_CMD+=" -c '${cdToResources}VIASH_WORK_PARAMS=\\\"$$VIASH_WORK_DIR/params.json\\\" ${res.command(scriptPath).replace("\"", "\\\"")}'"
+          |
           |# Run command
           |ViashDebug "Running command: $$(echo $$VIASH_RUN_CMD)"
           |eval $$VIASH_RUN_CMD &
