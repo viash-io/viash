@@ -28,7 +28,6 @@ object CSharp extends Language {
   val extensions: Seq[String] = Seq(".csx", ".cs")
   val commentStr: String = "//"
   val executor: Seq[String] = Seq("dotnet", "script")
-  val viashParseYamlCode: String = Resources.read("languages/csharp/ViashParseYaml.csx")
   val viashParseJsonCode: String = Resources.read("languages/csharp/ViashParseJson.csx")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

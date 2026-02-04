@@ -28,7 +28,6 @@ object R extends Language {
   val extensions: Seq[String] = Seq(".R", ".r")
   val commentStr: String = "#"
   val executor: Seq[String] = Seq("Rscript")
-  val viashParseYamlCode: String = Resources.read("languages/r/ViashParseYaml.R")
   val viashParseJsonCode: String = Resources.read("languages/r/ViashParseJson.R")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

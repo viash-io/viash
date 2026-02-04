@@ -40,9 +40,6 @@ trait Language {
   // The command(s) used to execute a script written in the programming language
   val executor: Seq[String]
 
-  // The code to parse Viash param YAML files in the programming language
-  val viashParseYamlCode: String
-  
   // The code to parse Viash param JSON files in the programming language
   val viashParseJsonCode: String
 

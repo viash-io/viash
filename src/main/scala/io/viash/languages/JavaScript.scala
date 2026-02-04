@@ -28,7 +28,6 @@ object JavaScript extends Language {
   val extensions: Seq[String] = Seq(".js")
   val commentStr: String = "//"
   val executor: Seq[String] = Seq("node")
-  val viashParseYamlCode: String = Resources.read("languages/javascript/ViashParseYaml.js")
   val viashParseJsonCode: String = Resources.read("languages/javascript/ViashParseJson.js")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

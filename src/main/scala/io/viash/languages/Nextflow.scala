@@ -29,7 +29,6 @@ object Nextflow extends Language {
   val commentStr: String = "//"
   val executor: Seq[String] = Seq("nextflow", "run", ".", "-main-script")
   // this is processed in a different way
-  val viashParseYamlCode: String = ""
   val viashParseJsonCode: String = ""
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

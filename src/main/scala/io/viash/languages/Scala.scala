@@ -28,7 +28,6 @@ object Scala extends Language {
   val extensions: Seq[String] = Seq(".scala")
   val commentStr: String = "//"
   val executor: Seq[String] = Seq("scala", "-nc")
-  val viashParseYamlCode: String = Resources.read("languages/scala/ViashParseYaml.scala")
   val viashParseJsonCode: String = Resources.read("languages/scala/ViashParseJson.scala")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

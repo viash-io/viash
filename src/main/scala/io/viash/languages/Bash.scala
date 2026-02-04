@@ -28,7 +28,6 @@ object Bash extends Language {
   val extensions: Seq[String] = Seq(".sh")
   val commentStr: String = "#"
   val executor: Seq[String] = Seq("bash")
-  val viashParseYamlCode: String = Resources.read("languages/bash/ViashParseYaml.sh")
   val viashParseJsonCode: String = Resources.read("languages/bash/ViashParseJson.sh")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {

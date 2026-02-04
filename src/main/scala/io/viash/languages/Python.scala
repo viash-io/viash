@@ -28,7 +28,6 @@ object Python extends Language {
   val extensions: Seq[String] = Seq(".py")
   val commentStr: String = "#"
   val executor: Seq[String] = Seq("python", "-B")
-  val viashParseYamlCode: String = Resources.read("languages/python/ViashParseYaml.py")
   val viashParseJsonCode: String = Resources.read("languages/python/ViashParseJson.py")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
