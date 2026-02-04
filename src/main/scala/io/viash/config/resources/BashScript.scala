@@ -17,13 +17,9 @@
 
 package io.viash.config.resources
 
-import io.viash.config.arguments._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 import java.net.URI
-import io.viash.helpers.Bash
-import io.viash.config.Config
 import io.viash.languages.{Bash => BashLang}
 
 @description("""An executable Bash script.
@@ -43,17 +39,5 @@ case class BashScript(
   val language = BashLang
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
-  }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-
-    val fullCode = s"""${language.viashParseJsonCode}
-
-# Parse JSON parameters
-_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
-ViashParseJsonBash <<< "$$_viash_json_content"
-
-"""
-    ScriptInjectionMods(params = fullCode)
   }
 }

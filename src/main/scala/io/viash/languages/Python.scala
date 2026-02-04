@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object Python extends Language {
   val id: String = "python"
@@ -27,4 +30,28 @@ object Python extends Language {
   val executor: Seq[String] = Seq("python", "-B")
   val viashParseYamlCode: String = Resources.read("languages/python/ViashParseYaml.py")
   val viashParseJsonCode: String = Resources.read("languages/python/ViashParseJson.py")
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Extract only the functions, not the main execution part
+    val helperFunctions = viashParseJsonCode
+      .split("\n")
+      .takeWhile(line => !line.startsWith("if __name__ == \"__main__\":"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse JSON once and extract all sections
+      val parseOnce = "# Parse JSON parameters once and extract all sections\n_viash_json_data = viash_parse_json()\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"$dest = _viash_json_data.get('$dest', {})"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
+    }
+
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
+  }
 }

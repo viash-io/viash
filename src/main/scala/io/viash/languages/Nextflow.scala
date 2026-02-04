@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object Nextflow extends Language {
   val id: String = "nextflow"
@@ -28,4 +31,9 @@ object Nextflow extends Language {
   // this is processed in a different way
   val viashParseYamlCode: String = ""
   val viashParseJsonCode: String = ""
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Nextflow scripts are processed differently
+    ScriptInjectionMods()
+  }
 }

@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object CSharp extends Language {
   val id: String = "csharp"
@@ -27,4 +30,28 @@ object CSharp extends Language {
   val executor: Seq[String] = Seq("dotnet", "script")
   val viashParseYamlCode: String = Resources.read("languages/csharp/ViashParseYaml.csx")
   val viashParseJsonCode: String = Resources.read("languages/csharp/ViashParseJson.csx")
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Extract only the class and functions, not the main execution part
+    val helperFunctions = viashParseJsonCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (Args.Length == 0)"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse JSON once and extract all sections
+      val parseOnce = "// Parse JSON parameters once and extract all sections\nvar _viashJsonData = ViashJsonParser.ParseJson();\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"var $dest = _viashJsonData.ContainsKey(\"$dest\") ? (Dictionary<string, object>)_viashJsonData[\"$dest\"] : new Dictionary<string, object>();"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
+    }
+
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
+  }
 }

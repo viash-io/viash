@@ -17,13 +17,9 @@
 
 package io.viash.config.resources
 
-import io.viash.config.arguments._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 import java.net.URI
-import io.viash.helpers.Bash
-import io.viash.config.Config
 import io.viash.languages.CSharp
 
 @description("""An executable C# script.
@@ -43,29 +39,5 @@ case class CSharpScript(
   val language = CSharp
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
-  }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    // Extract only the class and functions, not the main execution part
-    val helperFunctions = language.viashParseJsonCode
-      .split("\n")
-      .takeWhile(line => !line.contains("if (Args.Length == 0)"))
-      .mkString("\n")
-    
-    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse JSON once and extract all sections
-      val parseOnce = "// Parse JSON parameters once and extract all sections\nvar _viashJsonData = ViashJsonParser.ParseJson();\n"
-      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"var $dest = _viashJsonData.ContainsKey(\"$dest\") ? (Dictionary<string, object>)_viashJsonData[\"$dest\"] : new Dictionary<string, object>();"
-      }.mkString("\n")
-      
-      parseOnce + extractSections
-    } else {
-      ""
-    }
-
-    ScriptInjectionMods(
-      params = helperFunctions + "\n\n" + paramsCode
-    )
   }
 }

@@ -17,6 +17,10 @@
 
 package io.viash.languages
 
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
+
 /**
  * Represents a programming language.
  */
@@ -43,4 +47,14 @@ trait Language {
   val viashParseJsonCode: String
 
   def scriptTypeId = id + "_script"
+
+  /**
+   * Generate the code injection modifications for this language.
+   * This includes the JSON parser helper functions and type-aware extraction code.
+   *
+   * @param argsMetaAndDeps Map of destination names to lists of arguments
+   * @param config The component configuration
+   * @return ScriptInjectionMods containing header, params, and footer code
+   */
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
 }

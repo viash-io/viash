@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object Bash extends Language {
   val id: String = "bash"
@@ -27,4 +30,15 @@ object Bash extends Language {
   val executor: Seq[String] = Seq("bash")
   val viashParseYamlCode: String = Resources.read("languages/bash/ViashParseYaml.sh")
   val viashParseJsonCode: String = Resources.read("languages/bash/ViashParseJson.sh")
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val fullCode = s"""${viashParseJsonCode}
+
+# Parse JSON parameters
+_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
+ViashParseJsonBash <<< "$$_viash_json_content"
+
+"""
+    ScriptInjectionMods(params = fullCode)
+  }
 }

@@ -17,13 +17,9 @@
 
 package io.viash.config.resources
 
-import io.viash.config.arguments._
-import io.viash.wrapper.BashWrapper
+import io.viash.schemas._
 
 import java.net.URI
-import _root_.io.viash.helpers.Bash
-import io.viash.schemas._
-import io.viash.config.Config
 import io.viash.languages.Python
 
 @description("""An executable Python script.
@@ -43,29 +39,5 @@ case class PythonScript(
   val language = Python
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
-  }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    // Extract only the functions, not the main execution part
-    val helperFunctions = language.viashParseJsonCode
-      .split("\n")
-      .takeWhile(line => !line.startsWith("if __name__ == \"__main__\":"))
-      .mkString("\n")
-    
-    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse JSON once and extract all sections
-      val parseOnce = "# Parse JSON parameters once and extract all sections\n_viash_json_data = viash_parse_json()\n"
-      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"$dest = _viash_json_data.get('$dest', {})"
-      }.mkString("\n")
-      
-      parseOnce + extractSections
-    } else {
-      ""
-    }
-
-    ScriptInjectionMods(
-      params = helperFunctions + "\n\n" + paramsCode
-    )
   }
 }

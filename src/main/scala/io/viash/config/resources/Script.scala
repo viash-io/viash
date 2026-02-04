@@ -26,7 +26,9 @@ import io.viash.languages.{Bash, Python, R, JavaScript, Nextflow, Scala, CSharp}
 trait Script extends Resource {
   val language: Language
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    language.generateInjectionMods(argsMetaAndDeps, config)
+  }
 
   def readWithInjection(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): String = {
     val code = read

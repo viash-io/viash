@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object R extends Language {
   val id: String = "r"
@@ -27,4 +30,38 @@ object R extends Language {
   val executor: Seq[String] = Seq("Rscript")
   val viashParseYamlCode: String = Resources.read("languages/r/ViashParseYaml.R")
   val viashParseJsonCode: String = Resources.read("languages/r/ViashParseJson.R")
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Extract only the functions, not the main execution part  
+    val helperFunctions = viashParseJsonCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (!interactive() && identical(environment(), globalenv()))"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse JSON once and extract all sections
+      val parseOnce = "# Parse JSON parameters once and extract all sections\n.viash_json_data <- viash_parse_json()\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"$dest <- if (is.null(.viash_json_data[['$dest']])) list() else .viash_json_data[['$dest']]"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
+    }
+
+    val outCode = s"""# treat warnings as errors
+       |.viash_orig_warn <- options(warn = 2)
+       |
+       |$helperFunctions
+       |
+       |$paramsCode
+       |
+       |# restore original warn setting
+       |options(.viash_orig_warn)
+       |rm(.viash_orig_warn)
+       |rm(.viash_json_data)
+       |""".stripMargin
+    ScriptInjectionMods(params = outCode)
+  }
 }

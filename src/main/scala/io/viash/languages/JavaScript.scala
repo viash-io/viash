@@ -18,6 +18,9 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
+import io.viash.config.arguments.Argument
+import io.viash.config.Config
+import io.viash.config.resources.ScriptInjectionMods
 
 object JavaScript extends Language {
   val id: String = "javascript"
@@ -27,4 +30,29 @@ object JavaScript extends Language {
   val executor: Seq[String] = Seq("node")
   val viashParseYamlCode: String = Resources.read("languages/javascript/ViashParseYaml.js")
   val viashParseJsonCode: String = Resources.read("languages/javascript/ViashParseJson.js")
+
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Extract only the functions, not the main execution part or module exports
+    val helperFunctions = viashParseJsonCode
+      .split("\n")
+      .takeWhile(line => !line.contains("if (require.main === module)"))
+      .filterNot(line => line.contains("module.exports"))
+      .mkString("\n")
+    
+    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
+      // Parse JSON once and extract all sections
+      val parseOnce = "// Parse JSON parameters once and extract all sections\nconst _viashJsonData = viashParseJson();\n"
+      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
+        s"const $dest = _viashJsonData['$dest'] || {};"
+      }.mkString("\n")
+      
+      parseOnce + extractSections
+    } else {
+      ""
+    }
+    
+    ScriptInjectionMods(
+      params = helperFunctions + "\n\n" + paramsCode
+    )
+  }
 }

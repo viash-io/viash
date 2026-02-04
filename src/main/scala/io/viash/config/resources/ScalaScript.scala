@@ -17,13 +17,9 @@
 
 package io.viash.config.resources
 
-import io.viash.config.arguments._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 import java.net.URI
-import io.viash.helpers.Bash
-import io.viash.config.Config
 import io.viash.languages.{Scala => ScalaLang}
 
 @description("""An executable Scala script.
@@ -43,29 +39,5 @@ case class ScalaScript(
   val language = ScalaLang
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
-  }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    // Extract only the object and functions, not the main execution part
-    val helperFunctions = language.viashParseJsonCode
-      .split("\n")
-      .takeWhile(line => !line.contains("if (sys.props.get(\"viash.run.main\").contains(\"true\")"))
-      .mkString("\n")
-    
-    val paramsCode = if (argsMetaAndDeps.nonEmpty) {
-      // Parse JSON once and extract all sections
-      val parseOnce = "// Parse JSON parameters once and extract all sections\nval _viashJsonData = ViashJsonParser.parseJson()\n"
-      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"val $dest = _viashJsonData.getOrElse(\"$dest\", Map.empty[String, Any])"
-      }.mkString("\n")
-      
-      parseOnce + extractSections
-    } else {
-      ""
-    }
-
-    ScriptInjectionMods(
-      params = helperFunctions + "\n\n" + paramsCode
-    )
   }
 }
