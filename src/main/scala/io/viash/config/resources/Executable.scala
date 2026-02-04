@@ -41,7 +41,7 @@ case class Executable(
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = ScriptInjectionMods()
+  override def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = ScriptInjectionMods()
 
   override def readSome: Option[String] = None
 
