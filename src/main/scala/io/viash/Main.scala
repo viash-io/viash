@@ -43,9 +43,8 @@ import scala.io.Source
 import io.viash.helpers.autonetconfig.AutoNetConfig
 
 object Main extends Logging {
-  private val pkg = getClass.getPackage
-  val name: String = if (pkg.getImplementationTitle != null) pkg.getImplementationTitle else "viash"
-  val version: String = if (pkg.getImplementationVersion != null) pkg.getImplementationVersion else "test"
+  val name: String = BuildInfo.name
+  val version: String = BuildInfo.version
 
   /**
     * Viash main
