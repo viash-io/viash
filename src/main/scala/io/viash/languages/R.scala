@@ -18,7 +18,7 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
-import io.viash.config.arguments.Argument
+import io.viash.config.arguments._
 import io.viash.config.Config
 import io.viash.config.resources.ScriptInjectionMods
 
@@ -41,8 +41,27 @@ object R extends Language {
     val paramsCode = if (argsMetaAndDeps.nonEmpty) {
       // Parse JSON once and extract all sections
       val parseOnce = "# Parse JSON parameters once and extract all sections\n.viash_json_data <- viash_parse_json()\n"
-      val extractSections = argsMetaAndDeps.map { case (dest, _) =>
-        s"$dest <- if (is.null(.viash_json_data[['$dest']])) list() else .viash_json_data[['$dest']]"
+      
+      val extractSections = argsMetaAndDeps.map { case (dest, args) =>
+        // Extract the section
+        val sectionExtract = s"$dest <- if (is.null(.viash_json_data[['$dest']])) list() else .viash_json_data[['$dest']]"
+        
+        // Generate type conversions for long arguments (which come in as character due to bigint_as_char = TRUE)
+        val longConversions = args.collect {
+          case arg: LongArgument =>
+            val name = arg.plainName
+            if (arg.multiple) {
+              s"if (!is.null($dest[['$name']])) $dest[['$name']] <- bit64::as.integer64($dest[['$name']])"
+            } else {
+              s"if (!is.null($dest[['$name']])) $dest[['$name']] <- bit64::as.integer64($dest[['$name']])"
+            }
+        }
+        
+        if (longConversions.nonEmpty) {
+          sectionExtract + "\n" + longConversions.mkString("\n")
+        } else {
+          sectionExtract
+        }
       }.mkString("\n")
       
       parseOnce + extractSections

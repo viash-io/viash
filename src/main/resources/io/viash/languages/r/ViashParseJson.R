@@ -17,7 +17,9 @@ viash_parse_json <- function(json_path = NULL) {
   tryCatch({
     json_text <- readLines(json_path, warn = FALSE)
     json_text <- paste(json_text, collapse = "\n")
-    jsonlite::parse_json(json_text, simplifyVector = TRUE)
+    # Use bigint_as_char = TRUE to preserve large integers as strings
+    # This prevents precision loss for values > 2^53
+    jsonlite::parse_json(json_text, simplifyVector = TRUE, bigint_as_char = TRUE)
   }, error = function(e) {
     stop(paste0("Error parsing JSON file: ", e$message))
   })
