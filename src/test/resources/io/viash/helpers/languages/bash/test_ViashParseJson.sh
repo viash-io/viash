@@ -2,17 +2,8 @@
 
 # Test suite for viash_parse_json Bash function
 echo "Running viash_parse_json Bash unit tests..."
-echo
-echo "=== Test 5: Type conversions ==="
-test_equal "par_string" "$par_string" "text"
-test_equal "par_integer" "$par_integer" "123"
-test_equal "par_float" "$par_float" "3.14"
-test_equal "par_bool_true" "$par_bool_true" "true"
-test_equal "par_bool_false" "$par_bool_false" "false"
-test_equal "par_null_value" "$par_null_value" "null"
 
-echo
-echo "=== Test 6: Root-level values ==="d the parser
+# Load the parser
 source src/main/resources/io/viash/languages/bash/ViashParseJson.sh
 
 # Colors for test output
@@ -133,7 +124,8 @@ test_equal "par_integer" "$par_integer" "123"
 test_equal "par_float" "$par_float" "3.14"
 test_equal "par_bool_true" "$par_bool_true" "true"
 test_equal "par_bool_false" "$par_bool_false" "false"
-test_equal "par_null_value" "$par_null_value" "null"
+# null values should leave the variable unset
+test_equal "par_null_value (unset)" "${par_null_value-UNSET}" "UNSET"
 
 echo
 echo "=== Test 6: Root-level values ==="
