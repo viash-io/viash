@@ -72,7 +72,7 @@ try
             var array = p.GetValue(par) as Array;
 
             if (array.Length == 0)
-                Output($"{p.Name}: |empty array|");
+                Output($"{p.Name}: ||");
             else if (array is bool[])
             {
                 var array2 = (array as bool[]).Select(x => x.ToString().ToLower());
@@ -116,7 +116,7 @@ try
     {
         Output($"head of input: |{input.ReadLine()}|");
     }
-    using(StreamReader input = new StreamReader("resource1.txt"))
+    using(StreamReader input = new StreamReader($"{meta.resources_dir}/resource1.txt"))
     {
         Output($"head of resource1: |{input.ReadLine()}|");
     }
