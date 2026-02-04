@@ -195,7 +195,7 @@ function ViashParseJsonBash {
     fi
     
     # Key-value pair: "key": value
-    if [[ "$line" =~ ^\"([^\"]+)\":[[:space:]]*(.+[^[:space:]])[[:space:]]*,?[[:space:]]*$ ]]; then
+    if [[ "$line" =~ ^[[:space:]]*\"([^\"]+)\":[[:space:]]*([^[:space:]].*[^[:space:],]|[^[:space:],]),?[[:space:]]*$ ]]; then
       local key="${BASH_REMATCH[1]}"
       local value="${BASH_REMATCH[2]}"
       local var_name="${current_section:+${current_section}_}${key}"
@@ -203,9 +203,11 @@ function ViashParseJsonBash {
       # Remove trailing comma
       value="${value%,}"
       
-      # Parse and assign value
-      local unescaped="$(_viash_unescape_json_value "$value")"
-      eval "declare -g ${var_name}='${unescaped//\'/\'\\\'\'}'"
+      # Parse and assign value (skip null values - leave variable unset)
+      if [ "$value" != "null" ]; then
+        local unescaped="$(_viash_unescape_json_value "$value")"
+        eval "declare -g ${var_name}='${unescaped//\'/\'\\\'\'}'"
+      fi
       continue
     fi
   done
