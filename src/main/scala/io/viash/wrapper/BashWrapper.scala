@@ -201,7 +201,8 @@ object BashWrapper {
     val reqMods = generateComputationalRequirements(config)
     val parMods = generateParsers(args)
     val execMods = config.mainScript match {
-      case Some(_: Executable) => generateExecutableArgs(args)
+      // For executables, only pass the 'par' arguments, not 'meta' or 'dep'
+      case Some(_: Executable) => generateExecutableArgs(argsMetaAndDeps.getOrElse("par", List.empty))
       case _ => BashWrapperMods()
     }
     val depMods = generateDependencies(config)
@@ -916,14 +917,18 @@ object BashWrapper {
       // if mainResource is an executable
       case Some(e: Executable) => 
         // Execute the executable
+        // For native engine, run directly. For docker, use -c to pass to shell
         val runCode = s"""
-          |# Add context
-          |VIASH_RUN_CMD+=" -c '${cdToResources}${e.path.get} $$VIASH_EXECUTABLE_ARGS'"
-          |
-          |# Run command
-          |ViashDebug "Running command: $$(echo $$VIASH_RUN_CMD)"
-          |eval $$VIASH_RUN_CMD &
-          |wait "$$!"
+          |# Run executable
+          |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
+          |  VIASH_RUN_CMD+=" -c '${cdToResources}${e.path.get} $$VIASH_EXECUTABLE_ARGS'"
+          |  ViashDebug "Running command: $$(echo $$VIASH_RUN_CMD)"
+          |  eval $$VIASH_RUN_CMD &
+          |  wait "$$!"
+          |else
+          |  ViashDebug "Running command: ${cdToResources}${e.path.get} $$VIASH_EXECUTABLE_ARGS"
+          |  eval "${cdToResources}${e.path.get} $$VIASH_EXECUTABLE_ARGS"
+          |fi
           |""".stripMargin
         
         BashWrapperMods(
