@@ -2,7 +2,7 @@
 
 **PR:** [#762 - Switch to arrays](https://github.com/viash-io/viash/pull/762)  
 **Issue:** [#705](https://github.com/viash-io/viash/issues/705)  
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-04 (All languages COMPLETED, only Executable failing)
 
 ## Overview
 
@@ -16,19 +16,19 @@ This PR refactors the Viash codebase to make argument value parsing and handling
 
 ## Test Results Summary
 
-**Current Status:** 18 passed, 37 failed out of 55 tests
+**Current Status:** 54 passed, 1 failed out of 55 tests
 
 ### Language Status
 
 | Language | Native Tests | Docker Tests | JSON Generation | Notes |
 |----------|--------------|--------------|-----------------|-------|
-| Python ✅ | N/A | All PASS (6/6) | FAIL (file path issue) | Working correctly |
-| R | N/A | Multiple tests PASS, main FAIL | FAIL | jsonlite converts long to numeric |
-| Bash ❌ | All FAIL (6/6) | All FAIL (6/6) | FAIL | JSON parser not working |
-| Scala ❌ | N/A | All FAIL (6/6) | FAIL (parse error) | JSON parser issues |
-| JavaScript ❌ | N/A | All FAIL (6/6) | FAIL (module not found) | Module export issues |
-| C# ❌ | N/A | All FAIL (6/6) | FAIL (Dictionary access) | Type conversion issues |
-| Executable ❌ | N/A | FAIL (1/1) | N/A | Needs investigation |
+| Python ✅ | N/A | All PASS (6/6) | PASS | Working correctly |
+| Scala ✅ | N/A | All PASS (6/6) | PASS | Fixed: case class generation, BigInt for Long |
+| JavaScript ✅ | N/A | All PASS (6/6) | PASS | Fixed: fs naming conflict, null handling |
+| C# ✅ | N/A | All PASS (6/6) | PASS | Fixed: anonymous object generation |
+| R ✅ | N/A | All PASS (6/6) | PASS | Fixed by user |
+| Bash ✅ | N/A | All PASS (6/6) | PASS | Fixed by user |
+| Executable ❌ | N/A | FAIL (1/1) | N/A | Only remaining failure |
 
 ## Completed Changes
 
@@ -52,11 +52,11 @@ This PR refactors the Viash codebase to make argument value parsing and handling
 
 JSON parser implementations for each language:
 - [x] [src/main/resources/io/viash/languages/python/ViashParseJson.py](src/main/resources/io/viash/languages/python/ViashParseJson.py) ✅ Working
-- [x] [src/main/resources/io/viash/languages/r/ViashParseJson.R](src/main/resources/io/viash/languages/r/ViashParseJson.R) - Uses jsonlite (long issue)
-- [x] [src/main/resources/io/viash/languages/bash/ViashParseJson.sh](src/main/resources/io/viash/languages/bash/ViashParseJson.sh) - Custom parser (not working)
-- [x] [src/main/resources/io/viash/languages/scala/ViashParseJson.scala](src/main/resources/io/viash/languages/scala/ViashParseJson.scala) - Custom parser (not working)
-- [x] [src/main/resources/io/viash/languages/javascript/ViashParseJson.js](src/main/resources/io/viash/languages/javascript/ViashParseJson.js) - Uses Node fs/JSON (module issue)
-- [x] [src/main/resources/io/viash/languages/csharp/ViashParseJson.csx](src/main/resources/io/viash/languages/csharp/ViashParseJson.csx) - Custom parser (type issues)
+- [x] [src/main/resources/io/viash/languages/r/ViashParseJson.R](src/main/resources/io/viash/languages/r/ViashParseJson.R) ✅ Working
+- [x] [src/main/resources/io/viash/languages/bash/ViashParseJson.sh](src/main/resources/io/viash/languages/bash/ViashParseJson.sh) ✅ Working
+- [x] [src/main/resources/io/viash/languages/scala/ViashParseJson.scala](src/main/resources/io/viash/languages/scala/ViashParseJson.scala) ✅ Working - Uses BigInt for proper Int/Long handling
+- [x] [src/main/resources/io/viash/languages/javascript/ViashParseJson.js](src/main/resources/io/viash/languages/javascript/ViashParseJson.js) ✅ Working - Uses `_viashFs` to avoid naming conflicts
+- [x] [src/main/resources/io/viash/languages/csharp/ViashParseJson.csx](src/main/resources/io/viash/languages/csharp/ViashParseJson.csx) ✅ Working - Custom recursive parser
 
 YAML parser implementations (for reference):
 - [x] [src/main/resources/io/viash/languages/python/ViashParseYaml.py](src/main/resources/io/viash/languages/python/ViashParseYaml.py)
@@ -75,14 +75,26 @@ YAML parser implementations (for reference):
 
 ### Script Classes Updated
 
-Each script class has been updated with `generateInjectionMods`:
-- [x] [src/main/scala/io/viash/config/resources/PythonScript.scala](src/main/scala/io/viash/config/resources/PythonScript.scala) ✅
-- [x] [src/main/scala/io/viash/config/resources/RScript.scala](src/main/scala/io/viash/config/resources/RScript.scala)
-- [x] [src/main/scala/io/viash/config/resources/BashScript.scala](src/main/scala/io/viash/config/resources/BashScript.scala)
-- [x] [src/main/scala/io/viash/config/resources/ScalaScript.scala](src/main/scala/io/viash/config/resources/ScalaScript.scala)
-- [x] [src/main/scala/io/viash/config/resources/JavaScriptScript.scala](src/main/scala/io/viash/config/resources/JavaScriptScript.scala)
-- [x] [src/main/scala/io/viash/config/resources/CSharpScript.scala](src/main/scala/io/viash/config/resources/CSharpScript.scala)
-- [x] [src/main/scala/io/viash/config/resources/Script.scala](src/main/scala/io/viash/config/resources/Script.scala) - Base trait with `readWithInjection`
+**Note:** After Task #1 completion, `generateInjectionMods` has been moved to Language objects. 
+Script classes now delegate to their `language.generateInjectionMods()`.
+
+- [x] [src/main/scala/io/viash/config/resources/PythonScript.scala](src/main/scala/io/viash/config/resources/PythonScript.scala) ✅ (simplified)
+- [x] [src/main/scala/io/viash/config/resources/RScript.scala](src/main/scala/io/viash/config/resources/RScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/BashScript.scala](src/main/scala/io/viash/config/resources/BashScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/ScalaScript.scala](src/main/scala/io/viash/config/resources/ScalaScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/JavaScriptScript.scala](src/main/scala/io/viash/config/resources/JavaScriptScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/CSharpScript.scala](src/main/scala/io/viash/config/resources/CSharpScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/NextflowScript.scala](src/main/scala/io/viash/config/resources/NextflowScript.scala) (simplified)
+- [x] [src/main/scala/io/viash/config/resources/Script.scala](src/main/scala/io/viash/config/resources/Script.scala) - Base trait with `readWithInjection` and default `generateInjectionMods`
+
+**Language objects now contain `generateInjectionMods`:**
+- [x] [src/main/scala/io/viash/languages/Python.scala](src/main/scala/io/viash/languages/Python.scala) ✅
+- [x] [src/main/scala/io/viash/languages/R.scala](src/main/scala/io/viash/languages/R.scala)
+- [x] [src/main/scala/io/viash/languages/Bash.scala](src/main/scala/io/viash/languages/Bash.scala)
+- [x] [src/main/scala/io/viash/languages/Scala.scala](src/main/scala/io/viash/languages/Scala.scala)
+- [x] [src/main/scala/io/viash/languages/JavaScript.scala](src/main/scala/io/viash/languages/JavaScript.scala)
+- [x] [src/main/scala/io/viash/languages/CSharp.scala](src/main/scala/io/viash/languages/CSharp.scala)
+- [x] [src/main/scala/io/viash/languages/Nextflow.scala](src/main/scala/io/viash/languages/Nextflow.scala)
 
 ### BashWrapper Changes
 
@@ -110,97 +122,17 @@ New tests for JSON/YAML parsers:
 
 ### High Priority - Core Functionality
 
-#### 1. Move `generateInjectionMods` from Script to Language
-- [ ] Create `generateInjectionMods` method in `Language` trait
-- [ ] Move implementation from each `*Script.scala` to corresponding `Language` object
-- [ ] Update `Script` trait to use `language.generateInjectionMods()`
-- [ ] This provides better separation of concerns
+#### 1. ✅ COMPLETED - Move `generateInjectionMods` from Script to Language
 
-**Rationale:** The injection code is language-specific, not script-type specific. It belongs in the `Language` abstraction.
+#### 2. ✅ COMPLETED - Fix R Language - Long Type Handling
 
-**Pattern for `generateInjectionMods`:**
-```scala
-def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-  // 1. Include the JSON parser helper functions
-  val helperFunctions = viashParseJsonCode.split("\n")
-    .takeWhile(line => !line.contains("main execution marker"))
-    .mkString("\n")
-  
-  // 2. Generate code to parse JSON and extract sections
-  val parseCode = "val _viashJsonData = ViashJsonParser.parseJson()\n"
-  
-  // 3. Generate type-aware extraction code for each section and argument
-  val extractionCode = argsMetaAndDeps.map { case (dest, args) =>
-    val sectionCode = s"val $dest = _viashJsonData.getOrElse(\"$dest\", Map.empty[String, Any])"
-    val conversionCode = args.map { arg =>
-      arg match {
-        case _: IntegerArgument => s"val ${arg.plainName}: Option[Int] = $dest.get(\"${arg.plainName}\").map(_.toString.toInt)"
-        case _: LongArgument => s"val ${arg.plainName}: Option[Long] = $dest.get(\"${arg.plainName}\").map(_.toString.toLong)"
-        case _: DoubleArgument => s"val ${arg.plainName}: Option[Double] = $dest.get(\"${arg.plainName}\").map(_.toString.toDouble)"
-        case _: BooleanArgumentBase => s"val ${arg.plainName}: Option[Boolean] = $dest.get(\"${arg.plainName}\").map(_.toString.toBoolean)"
-        case _ => s"val ${arg.plainName}: Option[String] = $dest.get(\"${arg.plainName}\").map(_.toString)"
-      }
-    }.mkString("\n")
-    sectionCode + "\n" + conversionCode
-  }.mkString("\n\n")
-  
-  ScriptInjectionMods(params = helperFunctions + "\n\n" + parseCode + extractionCode)
-}
-```
+#### 3. ✅ COMPLETED - Fix Bash JSON Parser
 
-#### 2. Fix R Language - Long Type Handling
-- [ ] Update `ViashRenderJson.sh` to output long values as quoted strings
-- [ ] Update `RScript.generateInjectionMods` to generate type conversion code
-- [ ] For each argument, generate appropriate conversion: `as.integer()`, `bit64::as.integer64()`, `as.numeric()`, etc.
-- [ ] Handle `NULL` values gracefully
-- [ ] Handle arrays/multiple values with proper type conversion
+#### 4. ✅ COMPLETED - Fix Scala JSON Parser  
 
-**Key insight:** The `generateInjectionMods` function has access to `argsMetaAndDeps: Map[String, List[Argument[_]]]` which contains type information for each argument. Use this to generate type-specific conversion code.
+#### 5. ✅ COMPLETED - Fix JavaScript Module Loading
 
-#### 3. Fix Bash JSON Parser
-- [ ] Current `ViashParseJsonBash` function not working correctly
-- [ ] Issue: Variables not being properly exported to script scope
-- [ ] Debug the variable export mechanism
-- [ ] Test with simple cases first, then complex (arrays, nested objects)
-
-**Constraints:**
-- Cannot use external dependencies (jq, etc.)
-- Must work with bash 3.2+ (macOS default)
-- Can make assumptions about JSON structure (generated by ViashRenderJson)
-
-#### 4. Fix Scala JSON Parser  
-- [ ] Custom JSON parser has issues with certain JSON structures
-- [ ] Debug parse errors seen in tests
-- [ ] Update `ScalaScript.generateInjectionMods` to generate type conversion code
-- [ ] Long values stored as strings need `.toString.toLong` conversion
-- [ ] Generate proper Scala types (`Option[Int]`, `Option[Long]`, `List[String]`, etc.)
-
-**Constraints:**
-- Cannot use external libraries (circe, etc.)
-- Must be pure Scala script code
-- Type conversions generated at build time based on argument definitions
-
-#### 5. Fix JavaScript Module Loading
-- [ ] Issue: `viashParseJson` function not found at runtime
-- [ ] Check `require.main === module` pattern
-- [ ] Remove `module.exports` from injected code
-- [ ] Ensure function is available in global scope
-
-#### 6. Fix C# Type Conversion
-- [ ] Dictionary access issues with dynamic types
-- [ ] Update `CSharpScript.generateInjectionMods` to generate type conversion code
-- [ ] Cast from `object` to specific types based on argument definitions
-- [ ] Long values stored as strings need `long.Parse()` conversion
-- [ ] Generate proper C# types with null handling
-
-**Example generated code:**
-```csharp
-var par = _viashJsonData.ContainsKey("par") ? (Dictionary<string, object>)_viashJsonData["par"] : new Dictionary<string, object>();
-int? whole_number = par.ContainsKey("whole_number") ? Convert.ToInt32(par["whole_number"]) : null;
-long? long_number = par.ContainsKey("long_number") ? long.Parse((string)par["long_number"]) : null;
-```
-
----
+#### 6. ✅ COMPLETED - Fix C# Type Conversion
 
 ### Medium Priority - Runner Updates
 
@@ -240,6 +172,11 @@ long? long_number = par.ContainsKey("long_number") ? long.Parse((string)par["lon
   
 #### 12. PR cleanup
 - [ ] Remove this file once all tasks are complete
+
+#### 13. Document Breaking Changes
+- [ ] Document minimum Bash version bump from 3.2 to 4.2+ (required for `declare -g` in JSON parser)
+- [ ] Document change in how `multiple: true` arguments are processed (now stored as proper arrays)
+- [ ] Update migration guide with any user-facing changes
 
 ---
 
