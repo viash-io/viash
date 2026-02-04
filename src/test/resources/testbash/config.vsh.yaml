@@ -100,10 +100,10 @@ engines:
   - type: native
     id: native
   - type: docker
-    image: "bash:3.2"
+    image: "bash:4.4"
   - type: docker
     id: throwawayimage
-    image: "bash:3.2"
+    image: "bash:4.4"
     target_image: "mytestbash"
     setup:
       - type: apk

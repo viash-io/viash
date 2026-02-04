@@ -101,7 +101,7 @@ class MainRunDockerSuite extends AnyFunSuite with BeforeAndAfterAll {
          |      exit 1
          |engines:
          |  - type: docker
-         |    image: 'bash:3.2'
+         |    image: 'bash:4.4'
          |    target_image: '$image_name'
          |""".stripMargin
 

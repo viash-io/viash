@@ -189,7 +189,7 @@ function ViashDockerSetup {
 # $1                  : image identifier with format `[registry/]image[:tag]`
 # $@                  : commands to verify being present
 # examples:
-#   ViashDockerCheckCommands bash:4.0 bash ps foo
+#   ViashDockerCheckCommands bash:4.4 bash ps foo
 function ViashDockerCheckCommands {
   local image_id="$1"
   shift 1

@@ -71,7 +71,7 @@ test_resources:
 engines: {
              - type: native
                  - type: docker
-                   image: "bash:3.2"
+                   image: "bash:4.4"
                    target_image: "viash_test_bash"
                  - type: docker
                    image: "hello-world"

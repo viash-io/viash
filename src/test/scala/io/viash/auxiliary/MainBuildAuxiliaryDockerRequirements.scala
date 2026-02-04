@@ -23,7 +23,7 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
 
   protected val configDeriver = ConfigDeriver(Paths.get(configRequirementsFile), temporaryConfigFolder)
 
-  protected val image = "bash:3.2"
+  protected val image = "bash:4.4"
   protected val dockerTag = "viash_requirements_testbench"
 
   case class FixtureParam()
@@ -62,7 +62,7 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
 
 class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apk"
-  override val image = "bash:3.2"
+  override val image = "bash:4.4"
 
   test("setup; check base image for apk still does not contain the fortune package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "apk_base")
@@ -578,7 +578,7 @@ class MainBuildAuxiliaryDockerRequirementsPython extends AbstractMainBuildAuxili
 
 class MainBuildAuxiliaryDockerRequirementsApkTest extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apktest"
-  override val image = "bash:3.2"
+  override val image = "bash:4.4"
 
   test("test_setup; check the fortune package isn't added for the build option", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, Some("""[{ "type": "apk", "packages": ["fortune"] }]"""), "apk_test_fortune_build")

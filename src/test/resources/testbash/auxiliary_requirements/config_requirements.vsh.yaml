@@ -21,4 +21,4 @@ test_resources:
 
 engines:
   - type: docker
-    image: "bash:3.2"
+    image: "bash:4.4"

@@ -6,9 +6,9 @@ resources:
 engines:
   - type: native
   - type: docker
-    image: "bash:3.2"
+    image: "bash:4.4"
   - type: docker
-    image: "bash:3.2"
+    image: "bash:4.4"
     id: "throwawayimage"
     target_image: "throwawayimage"
     setup:
