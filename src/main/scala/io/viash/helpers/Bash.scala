@@ -34,6 +34,7 @@ object Bash {
   lazy val ViashFindTargetDir: String = readUtils("ViashFindTargetDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
   lazy val ViashLogging: String = readUtils("ViashLogging")
+  lazy val ViashCleanupRegistry: String = readUtils("ViashCleanupRegistry")
   lazy val ViashRenderYaml: String = readUtils("ViashRenderYaml")
   lazy val ViashRenderJson: String = readUtils("ViashRenderJson")
   lazy val ViashParseArgumentValue: String = readUtils("ViashParseArgumentValue")

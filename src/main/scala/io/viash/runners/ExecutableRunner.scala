@@ -526,7 +526,7 @@ final case class ExecutableRunner(
         |      set -e
         |    fi
         |  }
-        |  trap ViashPerformChown EXIT
+        |  ViashRegisterCleanup ViashPerformChown
         |fi""".stripMargin
 
     BashWrapperMods(

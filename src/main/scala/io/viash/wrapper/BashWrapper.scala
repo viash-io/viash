@@ -239,6 +239,7 @@ object BashWrapper {
        |${Bash.ViashSourceDir}
        |${Bash.ViashFindTargetDir}
        |${Bash.ViashLogging}
+       |${Bash.ViashCleanupRegistry}
        |${Bash.ViashParseArgumentValue}
        |${Bash.ViashRenderJson}
        |# bash helper functions end -------------------------------------
@@ -982,19 +983,22 @@ object BashWrapper {
           s"""VIASH_WORK_DIR=$$(mktemp -d "$$VIASH_META_TEMP_DIR/viash-run-${config.name}-workdir-XXXXXX")
             |VIASH_WORK_PARAMS="$$VIASH_WORK_DIR/params.json"
             |VIASH_WORK_SCRIPT="${scriptPath}"
+            |# Store original work dir path before docker remapping
+            |VIASH_WORK_DIR_ORIGINAL="$$VIASH_WORK_DIR"
             |
-            |function clean_up {
+            |function ViashCleanupWorkDir {
             |  if [ -z "$${VIASH_KEEP_WORK_DIR+x}" ]; then
-            |    rm -rf "$$VIASH_WORK_DIR"
+            |    rm -rf "$$VIASH_WORK_DIR_ORIGINAL"
             |  else
-            |    ViashNotice "Keeping work directory at '$$VIASH_WORK_DIR' because VIASH_KEEP_WORK_DIR is set."
+            |    ViashNotice "Keeping work directory at '$$VIASH_WORK_DIR_ORIGINAL' because VIASH_KEEP_WORK_DIR is set."
             |  fi
             |}
+            |ViashRegisterCleanup ViashCleanupWorkDir
+            |
             |function interrupt {
             |  echo -e "\nCTRL-C Pressed..."
             |  exit 1
             |}
-            |trap clean_up EXIT
             |trap interrupt INT SIGINT
             |""".stripMargin
 
