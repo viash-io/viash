@@ -1,4 +1,4 @@
-const fs = require('fs');
+const _viashFs = require('fs');
 
 /**
  * Parse JSON parameters file into a JavaScript object.
@@ -14,12 +14,12 @@ function viashParseJson(jsonPath = null) {
     }
   }
   
-  if (!fs.existsSync(jsonPath)) {
+  if (!_viashFs.existsSync(jsonPath)) {
     throw new Error(`Parameters file not found: ${jsonPath}`);
   }
   
   try {
-    const jsonText = fs.readFileSync(jsonPath, 'utf8');
+    const jsonText = _viashFs.readFileSync(jsonPath, 'utf8');
     return JSON.parse(jsonText);
   } catch (error) {
     throw new Error(`Error parsing JSON file: ${error.message}`);

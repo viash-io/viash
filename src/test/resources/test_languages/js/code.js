@@ -21,32 +21,28 @@ let meta = {
 const fs = require('fs')
 
 let logFun;
-if (typeof par['log'] === 'undefined') {
+if (!par['log']) {
 	logFun = function(out) {
-	    console.log("INFO:" + out);
+	  console.log("INFO:" + out);
 	}
 } else {
 	logFun = function(out) {
-		fs.appendFile(par['log'], "INFO:" + out + "\n", function (err) {
-			if (err) throw err;
-		});
+		fs.appendFileSync(par['log'], "INFO:" + out + "\n");
 	}
 }
 let outFun;
-if (typeof par['output'] === 'undefined') {
+if (!par['output']) {
 	outFun = console.log
 } else {
 	outFun = function(out) {
-		fs.appendFile(par['output'], out + "\n", function (err) {
-			if (err) throw err;
-		});
+		fs.appendFileSync(par['output'], out + "\n");
 	}
 }
 
 // process parameters
 logFun('Parsed input arguments.')
 
-if (typeof par['output'] === 'undefined') { 
+if (!par['output']) { 
 	logFun('Printing output to console')
 } else {
 	logFun('Writing output to file')
@@ -54,7 +50,7 @@ if (typeof par['output'] === 'undefined') {
 
 for (const key in par) {
 	if (Array.isArray(par[key]) && par[key].length == 0)
-		outFun(`${key}: |empty array|`)
+		outFun(`${key}: ||`)
 	else if (Array.isArray(par[key]))
 		outFun(`${key}: |${par[key].join(';')}|`)
 	else if (par[key] == undefined)
@@ -63,12 +59,10 @@ for (const key in par) {
 		outFun(`${key}: |${par[key]}|`)
 }
 
-fs.readFile(par['input'], 'utf8', function(err, data){
-    outFun(`head of input: |${data.split('\n')[0]}|`)
-})
-fs.readFile(meta['resources_dir'] + '/resource1.txt', 'utf8', function(err, data){
-    outFun(`head of resource1: |${data.split('\n')[0]}|`)
-})
+let inputData = fs.readFileSync(par['input'], 'utf8');
+outFun(`head of input: |${inputData.split('\n')[0]}|`)
+let resourceData = fs.readFileSync(meta['resources_dir'] + '/resource1.txt', 'utf8');
+outFun(`head of resource1: |${resourceData.split('\n')[0]}|`)
 
 for (const key in meta) {
 	if (meta[key] == undefined || String(meta[key]) == 'NaN')
