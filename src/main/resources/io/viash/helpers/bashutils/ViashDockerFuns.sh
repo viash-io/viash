@@ -220,10 +220,13 @@ function ViashDockerBuild {
   # create temporary directory to store dockerfile & optional resources in
   local tmpdir=$(mktemp -d "$VIASH_META_TEMP_DIR/dockerbuild-$VIASH_META_NAME-XXXXXX")
   local dockerfile="$tmpdir/Dockerfile"
-  function clean_up {
-    rm -rf "$tmpdir"
+  
+  # Use a unique cleanup function name to avoid conflicts
+  VIASH_DOCKER_BUILD_TMPDIR="$tmpdir"
+  function ViashDockerBuildCleanup {
+    rm -rf "$VIASH_DOCKER_BUILD_TMPDIR"
   }
-  trap clean_up EXIT
+  ViashRegisterCleanup ViashDockerBuildCleanup
 
   # store dockerfile and resources
   ViashDockerfile "$VIASH_ENGINE_ID" > "$dockerfile"
