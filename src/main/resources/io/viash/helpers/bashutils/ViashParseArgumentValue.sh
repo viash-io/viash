@@ -30,6 +30,9 @@
 # ViashParseArgumentValue "--input" "par_input" "true" "'UNDEFINED'" "false"
 #
 # See ViashParseArgumentValue.test.sh for additional examples.
+#
+# Note: This function is written to be compatible with bash 3.2 (macOS default)
+# and avoids bash 4+ features like declare -g, local -n, ${var@Q}, and readarray.
 function ViashParseArgumentValue {
   local flag="$1"
   local env_name="$2"
@@ -42,22 +45,29 @@ function ViashParseArgumentValue {
   fi
 
   if [ "$multiple" == "false" ]; then
-    # check whether the variable is already set
-    if [ ! -z ${!env_name+x} ]; then
-      local -n prev_value="$env_name"
-      ViashError "Pass only one argument to argument '${flag}'. Found: ${prev_value@Q} & ${value@Q}"
+    # check whether the variable is already set (bash 3.2 compatible)
+    eval "local is_set=\${${env_name}+x}"
+    if [ ! -z "$is_set" ]; then
+      eval "local prev_value=\"\${$env_name}\""
+      local prev_quoted=$(printf '%q' "$prev_value")
+      local value_quoted=$(printf '%q' "$value")
+      ViashError "Pass only one argument to argument '${flag}'. Found: ${prev_quoted} & ${value_quoted}"
       exit 1
     fi
 
     value=$(ViashParseSingleString "$value")
 
-    # set the variable
-    declare -g "$env_name=${value}"
+    # set the variable globally (bash 3.2 compatible - using eval instead of declare -g)
+    eval "$env_name=\"\$value\""
   else
-    local -n prev_values="$env_name"
+    # Get existing array values (bash 3.2 compatible)
+    eval "local prev_values=(\"\${${env_name}[@]}\")"
 
+    # Parse new values into array (bash 3.2 compatible - using while loop instead of readarray)
     local new_values=()
-    readarray -t "new_values" < <(ViashParseMultipleStringAsArray "$value")
+    while IFS= read -r line || [ -n "$line" ]; do
+      new_values+=("$line")
+    done < <(ViashParseMultipleStringAsArray "$value")
 
     local combined_values=( "${prev_values[@]}" "${new_values[@]}" )
 
@@ -65,13 +75,16 @@ function ViashParseArgumentValue {
     if [ ${#combined_values[@]} -gt 1 ]; then
       for element in "${combined_values[@]}"; do
         if [ "$element" == "@@VIASH_UNDEFINED@@" ]; then
-          ViashError "Argument '${flag}': If argument value 'UNDEFINED' is passed, no other values should be provided.\nFound: ${combined_values@Q}"
+          # bash 3.2 compatible quoting (using printf %q instead of ${var@Q})
+          local combined_quoted=$(printf '%q ' "${combined_values[@]}")
+          ViashError "Argument '${flag}': If argument value 'UNDEFINED' is passed, no other values should be provided.\nFound: ${combined_quoted}"
           exit 1
         fi
       done
     fi
 
-    declare -g -a "$env_name=(\"\${combined_values[@]}\")"
+    # Set the global array (bash 3.2 compatible - using eval instead of declare -g -a)
+    eval "$env_name=(\"\${combined_values[@]}\")"
   fi
 }
 

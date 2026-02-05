@@ -69,10 +69,12 @@ function ViashRenderJsonQuotedValue {
   local key="$1"
   local value="$2"
   # escape backslashes, quotes, and newlines for JSON
+  # Note: Uses awk instead of sed for newline replacement for BSD/macOS compatibility
   echo "$value" | \
     sed 's#\\#\\\\#g' | \
     sed 's#"#\\"#g' | \
-    sed ':a;N;$!ba;s/\n/\\n/g' | \
+    awk 'BEGIN{ORS="\\n"} {print}' | \
+    sed 's#\\n$##' | \
     sed 's#^#"#g;s#$#"#g'
 }
 

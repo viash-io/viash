@@ -12,6 +12,9 @@
 #   ViashParseJsonBash <<< "$json_content"
 #
 # Spec: See docs/json_parser_spec.md
+#
+# Note: This function is written to be compatible with bash 3.2 (macOS default)
+# and avoids bash 4+ features like declare -g, local -n, and readarray.
 
 function ViashParseJsonBash {
   local depth=0
@@ -43,9 +46,9 @@ function ViashParseJsonBash {
       if [[ "$line" =~ ^\}[[:space:]]*,?[[:space:]]*$ ]]; then
         ((nested_depth--)) || true
         if [ $nested_depth -eq 0 ]; then
-          # Nested object complete - store as JSON string
+          # Nested object complete - store as JSON string (bash 3.2 compatible)
           local escaped="${nested_json//\'/\'\\\'\'}"
-          eval "declare -g ${nested_name}='${escaped}'"
+          eval "${nested_name}='${escaped}'"
           in_nested=false
           nested_name=""
           nested_json=""
@@ -57,8 +60,8 @@ function ViashParseJsonBash {
     # Handle array collection
     if $in_array; then
       if [[ "$line" =~ ^\][[:space:]]*,?[[:space:]]*$ ]]; then
-        # End of array
-        eval "declare -g -a ${array_name}=($(printf '%q ' "${array_items[@]}"))"
+        # End of array (bash 3.2 compatible)
+        eval "${array_name}=($(printf '%q ' "${array_items[@]}"))"
         in_array=false
         array_name=""
         array_items=()
@@ -142,17 +145,17 @@ function ViashParseJsonBash {
       
       # Check if array ends on same line
       if [[ "$rest" =~ ^\][[:space:]]*,?[[:space:]]*$ ]]; then
-        # Empty array
-        eval "declare -g -a ${var_name}=()"
+        # Empty array (bash 3.2 compatible)
+        eval "${var_name}=()"
       elif [[ "$rest" =~ ^(.*)\][[:space:]]*,?[[:space:]]*$ ]]; then
         # Single-line array
         local content="${BASH_REMATCH[1]}"
         content="${content%,}"
         
-        # Parse array items
+        # Parse array items (bash 3.2 compatible - using temp array instead of local -n)
         local items=()
-        _viash_parse_array_content "$content" items
-        eval "declare -g -a ${var_name}=($(printf '%q ' "${items[@]}"))"
+        _viash_parse_array_content_compat "$content" "items"
+        eval "${var_name}=($(printf '%q ' "${items[@]}"))"
       else
         # Multi-line array
         in_array=true
@@ -206,7 +209,8 @@ function ViashParseJsonBash {
       # Parse and assign value (skip null values - leave variable unset)
       if [ "$value" != "null" ]; then
         local unescaped="$(_viash_unescape_json_value "$value")"
-        eval "declare -g ${var_name}='${unescaped//\'/\'\\\'\'}'"
+        # bash 3.2 compatible - using eval instead of declare -g
+        eval "${var_name}='${unescaped//\'/\'\\\'\'}'"
       fi
       continue
     fi
@@ -248,12 +252,14 @@ function _viash_unescape_json_value {
 }
 
 # Helper: Parse array content (for single-line arrays)
-function _viash_parse_array_content {
+# bash 3.2 compatible version - takes array name as string and modifies it via eval
+function _viash_parse_array_content_compat {
   local content="$1"
-  local -n result_array="$2"
+  local array_name="$2"
   
   local in_quotes=false
   local current_item=""
+  local temp_items=()
   
   for ((i=0; i<${#content}; i++)); do
     local char="${content:$i:1}"
@@ -266,7 +272,7 @@ function _viash_parse_array_content {
       current_item="${current_item#"${current_item%%[![:space:]]*}"}"
       current_item="${current_item%"${current_item##*[![:space:]]}"}"
       if [ -n "$current_item" ]; then
-        result_array+=("$(_viash_unescape_json_value "$current_item")")
+        temp_items+=("$(_viash_unescape_json_value "$current_item")")
       fi
       current_item=""
     else
@@ -278,6 +284,9 @@ function _viash_parse_array_content {
   current_item="${current_item#"${current_item%%[![:space:]]*}"}"
   current_item="${current_item%"${current_item##*[![:space:]]}"}"
   if [ -n "$current_item" ]; then
-    result_array+=("$(_viash_unescape_json_value "$current_item")")
+    temp_items+=("$(_viash_unescape_json_value "$current_item")")
   fi
+  
+  # Copy to the target array (bash 3.2 compatible)
+  eval "${array_name}=(\"\${temp_items[@]}\")"
 }
