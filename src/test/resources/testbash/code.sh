@@ -53,9 +53,16 @@ output "output: |$par_output|"
 output "log: |$par_log|"
 output "optional: |$par_optional|"
 output "optional_with_default: |$par_optional_with_default|"
-output "multiple: |$par_multiple|"
-output "multiple_pos: |$par_multiple_pos|"
-output "multiple_output: |$par_multiple_output|"
+
+# Join array elements with semicolons for output
+IFS=';'
+multiple_joined="${par_multiple[*]}"
+multiple_pos_joined="${par_multiple_pos[*]}";
+unset IFS
+
+output "multiple: |$multiple_joined|"
+output "multiple_pos: |$multiple_pos_joined|"
+output "multiple_output: |$multiple_output|"
 output "meta_resources_dir: |$meta_resources_dir|"
 
 multiple_output_i=0
