@@ -107,15 +107,19 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("C# JSON parser") {
-    // Check if dotnet script is available
+    // Check if dotnet-script is available (either as 'dotnet script' or 'dotnet-script')
+    val dotnetScriptCheck = Exec.runCatch(List("dotnet-script", "--version"))
     val dotnetCheck = Exec.runCatch(List("dotnet", "script", "--version"))
-    assume(dotnetCheck.exitValue == 0, "dotnet script not available, skipping C# test")
+    val useDotnetScript = dotnetScriptCheck.exitValue == 0
+    val useDotnetCmd = dotnetCheck.exitValue == 0
+    assume(useDotnetScript || useDotnetCmd, "dotnet script not available, skipping C# test")
     
     val (tempDir, testScript) = setupTempDirWithParser("csharp", "csx")
     
     try {
+      val cmd = if (useDotnetScript) List("dotnet-script", testScript.toString) else List("dotnet", "script", testScript.toString)
       val result = Exec.runCatchPath(
-        List("dotnet", "script", testScript.toString),
+        cmd,
         cwd = Some(tempDir)
       )
       
@@ -126,9 +130,10 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Scala JSON parser") {
-    // Check if scala is available
-    val scalaCheck = Exec.runCatch(List("scala", "-version"))
-    assume(scalaCheck.exitValue == 0, "scala not available, skipping Scala test")
+    // Check if scala is available and can actually compile
+    // Scala 2.x has known issues with Java 17+ due to missing javax.tools classes
+    val scalaCheck = Exec.runCatch(List("scala", "-e", "println(\"hello\")"))
+    assume(scalaCheck.exitValue == 0, s"scala not available or incompatible with current JDK, skipping Scala test. Output: ${scalaCheck.output}")
     
     val (tempDir, testScript) = setupTempDirWithParser("scala", "scala")
     
