@@ -19,6 +19,7 @@ package io.viash.config.arguments
 
 import io.circe.Json
 import io.viash.helpers.data_structures._
+import io.viash.helpers.Bash
 import io.viash.schemas._
 import java.nio.file.Paths
 
@@ -82,12 +83,8 @@ abstract class Argument[Type] {
   /** Common parameter name for this argument */
   val par: String = dest + "_" + plainName
 
-  /** Parameter name in bash scripts
-    * For backwards compatibility, meta variables still use uppercase plainName.
-    * Par and dep variables use lowercase plainName for so variables with similar names do not clash.
-    * Examples: VIASH_META_NAME, VIASH_PAR_input, VIASH_DEP_my_dependency
-    */
-  val VIASH_PAR: String = "VIASH_" + dest.toUpperCase + "_" + (if (dest == "meta") plainName.toUpperCase() else plainName)
+  /** Parameter name in bash scripts - see Bash.viashVarName for naming convention */
+  val VIASH_PAR: String = Bash.viashVarName(dest, plainName)
 
   def copyArg(
     `type`: String = this.`type`,

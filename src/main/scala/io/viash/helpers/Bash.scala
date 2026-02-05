@@ -76,4 +76,21 @@ object Bash {
       .replaceWith("\\\\\\$VIASH_", "\\$VIASH_", allowUnescape)
       .replaceWith("\\\\\\$\\{VIASH_", "\\${VIASH_", allowUnescape)
   }
-}
+  /**
+    * Generate a VIASH variable name for use in bash scripts.
+    * 
+    * For backwards compatibility, meta variables use uppercase names.
+    * Par and dep variables use lowercase names so variables with similar names
+    * (e.g. "--input" and "--INPUT") do not clash.
+    * 
+    * Examples: VIASH_META_NAME, VIASH_PAR_input, VIASH_DEP_my_dependency
+    *
+    * @param dest The destination type: "par", "meta", or "dep"
+    * @param name The variable name (may contain slashes which are replaced with underscores)
+    * @return The formatted VIASH variable name
+    */
+  def viashVarName(dest: String, name: String): String = {
+    val sanitizedName = name.replace("/", "_")
+    val formattedName = if (dest == "meta") sanitizedName.toUpperCase() else sanitizedName
+    s"VIASH_${dest.toUpperCase()}_$formattedName"
+  }}
