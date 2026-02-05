@@ -291,7 +291,7 @@ object BashWrapper {
        |        *)
        |            # positional arg or unknown option
        |            VIASH_POSITIONAL_ARGS+=("$$1")
-       |            [[ $$1 == -* ]] && ViashWarning "Value '$$1' looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use \\"--help\\" to get more information on the parameters."
+       |            [[ $$1 == -* ]] && ViashWarning "Value '$$1' looks like a parameter but is not a defined parameter and will instead be treated as a positional argument. Use --help to get more information on the parameters."
        |            shift # past argument
        |            ;;
        |    esac
