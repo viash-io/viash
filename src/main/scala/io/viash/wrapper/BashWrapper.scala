@@ -665,41 +665,37 @@ object BashWrapper {
 
       param match {
         case _ if param.multiple && param.direction == Input =>
-          s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
+          s"""if [ $${#${param.VIASH_PAR}[@]} -gt 0 ]; then
             |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
-            |  set -f
-            |  for val in $${${param.VIASH_PAR}}[@]}; do
+            |  for val in "$${${param.VIASH_PAR}[@]}"; do
             |    found=0
-            |    for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |    for choice in "$${${param.VIASH_PAR}_CHOICES[@]}"; do
             |      if [ "$$val" == "$$choice" ]; then
             |        found=1
             |        break
             |      fi
             |    done
             |    if [ $$found -eq 0 ]; then
-            |      ViashError '${param.name}' specified value of \\'$${val}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
+            |      ViashError '${param.name}' specified value of \\'$$val\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
             |      exit 1
             |    fi
             |  done
-            |  set +f
             |fi
             |""".stripMargin
         case _ =>
           s"""if [ ! -z "$$${param.VIASH_PAR}" ]; then
             |  ${param.VIASH_PAR}_CHOICES=($allowedChoicesString)
             |  found=0
-            |  for choice in $${${param.VIASH_PAR}_CHOICES[@]}; do
+            |  for choice in "$${${param.VIASH_PAR}_CHOICES[@]}"; do
             |    if [ "$$${param.VIASH_PAR}" == "$$choice" ]; then
             |      found=1
             |      break
             |    fi
             |  done
-            |  set -f
             |  if [ $$found -eq 0 ]; then
             |    ViashError '${param.name}' specified value of \\'$$${param.VIASH_PAR}\\' is not in the list of allowed values. Use "--help" to get more information on the parameters.
             |    exit 1
             |  fi
-            |  set +f
             |fi
             |""".stripMargin
       }
