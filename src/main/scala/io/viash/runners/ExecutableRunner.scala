@@ -416,9 +416,8 @@ final case class ExecutableRunner(
     val args = config.getArgumentLikes(includeMeta = true)
     
     val detectMounts = args.flatMap {
-      case arg: FileArgument if arg.multiple =>
-        // resolve arguments with multiplicity different from singular args
-        val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
+      case arg: FileArgument if arg.multiple && arg.direction == Input =>
+        // resolve input arguments with multiplicity different from singular args
         Some(
           s"""
             |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
@@ -426,6 +425,17 @@ final case class ExecutableRunner(
             |    VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg $${${arg.VIASH_PAR}[$$i]})" )
             |    ${arg.VIASH_PAR}[$$i]=$$(ViashDockerAutodetectMount $${${arg.VIASH_PAR}[$$i]})
             |  done
+            |fi""".stripMargin
+        )
+      case arg: FileArgument if arg.multiple && arg.direction == Output =>
+        // For multiple output arguments, the value is a pattern (e.g., "output_*.txt")
+        // Add it to chown vars so created files get ownership changed
+        Some(
+          s"""
+            |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+            |  VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$${arg.VIASH_PAR}")" )
+            |  ${arg.VIASH_PAR}=$$(ViashDockerAutodetectMount "$$${arg.VIASH_PAR}")
+            |  VIASH_CHOWN_VARS+=( "$$${arg.VIASH_PAR}" )
             |fi""".stripMargin
         )
       case arg: FileArgument =>
