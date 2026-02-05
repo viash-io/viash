@@ -49,9 +49,7 @@ function ViashParseArgumentValue {
     eval "local is_set=\${${env_name}+x}"
     if [ ! -z "$is_set" ]; then
       eval "local prev_value=\"\${$env_name}\""
-      local prev_quoted=$(printf '%q' "$prev_value")
-      local value_quoted=$(printf '%q' "$value")
-      ViashError "Pass only one argument to argument '${flag}'. Found: ${prev_quoted} & ${value_quoted}"
+      ViashError "Pass only one argument to argument '${flag}'. Found: '${prev_value}' & '${value}'"
       exit 1
     fi
 
