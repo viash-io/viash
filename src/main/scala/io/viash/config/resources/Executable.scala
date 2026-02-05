@@ -48,4 +48,6 @@ case class Executable(
   override def write(path: Path, overwrite: Boolean): Unit = {}
 
   override def command(script: String): String = script
+  
+  override def commandSeq(script: String): Seq[String] = Seq(script)
 }

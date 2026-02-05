@@ -991,7 +991,10 @@ object BashWrapper {
             |  if [ -z "$${VIASH_KEEP_WORK_DIR+x}" ]; then
             |    rm -rf "$$VIASH_WORK_DIR_ORIGINAL"
             |  else
-            |    ViashDebug "Keeping work directory at '$$VIASH_WORK_DIR_ORIGINAL' because VIASH_KEEP_WORK_DIR is set."
+            |    # Only print notice if VIASH_KEEP_WORK_DIR is not set to "silent"
+            |    if [ "$$VIASH_KEEP_WORK_DIR" != "silent" ]; then
+            |      ViashNotice "Keeping work directory at '$$VIASH_WORK_DIR_ORIGINAL' because VIASH_KEEP_WORK_DIR is set."
+            |    fi
             |  fi
             |}
             |ViashRegisterCleanup ViashCleanupWorkDir
