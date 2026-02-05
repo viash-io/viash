@@ -51,7 +51,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
-  test("Get tagged version of a docker image for bash 4.4", DockerTest) {
+  test("Get tagged version of a docker image for bash 3.2", DockerTest) {
     // prepare the environment
     TestHelper.testMain(
       "build",
@@ -76,7 +76,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // check whether the internal docker is correct
     val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
     // we expect something basic like
-    // FROM bash:4.4
+    // FROM bash:3.2
     // LABEL ...
     // RUN :
     // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences

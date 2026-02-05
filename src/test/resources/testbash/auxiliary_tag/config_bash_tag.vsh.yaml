@@ -14,7 +14,7 @@ engines:
     image: "bash:5.0"
   - id: "testtag2"
     type: docker
-    image: "bash:4.4"
+    image: "bash:3.2"
   - id: "testtargetimage1"
     type: docker
     image: "bash:5.0"
@@ -32,7 +32,7 @@ engines:
         run: [ ls ]
   - id: "testtargetimage3"
     type: docker
-    image: "bash:4.4"
+    image: "bash:3.2"
     target_image: bar
     target_tag: 0.0.2
     setup:

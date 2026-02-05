@@ -65,7 +65,7 @@ import io.viash.helpers.data_structures.oneOrMoreToList
     |  - type: executable
     |engines:
     |  - type: docker
-    |    image: "bash:4.4"
+    |    image: "bash:3.2"
     |""", "yaml")
 case class Config(
   @description("Name of the component and the filename of the executable when built with `viash build`.")

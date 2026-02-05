@@ -36,7 +36,7 @@ import io.viash.helpers.DockerImageInfo
 @example(
   """engines:
     |  - type: docker
-    |    image: "bash:4.4"
+    |    image: "bash:3.2"
     |    setup:
     |      - type: apt
     |        packages: [ curl ]
@@ -50,7 +50,7 @@ final case class DockerEngine(
   id: String = "docker",
 
   @description("The base container to start from. You can also add the tag here if you wish.")
-  @example("image: \"bash:4.4\"", "yaml")
+  @example("image: \"bash:3.2\"", "yaml")
   image: String,
 
   @description("If anything is specified in the setup section, running the `---setup` will result in an image with the name of `<target_image>:<version>`. If nothing is specified in the `setup` section, simply `image` will be used. Advanced usage only.")

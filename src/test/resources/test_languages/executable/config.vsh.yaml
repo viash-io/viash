@@ -19,4 +19,4 @@ __merge__: [../common-runners.yaml]
 engines:
   - type: native
   - type: docker
-    image: "bash:4.4"
+    image: "bash:3.2"

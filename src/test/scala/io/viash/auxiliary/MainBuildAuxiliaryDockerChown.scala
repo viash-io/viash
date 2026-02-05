@@ -39,7 +39,7 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     assert(amount > 0)
     assert(amount < 4)
 
-    val engineMod = s""".engines := [{"type": "docker", "image": "bash:4.4", "id": "$dockerId"}]"""
+    val engineMod = s""".engines := [{"type": "docker", "image": "bash:3.2", "id": "$dockerId"}]"""
     val modsWithEngine = mods :+ engineMod
     val localConfigFile = configDeriver.derive(modsWithEngine, dockerId)
     val localConfig = Config.read(localConfigFile)
