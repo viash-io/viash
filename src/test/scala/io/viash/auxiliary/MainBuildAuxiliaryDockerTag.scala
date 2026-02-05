@@ -51,7 +51,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
-  test("Get tagged version of a docker image for bash 3.2", DockerTest) {
+  test("Get tagged version of a docker image for bash 4.4", DockerTest) {
     // prepare the environment
     TestHelper.testMain(
       "build",
