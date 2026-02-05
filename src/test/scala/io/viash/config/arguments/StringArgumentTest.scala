@@ -27,7 +27,7 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(arg.`type` == "string")
     assert(arg.par == "par_foo")
-    assert(arg.VIASH_PAR == "VIASH_PAR_FOO")
+    assert(arg.VIASH_PAR == "VIASH_PAR_foo")
     assert(arg.flags == "--")
     assert(arg.plainName == "foo")
 
