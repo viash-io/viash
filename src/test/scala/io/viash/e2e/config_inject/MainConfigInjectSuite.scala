@@ -23,7 +23,7 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
     ("python", "config.vsh.yaml", "#", "'input': r'input.txt'"),
     // ("r", "script.vsh.R", "//", "input = \"input.txt\""), // TODO add back when `viash config inject` works for inline configs or add separate config/script combo for R
     ("js", "config.vsh.yaml", "//", "'input': String.raw`input.txt`"),
-    ("scala", "config.vsh.yaml", "//", "Some(\"\"\"input.txt\"\"\"),"),
+    ("scala", "config.vsh.yaml", "//", "\"\"\"input.txt\"\"\""),
     ("csharp", "config.vsh.yaml", "//", "input = @\"input.txt\""),
   )
 
@@ -33,8 +33,6 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   for ((name, file, comment, expectedInputString) <- tests) {
-    println(s"$name $file $expectedInputString")
-    
     test(s"config inject works for $name") {
       // check source file exists
       val configFile = destPath.resolve(s"$name/$file")
@@ -48,6 +46,7 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
       // inject script
       TestHelper.testMain(
         "config", "inject",
+        "--force",
         configFile.toString(),
       )
 
@@ -60,25 +59,13 @@ class MainConfigInjectSuite extends AnyFunSuite with BeforeAndAfterAll {
       // run inject script a second time. The result should be the same as running it once (no changes that stack).
       TestHelper.testMain(
         "config", "inject",
+        "--force",
         configFile.toString(),
       )
       val code2 = Source.fromFile(scriptFile.toString()).getLines().mkString("\n")
 
-      // these lines change each time config inject is run, clear the random number
-      // meta_resources_dir='/tmp/viash_inject_test_languages15183647856847957861'
-      // meta_executable='/tmp/viash_inject_test_languages15183647856847957861/test_languages'
-      // meta_config='/tmp/viash_inject_test_languages15183647856847957861/.config.vsh.yaml'
-
-      // assume number is a Long, so between 1 and 20 decimal characters
-      val code_replacements = code.replaceAll(s"inject_test_languages_$name\\d*", "")
-      val code2_replacements = code2.replaceAll(s"inject_test_languages_$name\\d*", "")
-
-      assert(code.length - code_replacements.length <= 126 + (name.length+1)*3, "Stripping the paths should not cause very big differences")
-      assert(code.length - code_replacements.length >= 66 + (name.length+1)*3, "Stripping the paths should not cause very big differences, but at least some")
-      assert(code2.length - code2_replacements.length <= 126 + (name.length+1)*3, "Stripping the paths should not cause very big differences")
-      assert(code2.length - code2_replacements.length >= 66 + (name.length+1)*3, "Stripping the paths should not cause very big differences, but at least some")
-
-      assert(code_replacements.length == code2_replacements.length, "Running config inject multiple times should not result in substantial code differences. Only the placeholder folder is different.")
+      // Running config inject multiple times should produce identical results
+      assert(code == code2, "Running config inject multiple times should produce identical code.")
     }
 
   }
