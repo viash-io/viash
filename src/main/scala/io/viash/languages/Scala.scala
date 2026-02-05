@@ -30,6 +30,38 @@ object Scala extends Language {
   val executor: Seq[String] = Seq("scala", "-nc")
   val viashParseJsonCode: String = Resources.read("languages/scala/ViashParseJson.scala")
 
+  private def getScalaType(arg: Argument[_]): String = {
+    arg match {
+      case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
+      case a: IntegerArgument if a.multiple => "List[Int]"
+      case a: LongArgument if a.multiple => "List[Long]"
+      case a: DoubleArgument if a.multiple => "List[Double]"
+      case a: FileArgument if a.multiple => "List[String]"
+      case a: StringArgument if a.multiple => "List[String]"
+      case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
+      case a: IntegerArgument if !a.required => "Option[Int]"
+      case a: LongArgument if !a.required => "Option[Long]"
+      case a: DoubleArgument if !a.required => "Option[Double]"
+      case a: FileArgument if !a.required => "Option[String]"
+      case a: StringArgument if !a.required => "Option[String]"
+      case _: BooleanArgumentBase => "Boolean"
+      case _: IntegerArgument => "Int"
+      case _: LongArgument => "Long"
+      case _: DoubleArgument => "Double"
+      case _: FileArgument => "String"
+      case _: StringArgument => "String"
+    }
+  }
+
+  private def generateCaseClass(className: String, params: List[Argument[_]]): String = {
+    val classTypes = params.map { par =>
+      s"${par.plainName}: ${getScalaType(par)}"
+    }
+    s"""case class $className(
+  ${classTypes.mkString(",\n  ")}
+)"""
+  }
+
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // Extract only the object and functions, not the main execution part
     val helperFunctions = viashParseJsonCode
@@ -44,33 +76,6 @@ object Scala extends Language {
       // Generate case class and instance for each section (par, meta, dep)
       val sections = argsMetaAndDeps.map { case (dest, params) =>
         val className = s"Viash${dest.capitalize}"
-        
-        // Generate case class field types
-        val classTypes = params.map { par =>
-          val classType = par match {
-            case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
-            case a: IntegerArgument if a.multiple => "List[Int]"
-            case a: LongArgument if a.multiple => "List[Long]"
-            case a: DoubleArgument if a.multiple => "List[Double]"
-            case a: FileArgument if a.multiple => "List[String]"
-            case a: StringArgument if a.multiple => "List[String]"
-            // Optional types for non-required, non-flag arguments
-            case a: BooleanArgumentBase if !a.required && a.flagValue.isEmpty => "Option[Boolean]"
-            case a: IntegerArgument if !a.required => "Option[Int]"
-            case a: LongArgument if !a.required => "Option[Long]"
-            case a: DoubleArgument if !a.required => "Option[Double]"
-            case a: FileArgument if !a.required => "Option[String]"
-            case a: StringArgument if !a.required => "Option[String]"
-            // Required types
-            case _: BooleanArgumentBase => "Boolean"
-            case _: IntegerArgument => "Int"
-            case _: LongArgument => "Long"
-            case _: DoubleArgument => "Double"
-            case _: FileArgument => "String"
-            case _: StringArgument => "String"
-          }
-          s"  ${par.plainName}: $classType"
-        }
         
         // Generate JSON extraction code for each parameter
         val extractors = params.map { par =>
@@ -122,9 +127,7 @@ object Scala extends Language {
         }
         
         // Generate the case class definition
-        val caseClassDef = s"""case class $className(
-${classTypes.mkString(",\n")}
-)"""
+        val caseClassDef = generateCaseClass(className, params)
         
         // Generate the JSON extraction and instance creation
         val extraction = s"""val _${dest}Json = _viashJsonData.getOrElse("$dest", Map.empty[String, Any]).asInstanceOf[Map[String, Any]]
@@ -143,5 +146,63 @@ ${extractors.mkString(",\n")}
     ScriptInjectionMods(
       params = helperFunctions + "\n\n" + paramsCode
     )
+  }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val quo = "\"\"\""
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
+      val className = s"Viash${dest.capitalize}"
+      val caseClassDef = generateCaseClass(className, params)
+
+      val parSet = params.map { par =>
+        formatScalaValue(par)
+      }
+
+      s"""$caseClassDef
+val $dest = $className(
+  ${parSet.mkString(",\n  ")}
+)"""
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString("\n"))
+  }
+
+  private def formatScalaValue(arg: Argument[_]): String = {
+    val quo = "\"\"\""
+    // Priority: example > default > None/Nil for optional args
+    val rawValues = arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil =>
+          // Return appropriate null value based on type
+          return arg match {
+            case a: Argument[_] if a.multiple => "Nil"
+            case a: BooleanArgumentBase if a.flagValue.isDefined => formatSingleScalaValue(arg, a.flagValue.get.toString)
+            case _: Argument[_] if !arg.required => "None"
+            case _ => "??? // Required argument without default"
+          }
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+
+    if (arg.multiple) {
+      val formattedValues = rawValues.map(v => formatSingleScalaValue(arg, v))
+      s"List(${formattedValues.mkString(", ")})"
+    } else if (!arg.required) {
+      s"Some(${formatSingleScalaValue(arg, rawValues.headOption.getOrElse(""))})"
+    } else {
+      formatSingleScalaValue(arg, rawValues.headOption.getOrElse(""))
+    }
+  }
+
+  private def formatSingleScalaValue(arg: Argument[_], value: String): String = {
+    val quo = "\"\"\""
+    arg match {
+      case _: BooleanArgumentBase => if (value.toLowerCase == "true") "true" else "false"
+      case _: IntegerArgument => value
+      case _: LongArgument => s"${value}L"
+      case _: DoubleArgument => value
+      case _ => s"$quo${value.replace(quo, "\\" + quo)}$quo"
+    }
   }
 }

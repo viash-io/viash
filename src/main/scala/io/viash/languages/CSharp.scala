@@ -116,4 +116,61 @@ ${fieldAssignments.mkString(",\n")}
       params = helperFunctions + "\n\n" + paramsCode
     )
   }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
+      val parSet = params.map { par =>
+        val value = formatCSharpValue(par)
+        s"${par.plainName} = $value"
+      }
+
+      s"""var $dest = new {
+         |  ${parSet.mkString(",\n  ")}
+         |};""".stripMargin
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString("\n"))
+  }
+
+  private def getCSharpArrayType(arg: Argument[_]): String = {
+    arg match {
+      case _: BooleanArgumentBase => "bool"
+      case _: IntegerArgument => "int"
+      case _: LongArgument => "long"
+      case _: DoubleArgument => "double"
+      case _: FileArgument => "string"
+      case _: StringArgument => "string"
+    }
+  }
+
+  private def formatCSharpValue(arg: Argument[_]): String = {
+    // Priority: example > default > null for optional args
+    val rawValues = arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil =>
+          // Return null with appropriate cast
+          val class_ = getCSharpArrayType(arg)
+          return if (arg.multiple) s"($class_[]) null" else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) s"($class_) null" else s"($class_?) null"
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+
+    if (arg.multiple) {
+      val arrayType = getCSharpArrayType(arg)
+      val formattedValues = rawValues.map(v => formatSingleCSharpValue(arg, v))
+      s"new $arrayType[] { ${formattedValues.mkString(", ")} }"
+    } else {
+      formatSingleCSharpValue(arg, rawValues.headOption.getOrElse(""))
+    }
+  }
+
+  private def formatSingleCSharpValue(arg: Argument[_], value: String): String = {
+    arg match {
+      case _: BooleanArgumentBase => if (value.toLowerCase == "true") "true" else "false"
+      case _: IntegerArgument | _: LongArgument => value
+      case _: DoubleArgument => value
+      case _ => s"@\"${value.replace("\"", "\"\"")}\""
+    }
+  }
 }

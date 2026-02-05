@@ -23,14 +23,46 @@ import scala.sys.process.Process
 import io.circe.syntax.EncoderOps
 
 import io.viash.config.Config
+import io.viash.config.arguments._
 import io.viash.helpers.{IO, Logging}
 import io.viash.helpers.circe._
+import io.viash.helpers.data_structures._
 import io.viash.runners.DebugRunner
 import io.viash.config.ConfigMeta
 import io.viash.exceptions.ExitException
 import io.viash.runners.Runner
 
 object ViashConfig extends Logging{
+
+  /**
+   * Augment required arguments with placeholder examples if they don't have examples or defaults.
+   * This ensures consistency across languages when generating config inject code.
+   */
+  private def addPlaceholderExamples(config: Config): Config = {
+    val newGrps = config.argument_groups.map(grp =>
+      val newArgs = grp.arguments.map { arg =>
+        // Only add placeholder if required and missing both example and default
+        if (arg.required && arg.example.toList.isEmpty && arg.default.toList.isEmpty) {
+          val placeholder = arg match {
+            case a: StringArgument => a.copy(example = OneOrMore("placeholder"))
+            case a: FileArgument => a.copy(example = OneOrMore(Paths.get("path/to/file")))
+            case a: IntegerArgument => a.copy(example = OneOrMore(123))
+            case a: LongArgument => a.copy(example = OneOrMore(123456L))
+            case a: DoubleArgument => a.copy(example = OneOrMore(12.34))
+            case a: BooleanArgument => a.copy(example = OneOrMore(true))
+            // BooleanTrueArgument and BooleanFalseArgument automatically have a default
+            case other => other
+          }
+          placeholder.asInstanceOf[Argument[_]]
+        } else {
+          arg
+        }
+      }
+      grp.copy(arguments = newArgs)
+    )
+
+    config.copy(argument_groups = newGrps)
+  }
 
   def view(config: Config, format: String): Unit = {
     val json = ConfigMeta.configToCleanJson(config)
@@ -42,23 +74,25 @@ object ViashConfig extends Logging{
     infoOut(jsons.asJson.toFormattedString(format))
   }
 
-  def inject(config: Config): Unit = {
+  def inject(config: Config, force: Boolean = false): Unit = {
     // check if config has a main script
     if (config.mainScript.isEmpty) {
       infoOut("Could not find a main script in the Viash config.")
       throw new ExitException(1)
     }
+    val mainScript = config.mainScript.get
+    
     // check if we can read code
-    if (config.mainScript.get.readSome.isEmpty) {
+    if (mainScript.readSome.isEmpty) {
       infoOut("Could not read main script in the Viash config.")
       throw new ExitException(1)
     }
     // check if main script has a path
-    if (config.mainScript.get.uri.isEmpty) {
+    if (mainScript.uri.isEmpty) {
       infoOut("Main script should have a path.")
       throw new ExitException(1)
     }
-    val uri = config.mainScript.get.uri.get
+    val uri = mainScript.uri.get
 
     // check if main script is a local file
     if (uri.getScheme != "file") {
@@ -67,22 +101,35 @@ object ViashConfig extends Logging{
     }
     val path = Paths.get(uri.getPath())
 
-    // debugFun
-    val debugRunner = DebugRunner(path = uri.getPath())
-    val resources = debugRunner.generateRunner(config, testing = false)
+    // Augment config with placeholder examples for required arguments
+    val augmentedConfig = addPlaceholderExamples(config)
+    
+    // Generate args, meta, and deps maps
+    val argsMetaAndDeps = augmentedConfig.getArgumentLikesGroupedByDest(
+      includeMeta = true,
+      includeDependencies = true,
+      filterInputs = true
+    )
 
-    // create temporary directory
-    val dir = IO.makeTemp("viash_inject_" + config.name)
+    // Generate injected code
+    val script = mainScript.asInstanceOf[io.viash.config.resources.Script]
+    val newCode = script.readWithConfigInject(argsMetaAndDeps, augmentedConfig)
 
-    // build regular executable
-    Files.createDirectories(dir)
-    IO.writeResources(resources.resources, dir)
+    // Ask for confirmation unless --force is specified
+    if (!force) {
+      infoOut(s"About to modify: $path")
+      infoOut("This will inject parameter definitions into the script between VIASH START and VIASH END markers.")
+      infoOut("Do you want to continue? (y/N): ")
+      val response = scala.io.StdIn.readLine()
+      if (response.toLowerCase != "y" && response.toLowerCase != "yes") {
+        infoOut("Cancelled.")
+        return
+      }
+    }
 
-    // run command, collect output
-    val executable = Paths.get(dir.toString, config.name).toString
-    val exitValue = Process(Seq(executable), cwd = dir.toFile).!
-
-    // TODO: remove tempdir
+    // Write the modified script back to the file
+    IO.write(newCode, path)
+    infoOut(s"Successfully injected Viash header into: $path")
   }
 
 

@@ -35,4 +35,9 @@ object Nextflow extends Language {
     // Nextflow scripts are processed differently
     ScriptInjectionMods()
   }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Config inject is not supported for Nextflow scripts
+    ScriptInjectionMods()
+  }
 }

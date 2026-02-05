@@ -18,7 +18,7 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
-import io.viash.config.arguments.Argument
+import io.viash.config.arguments._
 import io.viash.config.Config
 import io.viash.config.resources.ScriptInjectionMods
 
@@ -52,5 +52,47 @@ object Python extends Language {
     ScriptInjectionMods(
       params = helperFunctions + "\n\n" + paramsCode
     )
+  }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
+      val parSet = params.map { par =>
+        val value = formatPythonValue(par)
+        s"  '${par.plainName}': $value"
+      }
+
+      s"""$dest = {
+         |${parSet.mkString(",\n")}
+         |}""".stripMargin
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString("\n"))
+  }
+
+  private def formatPythonValue(arg: Argument[_]): String = {
+    // Priority: example > default > None for optional args
+    val rawValues = arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil => return "None"
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+
+    if (arg.multiple) {
+      val formattedValues = rawValues.map(v => formatSingleValue(arg, v))
+      s"[${formattedValues.mkString(", ")}]"
+    } else {
+      formatSingleValue(arg, rawValues.headOption.getOrElse(""))
+    }
+  }
+
+  private def formatSingleValue(arg: Argument[_], value: String): String = {
+    arg match {
+      case _: BooleanArgumentBase => if (value.toLowerCase == "true") "True" else "False"
+      case _: IntegerArgument | _: LongArgument => value
+      case _: DoubleArgument => value
+      case _ => s"r'${value.replace("'", "\\'")}'"
+    }
   }
 }

@@ -54,4 +54,15 @@ trait Language {
    * @return ScriptInjectionMods containing header, params, and footer code
    */
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
+
+  /**
+   * Generate static code for `viash config inject`.
+   * This generates simple dictionaries/classes with example/default/placeholder values,
+   * not a JSON parser. This is intended for development convenience when editing scripts.
+   *
+   * @param argsMetaAndDeps Map of destination names to lists of arguments
+   * @param config The component configuration
+   * @return ScriptInjectionMods containing the static dictionary/class definitions
+   */
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
 }

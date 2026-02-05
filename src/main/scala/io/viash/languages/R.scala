@@ -82,4 +82,47 @@ object R extends Language {
        |""".stripMargin
     ScriptInjectionMods(params = outCode)
   }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
+      val parSet = params.map { par =>
+        val value = formatRValue(par)
+        s"""  "${par.plainName}" = $value"""
+      }
+
+      s"""$dest <- list(
+         |${parSet.mkString(",\n")}
+         |)""".stripMargin
+    }
+
+    ScriptInjectionMods(params = paramsCode.mkString("\n"))
+  }
+
+  private def formatRValue(arg: Argument[_]): String = {
+    // Priority: example > default > NULL for optional args
+    val rawValues = arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil => return "NULL"
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+
+    if (arg.multiple) {
+      val formattedValues = rawValues.map(v => formatSingleRValue(arg, v))
+      s"c(${formattedValues.mkString(", ")})"
+    } else {
+      formatSingleRValue(arg, rawValues.headOption.getOrElse(""))
+    }
+  }
+
+  private def formatSingleRValue(arg: Argument[_], value: String): String = {
+    arg match {
+      case _: BooleanArgumentBase => if (value.toLowerCase == "true") "TRUE" else "FALSE"
+      case _: IntegerArgument => s"${value}L"
+      case _: LongArgument => s"bit64::as.integer64('$value')"
+      case _: DoubleArgument => value
+      case _ => s""""${value.replace("\\", "\\\\").replace("\"", "\\\"")}""""
+    }
+  }
 }

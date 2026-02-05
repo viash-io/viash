@@ -18,7 +18,7 @@
 package io.viash.languages
 
 import io.viash.helpers.Resources
-import io.viash.config.arguments.Argument
+import io.viash.config.arguments._
 import io.viash.config.Config
 import io.viash.config.resources.ScriptInjectionMods
 
@@ -39,5 +39,43 @@ ViashParseJsonBash <<< "$$_viash_json_content"
 
 """
     ScriptInjectionMods(params = fullCode)
+  }
+
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    val parSet = argsMetaAndDeps.flatMap { case (_, params) =>
+      params.map { par =>
+        val value = getExampleValue(par)
+        if (par.multiple) {
+          // For multiple values, create a bash array
+          val values = value match {
+            case v if v.isEmpty => ""
+            case v => v
+          }
+          s"""${par.par}=($values)"""
+        } else {
+          s"""${par.par}='$value'"""
+        }
+      }
+    }
+
+    val paramsCode = parSet.mkString("\n")
+    ScriptInjectionMods(params = paramsCode)
+  }
+
+  private def getExampleValue(arg: Argument[_]): String = {
+    // Priority: example > default > empty for optional args
+    val values = arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil => Nil
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+    
+    if (arg.multiple) {
+      values.map(v => s"'$v'").mkString(" ")
+    } else {
+      values.headOption.getOrElse("")
+    }
   }
 }
