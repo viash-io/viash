@@ -19,6 +19,10 @@ check_output() {
   fi
 }
 
+export VIASH_KEEP_WORK_DIR=true
+export VIASH_TEMP=$meta_temp_dir/temp
+mkdir -p $VIASH_TEMP
+
 echo ">>> Checking whether expected resources exist"
 [[ ! -f "$meta_executable" ]] && echo "executable could not be found!" && exit 1
 [[ ! -f "$meta_resources_dir/.config.vsh.yaml" ]] && echo ".config.vsh.yaml could not be found!" && exit 1
