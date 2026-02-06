@@ -1,6 +1,12 @@
 name: Scala CI
 
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop_0_8
+      - develop_0_9
 
 jobs:
   scala-ci:
