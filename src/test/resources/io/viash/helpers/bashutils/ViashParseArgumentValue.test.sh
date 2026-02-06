@@ -172,3 +172,89 @@ assert_value_equal "par_input" "a;b'\"c d e" "${par_input[@]}"
 assert_value_equal "par_input" 3 "${#par_input[@]}"
 
 unset par_input
+
+
+## TEST6: test special shell characters that could cause command injection
+
+# TEST6a: backticks should not be executed
+ViashParseArgumentValue "--input" "par_input" "false" 'value with `echo dangerous`'
+
+assert_value_equal "par_input_backtick" 'value with `echo dangerous`' "${par_input[@]}"
+assert_value_equal "par_input_backtick_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST6b: dollar signs should be preserved literally
+ViashParseArgumentValue "--input" "par_input" "false" 'value with $HOME variable'
+
+assert_value_equal "par_input_dollar" 'value with $HOME variable' "${par_input[@]}"
+assert_value_equal "par_input_dollar_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST6c: command substitution syntax should not be executed
+ViashParseArgumentValue "--input" "par_input" "false" 'value with $(whoami)'
+
+assert_value_equal "par_input_subst" 'value with $(whoami)' "${par_input[@]}"
+assert_value_equal "par_input_subst_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST6d: complex string with multiple special characters
+ViashParseArgumentValue "--input" "par_input" "false" 'a \ b $ c ` d " e '\'' f'
+
+assert_value_equal "par_input_complex" 'a \ b $ c ` d " e '\'' f' "${par_input[@]}"
+assert_value_equal "par_input_complex_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST6e: newline escape sequences
+ViashParseArgumentValue "--input" "par_input" "false" 'line1\nline2'
+
+assert_value_equal "par_input_newline" 'line1\nline2' "${par_input[@]}"
+assert_value_equal "par_input_newline_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+
+## TEST7: test accumulating multiple values
+
+# TEST7a: multiple calls should accumulate values
+ViashParseArgumentValue "--input" "par_input" "true" 'value1'
+ViashParseArgumentValue "--input" "par_input" "true" 'value2'
+
+assert_value_equal "par_input_accum" 'value1 value2' "${par_input[@]}"
+assert_value_equal "par_input_accum_len" 2 "${#par_input[@]}"
+
+unset par_input
+
+# TEST7b: multiple calls with semicolon-separated values
+ViashParseArgumentValue "--input" "par_input" "true" 'a;b'
+ViashParseArgumentValue "--input" "par_input" "true" 'c;d'
+
+assert_value_equal "par_input_multi_accum" 'a b c d' "${par_input[@]}"
+assert_value_equal "par_input_multi_accum_len" 4 "${#par_input[@]}"
+
+unset par_input
+
+
+## TEST8: test empty and whitespace values
+
+# TEST8a: empty string for multiple
+ViashParseArgumentValue "--input" "par_input" "true" ''
+
+assert_value_equal "par_input_empty_multi" '' "${par_input[@]}"
+assert_value_equal "par_input_empty_multi_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST8b: value with only spaces
+ViashParseArgumentValue "--input" "par_input" "false" '   '
+
+assert_value_equal "par_input_spaces" '   ' "${par_input[@]}"
+assert_value_equal "par_input_spaces_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+
+echo "All ViashParseArgumentValue tests passed!"
