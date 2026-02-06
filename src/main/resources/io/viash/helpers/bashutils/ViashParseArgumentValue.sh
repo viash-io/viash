@@ -56,7 +56,10 @@ function ViashParseArgumentValue {
     value=$(ViashParseSingleString "$value")
 
     # set the variable globally (bash 3.2 compatible - using eval instead of declare -g)
-    eval "$env_name=\"\$value\""
+    # use printf %q to safely escape the value for eval to prevent backtick/command substitution
+    local escaped_value
+    escaped_value=$(printf '%q' "$value")
+    eval "$env_name=$escaped_value"
   else
     # Get existing array values (bash 3.2 compatible)
     eval "local prev_values=(\"\${${env_name}[@]}\")"
