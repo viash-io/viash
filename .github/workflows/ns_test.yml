@@ -1,6 +1,6 @@
 name: ns test
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   ns-test:
