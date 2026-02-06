@@ -95,6 +95,28 @@ The `par` object (or `par_` environment variables in Bash) will contain argument
 Try adding more [arguments]({{< var reference.arguments >}}) with different types to see what effect this has on the resulting placeholder.
 :::
 
+### Special values: undefined and missing items
+
+When calling a Viash component, you can use special values to explicitly set arguments to undefined or represent missing items in multi-value arguments:
+
+* **Unsetting a single-value argument**: Pass the literal `UNDEFINED` (unquoted) to set a single-value argument to undefined/null:
+  ```bash
+  ./my_component --arg UNDEFINED
+  ```
+  In the script, `par["arg"]` will be `None` (Python), `NULL` (R), `null` (JavaScript), or unset (Bash).
+
+* **Missing items in multi-value arguments**: When passing multiple values via semicolon-separated syntax, use `UNDEFINED_ITEM` to represent a missing element:
+  ```bash
+  ./my_component --values "item1;UNDEFINED_ITEM;item3"
+  ```
+  In the script, `par["values"]` will be `["item1", None, "item3"]` (Python) or equivalent.
+
+* **Passing the literal string "UNDEFINED"**: Quote the value to pass it as a literal string:
+  ```bash
+  ./my_component --arg '"UNDEFINED"'     # par["arg"] = "UNDEFINED"
+  ./my_component --arg "'UNDEFINED'"     # par["arg"] = "UNDEFINED"
+  ```
+
 ## Meta variables in `meta`
 
 Meta-variables offer information on the runtime environment which you can use from within your script.
@@ -215,6 +237,9 @@ viash test config.vsh.yaml --cpus 10
 viash build config.vsh.yaml -o output
 output/my_executable ---cpus 10
 #                     ↑ notice the triple dash
+
+# to unset a default cpu value, pass an empty string
+output/my_executable ---cpus ""
 ```
 
 ### `config` (string)
@@ -267,6 +292,9 @@ viash test config.vsh.yaml --memory 2GB
 viash build config.vsh.yaml -o output
 output/my_executable ---memory 2GB
 #                     ↑ notice the triple dash
+
+# to unset a default memory value, pass an empty string
+output/my_executable ---memory ""
 ```
 
 ### `resources_dir` (string)
