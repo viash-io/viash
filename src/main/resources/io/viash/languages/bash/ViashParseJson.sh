@@ -47,8 +47,9 @@ function ViashParseJsonBash {
         ((nested_depth--)) || true
         if [ $nested_depth -eq 0 ]; then
           # Nested object complete - store as JSON string (bash 3.2 compatible)
-          local escaped="${nested_json//\'/\'\\\'\'}"
-          eval "${nested_name}='${escaped}'"
+          # Use printf %q to safely escape for eval (handles backticks correctly in bash 3.2)
+          printf -v _viash_escaped '%q' "$nested_json"
+          eval "${nested_name}=$_viash_escaped"
           in_nested=false
           nested_name=""
           nested_json=""
@@ -209,8 +210,10 @@ function ViashParseJsonBash {
       # Parse and assign value (skip null values - leave variable unset)
       if [ "$value" != "null" ]; then
         local unescaped="$(_viash_unescape_json_value "$value")"
-        # bash 3.2 compatible - using eval instead of declare -g
-        eval "${var_name}='${unescaped//\'/\'\\\'\'}'"
+        # bash 3.2 compatible - using printf %q to safely escape for eval
+        # (handles backticks correctly which the previous single-quote method didn't)
+        printf -v _viash_escaped '%q' "$unescaped"
+        eval "${var_name}=$_viash_escaped"
       fi
       continue
     fi
