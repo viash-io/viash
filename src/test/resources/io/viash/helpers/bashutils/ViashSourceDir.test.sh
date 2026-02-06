@@ -6,7 +6,9 @@ source src/main/resources/io/viash/helpers/bashutils/ViashFindTargetDir.sh
 source src/test/resources/io/viash/helpers/bashutils/helpers.sh
 
 # Create a temporary directory structure for testing
+# Use cd -P && pwd to resolve symlinks (e.g. /var -> /private/var on macOS)
 TEST_DIR=$(mktemp -d)
+TEST_DIR=$(cd -P "$TEST_DIR" && pwd)
 cleanup() {
   rm -rf "$TEST_DIR"
 }
