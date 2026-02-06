@@ -119,7 +119,7 @@ final case class ExecutableRunner(
     val mainScript = Some(BashScript(
       dest = Some(config.name),
       text = Some(BashWrapper.wrapScript(
-        executor = "eval $VIASH_CMD",
+        executor = "eval $VIASH_RUN_CMD",
         mods = mods,
         config = config
       ))
@@ -192,12 +192,12 @@ final case class ExecutableRunner(
   }
 
   private def nativeConfigMods(config: Config): BashWrapperMods = {
-    val engines = config.engines.flatMap{
+    val nativeEngines = config.engines.flatMap{
       case e: NativeEngine => Some(e)
       case _ => None
     }
 
-    if (engines.isEmpty) {
+    if (nativeEngines.isEmpty) {
       return BashWrapperMods()
     }
 
@@ -209,9 +209,9 @@ final case class ExecutableRunner(
 
     val preRun =
       s"""
-        |if ${oneOfEngines(engines)} ; then
+        |if ${oneOfEngines(nativeEngines)} ; then
         |  if [ "$$VIASH_MODE" == "run" ]; then
-        |    VIASH_CMD="$cmd"
+        |    VIASH_RUN_CMD="$cmd"
         |  else
         |    ViashError "Engine '$$VIASH_ENGINE_ID' does not support mode '$$VIASH_MODE'."
         |    exit 1
@@ -363,6 +363,7 @@ final case class ExecutableRunner(
         |    VIASH_DOCKER_IMAGE_ID='${engine.getTargetIdentifier(config).toString()}'""".stripMargin  
     }.mkString("if ", "\n  elif ", "\n  fi")
 
+    // NOTE: regarding ---debug, should we create the viash_work_dir already?
     val postParse =
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
@@ -383,9 +384,9 @@ final case class ExecutableRunner(
         |  
         |  # enter docker container
         |  elif [[ "$$VIASH_MODE" == "debug" ]]; then
-        |    VIASH_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
-        |    ViashNotice "+ $$VIASH_CMD"
-        |    eval $$VIASH_CMD
+        |    VIASH_DEBUG_CMD="docker run --entrypoint=bash $${VIASH_DOCKER_RUN_ARGS[@]} -v '$$(pwd)':/pwd --workdir /pwd -t $$VIASH_DOCKER_IMAGE_ID"
+        |    ViashNotice "+ $$VIASH_DEBUG_CMD"
+        |    eval $$VIASH_DEBUG_CMD
         |    exit 
         |
         |  # build docker image
@@ -415,22 +416,26 @@ final case class ExecutableRunner(
     val args = config.getArgumentLikes(includeMeta = true)
     
     val detectMounts = args.flatMap {
-      case arg: FileArgument if arg.multiple =>
-        // resolve arguments with multiplicity different from singular args
-        val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
-        val chownIfOutput = if (arg.direction == Output) "\n    VIASH_CHOWN_VARS+=( \"$var\" )" else ""
+      case arg: FileArgument if arg.multiple && arg.direction == Input =>
+        // resolve input arguments with multiplicity different from singular args
         Some(
           s"""
             |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-            |  $viash_temp=()
-            |  IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
-            |  for var in $$${arg.VIASH_PAR}; do
-            |    unset IFS
-            |    VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$var")" )
-            |    var=$$(ViashDockerAutodetectMount "$$var")
-            |    $viash_temp+=( "$$var" )$chownIfOutput
+            |  for i in "$${!${arg.VIASH_PAR}[@]}"; do
+            |    VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg $${${arg.VIASH_PAR}[$$i]})" )
+            |    ${arg.VIASH_PAR}[$$i]=$$(ViashDockerAutodetectMount $${${arg.VIASH_PAR}[$$i]})
             |  done
-            |  ${arg.VIASH_PAR}=$$(IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}' ; echo "$${$viash_temp[*]}")
+            |fi""".stripMargin
+        )
+      case arg: FileArgument if arg.multiple && arg.direction == Output =>
+        // For multiple output arguments, the value is a pattern (e.g., "output_*.txt")
+        // Add it to chown vars so created files get ownership changed
+        Some(
+          s"""
+            |if [ ! -z "$$${arg.VIASH_PAR}" ]; then
+            |  VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$${arg.VIASH_PAR}")" )
+            |  ${arg.VIASH_PAR}=$$(ViashDockerAutodetectMount "$$${arg.VIASH_PAR}")
+            |  VIASH_CHOWN_VARS+=( "$$${arg.VIASH_PAR}" )
             |fi""".stripMargin
         )
       case arg: FileArgument =>
@@ -467,6 +472,10 @@ final case class ExecutableRunner(
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # detect volumes from file arguments
         |  VIASH_CHOWN_VARS=()${detectMounts.mkString("")}
+        |
+        |  # Add viash work dir to mounts
+        |  VIASH_DIRECTORY_MOUNTS+=( "$$(ViashDockerAutodetectMountArg "$$VIASH_WORK_DIR")" )
+        |  VIASH_WORK_DIR=$$(ViashDockerAutodetectMount "$$VIASH_WORK_DIR")
         |  
         |  # get unique mounts
         |  VIASH_UNIQUE_MOUNTS=($$(for val in "$${VIASH_DIRECTORY_MOUNTS[@]}"; do echo "$$val"; done | sort -u))
@@ -477,17 +486,12 @@ final case class ExecutableRunner(
     val stripAutomounts = args.flatMap {
       case arg: FileArgument if arg.multiple && arg.direction == Input =>
         // resolve arguments with multiplicity different from singular args
-        val viash_temp = "VIASH_TEST_" + arg.plainName.toUpperCase()
         Some(
           s"""
             |  if [ ! -z "$$${arg.VIASH_PAR}" ]; then
-            |    unset $viash_temp
-            |    IFS='${Bash.escapeString(arg.multiple_sep, quote = true)}'
-            |    for var in $$${arg.VIASH_PAR}; do
-            |      unset IFS
-            |      ${BashWrapper.store("ViashDockerStripAutomount", viash_temp, "\"$(ViashDockerStripAutomount \"$var\")\"", Some(arg.multiple_sep)).mkString("\n    ")}
+            |    for i in "$${!${arg.VIASH_PAR}[@]}"; do
+            |      ${arg.VIASH_PAR}[i]=$$(ViashDockerStripAutomount "$${${arg.VIASH_PAR}[i]}")
             |    done
-            |    ${arg.VIASH_PAR}="$$$viash_temp"
             |  fi""".stripMargin
         )
       case arg: FileArgument =>
@@ -526,13 +530,13 @@ final case class ExecutableRunner(
         |  function ViashPerformChown {
         |    if (( $${#VIASH_CHOWN_VARS[@]} )); then
         |      set +e
-        |      VIASH_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
-        |      ViashDebug "+ $$VIASH_CMD"
-        |      eval $$VIASH_CMD
+        |      VIASH_CHMOD_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
+        |      ViashDebug "+ $$VIASH_CHMOD_CMD"
+        |      eval $$VIASH_CHMOD_CMD
         |      set -e
         |    fi
         |  }
-        |  trap ViashPerformChown EXIT
+        |  ViashRegisterCleanup ViashPerformChown
         |fi""".stripMargin
 
     BashWrapperMods(
@@ -584,7 +588,7 @@ final case class ExecutableRunner(
     val preRun =
       s"""
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
-        |  VIASH_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
+        |  VIASH_RUN_CMD="docker run$entrypointStr$workdirStr $${VIASH_DOCKER_RUN_ARGS[@]} $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID"
         |fi""".stripMargin
       
     BashWrapperMods(

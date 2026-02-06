@@ -17,13 +17,10 @@
 
 package io.viash.config.resources
 
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 import java.net.URI
-import io.viash.helpers.Bash
-import io.viash.config.Config
-import io.viash.config.arguments.{Argument, StringArgument, IntegerArgument, BooleanArgumentBase, LongArgument, DoubleArgument, FileArgument}
+import io.viash.languages.JavaScript
 
 @description("""An executable JavaScript script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,56 +34,10 @@ case class JavaScriptScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a JavaScript script.")
-  `type`: String = JavaScriptScript.`type`
+  `type`: String = "javascript_script"
 ) extends Script {
-  val companion = JavaScriptScript
+  val language = JavaScript
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-    val parSet = params.map { par =>
-      // val env_name = par.VIASH_PAR
-      val env_name = Bash.getEscapedArgument(par.VIASH_PAR, "String.raw`", "`", """`""", """`+\"`\"+String.raw`""")
-
-      val parse = par match {
-        case a: BooleanArgumentBase if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => x.toLowerCase() === 'true')"""
-        case a: IntegerArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
-        case a: LongArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseInt(x))"""
-        case a: DoubleArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}').map(x => parseFloat(x))"""
-        case a: FileArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case a: StringArgument if a.multiple =>
-          s"""$env_name.split('${a.multiple_sep}')"""
-        case _: BooleanArgumentBase => s"""$env_name.toLowerCase() === 'true'"""
-        case _: IntegerArgument => s"""parseInt($env_name)"""
-        case _: LongArgument => s"""parseInt($env_name)"""
-        case _: DoubleArgument => s"""parseFloat($env_name)"""
-        case _: FileArgument => s"""$env_name"""
-        case _: StringArgument => s"""$env_name"""
-      }
-
-      val notFound = "undefined"
-
-      s"""'${par.plainName}': $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo "$parse"; else echo $notFound; fi )"""
-    }
-    s"""let $dest = {
-      |  ${parSet.mkString(",\n  ")}
-      |};
-      |""".stripMargin
-    }
-    ScriptInjectionMods(params = paramsCode.mkString)
-  }
-}
-
-object JavaScriptScript extends ScriptCompanion {
-  val commentStr = "//"
-  val extension = "js"
-  val `type` = "javascript_script"
-  val executor = Seq("node")
 }

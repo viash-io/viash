@@ -21,12 +21,12 @@ test_resources:
   - type: bash_script
     path: "test_script.sh"
     text: |
-      if [ -n "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-        VIASH_META_CPUS=$VIASH_META_CPUS VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
-      elif [ -z "$VIASH_META_CPUS" ] && [ -n "$VIASH_META_MEMORY" ]; then
-        VIASH_META_MEMORY=$VIASH_META_MEMORY "$meta_executable"
-      elif [ -n "$VIASH_META_CPUS" ] && [ -z "$VIASH_META_MEMORY" ]; then
-        VIASH_META_CPUS=$VIASH_META_CPUS "$meta_executable"
+      if [ -n "$meta_cpus" ] && [ -n "$meta_memory_mb" ]; then
+        VIASH_META_CPUS=$meta_cpus VIASH_META_MEMORY=${meta_memory_mb}MB "$meta_executable"
+      elif [ -z "$meta_cpus" ] && [ -n "$meta_memory_mb" ]; then
+        VIASH_META_MEMORY=${meta_memory_mb}MB "$meta_executable"
+      elif [ -n "$meta_cpus" ] && [ -z "$meta_memory_mb" ]; then
+        VIASH_META_CPUS=$meta_cpus "$meta_executable"
       else
         "$meta_executable"
       fi

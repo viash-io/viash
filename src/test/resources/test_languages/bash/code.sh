@@ -19,16 +19,16 @@ set -e
 
 function log {
   if [ -z "$par_log" ]; then
-    echo $@
+    echo "$*"
   else
-    echo $@ >> $par_log
+    echo "$*" >> $par_log
   fi
 }
 function output {
   if [ -z "$par_output" ]; then
-    echo $@
+    echo "$*"
   else
-    echo $@ >> $par_output
+    echo "$*" >> $par_output
   fi
 }
 
@@ -56,8 +56,14 @@ INPUT=`head -1 "$par_input"`
 output "head of input: |$INPUT|"
 RESOURCE=`head -1 "$meta_resources_dir/resource1.txt"`
 output "head of resource1: |$RESOURCE|"
-output "multiple: |$par_multiple|"
-output "multiple_pos: |$par_multiple_pos|"
+
+# Join array elements with semicolons
+# Note: We need to set IFS before expansion, then restore it
+_old_IFS="$IFS"
+IFS=';'
+output "multiple: |${par_multiple[*]}|"
+output "multiple_pos: |${par_multiple_pos[*]}|"
+IFS="$_old_IFS"
 
 output "meta_name: |$meta_name|"
 output "meta_resources_dir: |$meta_resources_dir|"
