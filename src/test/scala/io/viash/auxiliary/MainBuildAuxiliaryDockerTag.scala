@@ -71,7 +71,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
 
     // run the script
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
-    assert(stdout.contains("GNU bash, version 4.4"))
+    assert(stdout.contains("GNU bash, version 3.2"))
 
     // check whether the internal docker is correct
     val dockerout = Exec.run(Seq(executableBashTagFile.toString, "---dockerfile"))
@@ -80,7 +80,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
     // LABEL ...
     // RUN :
     // Allow for extra spaces just in case the format changes slightly format-wise but without functional differences
-    val regex = """^FROM bash:4\.4[\r\n\s]*.*""".r
+    val regex = """^FROM bash:3\.2[\r\n\s]*.*""".r
     assert(regex.findFirstIn(dockerout).isDefined, regex.toString)
   }
 
@@ -168,7 +168,7 @@ class MainBuildAuxiliaryDockerTag extends AnyFunSuite with BeforeAndAfterAll {
 
     // run the script
     val stdout = Exec.run(Seq(executableBashTagFile.toString))
-    assert(stdout.contains("GNU bash, version 4.4"))
+    assert(stdout.contains("GNU bash, version 3.2"))
 
     // check whether script is using the expected docker image
     val contentSource = Source.fromFile(executableBashTagFile)
