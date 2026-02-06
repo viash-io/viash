@@ -71,14 +71,8 @@ object JavaScript extends Language {
   }
 
   private def formatJSValue(arg: Argument[_]): String = {
-    // Priority: example > default > undefined for optional args
-    val rawValues = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil => return "undefined"
-        case defaults => defaults.map(_.toString)
-      }
-      case examples => examples.map(_.toString)
-    }
+    val rawValues = getArgumentValues(arg)
+    if (rawValues.isEmpty) return "undefined"
 
     if (arg.multiple) {
       val formattedValues = rawValues.map(v => formatSingleJSValue(arg, v))

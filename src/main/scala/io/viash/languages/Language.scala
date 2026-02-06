@@ -23,6 +23,11 @@ import io.viash.config.resources.ScriptInjectionMods
 
 /**
  * Represents a programming language.
+ * 
+ * Each language implementation provides:
+ * - Code generation for runtime parameter parsing via JSON
+ * - Static code injection for `viash config inject` (development convenience)
+ * - Language-specific value formatting
  */
 trait Language {
   // The unique identifier for the programming language
@@ -65,4 +70,25 @@ trait Language {
    * @return ScriptInjectionMods containing the static dictionary/class definitions
    */
   def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
+
+  /**
+   * Get the raw example/default values for an argument.
+   * 
+   * Priority order: example > default > empty list
+   * 
+   * This is a common helper used across language implementations to extract
+   * values for static code injection (`viash config inject`).
+   *
+   * @param arg The argument to get values from
+   * @return List of string values (may be empty if no example or default exists)
+   */
+  protected def getArgumentValues(arg: Argument[_]): List[String] = {
+    arg.example.toList match {
+      case Nil => arg.default.toList match {
+        case Nil => Nil
+        case defaults => defaults.map(_.toString)
+      }
+      case examples => examples.map(_.toString)
+    }
+  }
 }

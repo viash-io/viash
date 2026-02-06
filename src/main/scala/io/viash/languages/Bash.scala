@@ -63,14 +63,7 @@ ViashParseJsonBash <<< "$$_viash_json_content"
   }
 
   private def getExampleValue(arg: Argument[_]): String = {
-    // Priority: example > default > empty for optional args
-    val values = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil => Nil
-        case defaults => defaults.map(_.toString)
-      }
-      case examples => examples.map(_.toString)
-    }
+    val values = getArgumentValues(arg)
     
     if (arg.multiple) {
       values.map(v => s"'$v'").mkString(" ")

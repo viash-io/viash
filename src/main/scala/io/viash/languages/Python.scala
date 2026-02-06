@@ -70,14 +70,8 @@ object Python extends Language {
   }
 
   private def formatPythonValue(arg: Argument[_]): String = {
-    // Priority: example > default > None for optional args
-    val rawValues = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil => return "None"
-        case defaults => defaults.map(_.toString)
-      }
-      case examples => examples.map(_.toString)
-    }
+    val rawValues = getArgumentValues(arg)
+    if (rawValues.isEmpty) return "None"
 
     if (arg.multiple) {
       val formattedValues = rawValues.map(v => formatSingleValue(arg, v))

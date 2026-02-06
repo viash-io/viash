@@ -99,14 +99,8 @@ object R extends Language {
   }
 
   private def formatRValue(arg: Argument[_]): String = {
-    // Priority: example > default > NULL for optional args
-    val rawValues = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil => return "NULL"
-        case defaults => defaults.map(_.toString)
-      }
-      case examples => examples.map(_.toString)
-    }
+    val rawValues = getArgumentValues(arg)
+    if (rawValues.isEmpty) return "NULL"
 
     if (arg.multiple) {
       val formattedValues = rawValues.map(v => formatSingleRValue(arg, v))

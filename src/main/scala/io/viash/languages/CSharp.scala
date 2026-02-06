@@ -144,16 +144,12 @@ ${fieldAssignments.mkString(",\n")}
   }
 
   private def formatCSharpValue(arg: Argument[_]): String = {
-    // Priority: example > default > null for optional args
-    val rawValues = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil =>
-          // Return null with appropriate cast
-          val class_ = getCSharpArrayType(arg)
-          return if (arg.multiple) s"($class_[]) null" else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) s"($class_) null" else s"($class_?) null"
-        case defaults => defaults.map(_.toString)
-      }
-      case examples => examples.map(_.toString)
+    val rawValues = getArgumentValues(arg)
+    
+    if (rawValues.isEmpty) {
+      // Return null with appropriate cast
+      val class_ = getCSharpArrayType(arg)
+      return if (arg.multiple) s"($class_[]) null" else if (arg.isInstanceOf[StringArgument] || arg.isInstanceOf[FileArgument]) s"($class_) null" else s"($class_?) null"
     }
 
     if (arg.multiple) {

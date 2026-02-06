@@ -169,20 +169,16 @@ val $dest = $className(
 
   private def formatScalaValue(arg: Argument[_]): String = {
     val quo = "\"\"\""
-    // Priority: example > default > None/Nil for optional args
-    val rawValues = arg.example.toList match {
-      case Nil => arg.default.toList match {
-        case Nil =>
-          // Return appropriate null value based on type
-          return arg match {
-            case a: Argument[_] if a.multiple => "Nil"
-            case a: BooleanArgumentBase if a.flagValue.isDefined => formatSingleScalaValue(arg, a.flagValue.get.toString)
-            case _: Argument[_] if !arg.required => "None"
-            case _ => "??? // Required argument without default"
-          }
-        case defaults => defaults.map(_.toString)
+    val rawValues = getArgumentValues(arg)
+    
+    if (rawValues.isEmpty) {
+      // Return appropriate null value based on type
+      return arg match {
+        case a: Argument[_] if a.multiple => "Nil"
+        case a: BooleanArgumentBase if a.flagValue.isDefined => formatSingleScalaValue(arg, a.flagValue.get.toString)
+        case _: Argument[_] if !arg.required => "None"
+        case _ => "??? // Required argument without default"
       }
-      case examples => examples.map(_.toString)
     }
 
     if (arg.multiple) {
