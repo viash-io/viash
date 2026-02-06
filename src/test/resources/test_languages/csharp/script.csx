@@ -126,15 +126,20 @@ try
 
     foreach (PropertyInfo p in pi)
     {
-        if (p.PropertyType.IsArray)
+        var value = p.GetValue(meta);
+        if (value == null)
         {
-            object[] array = (object[])p.GetValue(meta);
+            Output($"meta_{p.Name}: ||");
+        }
+        else if (p.PropertyType.IsArray)
+        {
+            object[] array = (object[])value;
 
             Output($"meta_{p.Name}: |{string.Join(", ", array)}|");
         }
         else
         {
-            Output($"meta_{p.Name}: |{p.GetValue(meta)}|");
+            Output($"meta_{p.Name}: |{value}|");
         }
     }
 }
