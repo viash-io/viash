@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -ex
+set -e
+
+## VIASH START
+## VIASH END
 
 # Helper function to check output with verbose error messages
 check_output() {
