@@ -238,8 +238,8 @@ viash build config.vsh.yaml -o output
 output/my_executable ---cpus 10
 #                     ↑ notice the triple dash
 
-# to unset a default cpu value, pass an empty string
-output/my_executable ---cpus ""
+# to unset a default cpu value, pass UNDEFINED
+output/my_executable ---cpus UNDEFINED
 ```
 
 ### `config` (string)
@@ -293,8 +293,8 @@ viash build config.vsh.yaml -o output
 output/my_executable ---memory 2GB
 #                     ↑ notice the triple dash
 
-# to unset a default memory value, pass an empty string
-output/my_executable ---memory ""
+# to unset a default memory value, pass UNDEFINED
+output/my_executable ---memory UNDEFINED
 ```
 
 ### `resources_dir` (string)

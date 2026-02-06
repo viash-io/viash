@@ -802,7 +802,7 @@ object BashWrapper {
       |  fi
       |}
       |# compute memory in different units
-      |if [ ! -z ${VIASH_META_MEMORY+x} ]; then
+      |if [ ! -z ${VIASH_META_MEMORY+x} ] && [ "$VIASH_META_MEMORY" != "@@VIASH_UNDEFINED@@" ]; then
       |  VIASH_META_MEMORY_B=`ViashMemoryAsBytes $VIASH_META_MEMORY`
       |  # do not define other variables if memory_b is an empty string
       |  if [ ! -z "$VIASH_META_MEMORY_B" ]; then
@@ -816,14 +816,15 @@ object BashWrapper {
       |    VIASH_META_MEMORY_GIB=$(( ($VIASH_META_MEMORY_MIB+1023) / 1024 ))
       |    VIASH_META_MEMORY_TIB=$(( ($VIASH_META_MEMORY_GIB+1023) / 1024 ))
       |    VIASH_META_MEMORY_PIB=$(( ($VIASH_META_MEMORY_TIB+1023) / 1024 ))
-      |  else
-      |    # unset memory if string is empty
-      |    unset $VIASH_META_MEMORY_B
       |  fi
       |fi
-      |# unset nproc if string is empty
-      |if [ -z "$VIASH_META_CPUS" ]; then
-      |  unset $VIASH_META_CPUS
+      |# unset cpus if undefined or empty
+      |if [ -z "$VIASH_META_CPUS" ] || [ "$VIASH_META_CPUS" == "@@VIASH_UNDEFINED@@" ]; then
+      |  unset VIASH_META_CPUS
+      |fi
+      |# unset memory if undefined
+      |if [ "$VIASH_META_MEMORY" == "@@VIASH_UNDEFINED@@" ]; then
+      |  unset VIASH_META_MEMORY
       |fi""".stripMargin
 
     // return output

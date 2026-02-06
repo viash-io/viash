@@ -142,7 +142,7 @@ check_output 'meta_memory_gib: |104857600|' output2.txt
 check_output 'meta_memory_tib: |102400|' output2.txt
 check_output 'meta_memory_pib: |100|' output2.txt
 
-# Test unsetting defaults using empty string (issue #375)
+# Test unsetting defaults using UNDEFINED (issue #375)
 # With JSON-based parameter passing, this now works in all languages
 echo ">>> Try to unset defaults"
 "$meta_executable" \
@@ -150,8 +150,8 @@ echo ">>> Try to unset defaults"
   --real_number 123.456 \
   --whole_number=789 \
   -s "my\$weird#string\"\"\"" \
-  ---cpus "" \
-  ---memory "" \
+  ---cpus UNDEFINED \
+  ---memory UNDEFINED \
   > output4.txt
 
 [[ ! -f output4.txt ]] && echo "Output file could not be found!" && exit 1

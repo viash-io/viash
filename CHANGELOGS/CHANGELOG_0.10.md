@@ -10,9 +10,10 @@ TODO add summary
   This allows for running a component without having to build it first.
   Example: `viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml`.
 
-* `Parameter passing`: Add support for unsetting argument values and computational requirements at runtime (PR #762).
+* `Parameter passing`: Add support for unsetting argument values and computational requirements at runtime (PR #762, fixes #375).
   - Pass the literal `UNDEFINED` (unquoted) to set a single-value argument to undefined/null: `./my_component --arg UNDEFINED`
   - Pass `UNDEFINED_ITEM` as a value in a multi-value argument to represent a missing item: `./my_component --args "value1;UNDEFINED_ITEM;value3"`
+  - Unset computational requirements with `---cpus UNDEFINED` or `---memory UNDEFINED`
   - Quote the values (`'"UNDEFINED"'` or `"'UNDEFINED'"`) to pass the literal string `UNDEFINED` instead of null.
 
 ## BREAKING CHANGES
