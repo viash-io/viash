@@ -19,7 +19,8 @@ check_output() {
   fi
 }
 
-export VIASH_KEEP_WORK_DIR=true
+# Set up temporary directory and environment variables for the test
+export VIASH_KEEP_WORK_DIR=silent
 export VIASH_TEMP=$meta_temp_dir/temp
 mkdir -p $VIASH_TEMP
 
@@ -141,28 +142,38 @@ check_output 'meta_memory_gib: |104857600|' output2.txt
 check_output 'meta_memory_tib: |102400|' output2.txt
 check_output 'meta_memory_pib: |100|' output2.txt
 
-if [[ $meta_name == "bash" || $meta_name == "js" ]]; then
-# This currently only works fully on bash and javascript
+# Test unsetting defaults using empty string (issue #375)
+# With JSON-based parameter passing, this now works in all languages
+echo ">>> Try to unset defaults"
+"$meta_executable" \
+  "resource2.txt" \
+  --real_number 123.456 \
+  --whole_number=789 \
+  -s "my\$weird#string\"\"\"" \
+  ---cpus "" \
+  ---memory "" \
+  > output4.txt
 
-  echo ">>> Try to unset defaults"
-  "$meta_executable" \
-    "resource2.txt" \
-    --real_number 123.456 \
-    --whole_number=789 \
-    -s "my\$weird#string\"\"\"" \
-    ---cpus "" \
-    ---memory "" \
-    > output4.txt
+[[ ! -f output4.txt ]] && echo "Output file could not be found!" && exit 1
+check_output 'meta_cpus: ||' output4.txt
+check_output 'meta_memory_b: ||' output4.txt
+check_output 'meta_memory_kb: ||' output4.txt
+check_output 'meta_memory_mb: ||' output4.txt
+check_output 'meta_memory_gb: ||' output4.txt
+check_output 'meta_memory_tb: ||' output4.txt
+check_output 'meta_memory_pb: ||' output4.txt
 
-  [[ ! -f output4.txt ]] && echo "Output file could not be found!" && exit 1
-  check_output 'meta_cpus: ||' output4.txt
-  check_output 'meta_memory_b: ||' output4.txt
-  check_output 'meta_memory_kb: ||' output4.txt
-  check_output 'meta_memory_mb: ||' output4.txt
-  check_output 'meta_memory_gb: ||' output4.txt
-  check_output 'meta_memory_tb: ||' output4.txt
-  check_output 'meta_memory_pb: ||' output4.txt
+# Test backslash-quote escaping (issue #821)
+# The sequence \' was previously breaking Python syntax
+echo ">>> Test backslash-quote escaping"
+"$meta_executable" \
+  "resource2.txt" \
+  --real_number 123.456 \
+  --whole_number=789 \
+  -s "test\\'value" \
+  > output5.txt
 
-fi
+[[ ! -f output5.txt ]] && echo "Output file could not be found!" && exit 1
+check_output "s: |test\\\\'value|" output5.txt
 
 echo ">>> Test finished successfully"
