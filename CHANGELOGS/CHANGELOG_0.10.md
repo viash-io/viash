@@ -11,10 +11,10 @@ TODO add summary
   Example: `viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml`.
 
 * `Parameter passing`: Add support for unsetting argument values and computational requirements at runtime (PR #762, fixes #375).
-  - Pass the literal `UNDEFINED` (unquoted) to set a single-value argument to undefined/null: `./my_component --arg UNDEFINED`
-  - Pass `UNDEFINED_ITEM` as a value in a multi-value argument to represent a missing item: `./my_component --args "value1;UNDEFINED_ITEM;value3"`
-  - Unset computational requirements with `---cpus UNDEFINED` or `---memory UNDEFINED`
-  - Quote the values (`'"UNDEFINED"'` or `"'UNDEFINED'"`) to pass the literal string `UNDEFINED` instead of null.
+  * Pass the literal `UNDEFINED` (unquoted) to set a single-value argument to undefined/null: `./my_component --arg UNDEFINED`
+  * Pass `UNDEFINED_ITEM` as a value in a multi-value argument to represent a missing item: `./my_component --args "value1;UNDEFINED_ITEM;value3"`
+  * Unset computational requirements with `---cpus UNDEFINED` or `---memory UNDEFINED`
+  * Quote the values (`'"UNDEFINED"'` or `"'UNDEFINED'"`) to pass the literal string `UNDEFINED` instead of null.
 
 ## BREAKING CHANGES
 
@@ -32,9 +32,9 @@ TODO add summary
 * `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
 
 * `Parameter passing`: Fix handling of special characters in argument values (PR #762, fixes #619, #705, #763, #821, #840).
-  - Backticks in argument values no longer cause command substitution
-  - Backslash-quote sequences (`\'`) no longer break Python syntax
-  - Dollar signs, newlines, and other special characters are properly preserved
+  * Backticks in argument values no longer cause command substitution
+  * Backslash-quote sequences (`\'`) no longer break Python syntax
+  * Dollar signs, newlines, and other special characters are properly preserved
 
 ## MINOR FIXES
 
