@@ -112,50 +112,80 @@ function ViashParseMultipleStringAsArray() {
 
   # if value is equal to UNDEFINED, replace with @@VIASH_UNDEFINED@@
   if [ "$value" == "UNDEFINED" ]; then
-    value="@@VIASH_UNDEFINED@@"
+    echo "@@VIASH_UNDEFINED@@"
+    return
   fi
 
-  # escape slashes
-  value="${value//\\\\/@@VIASH_ESCAPE_SLASH@@}"
-  # escape semicolons
-  value="${value//\\;/@@VIASH_ESCAPE_SEMICOLON@@}"
-  # escape quotes
-  value="${value//\\\"/@@VIASH_ESCAPE_QUOTE@@}"
-  # escape single quotes
-  value="${value//\\\'/@@VIASH_ESCAPE_SINGLE_QUOTE@@}"
+  # if value is empty, return nothing (results in 0-length array)
+  if [ -z "$value" ]; then
+    return
+  fi
 
-  local gawk_script="
-    BEGIN {
-      FPAT = \"([^;]+)|(\\\"[^\\\"]+\\\")|('[^']+')\";
-    }
-
-    {
-      for (i = 1; i <= NF; i++) {
-        field = \$i;
-
-        # if field is equal to 'UNDEFINED_ITEM', replace it with @@VIASH_UNDEFINED_ITEM@@
-        if (field == \"UNDEFINED_ITEM\") {
-          field = \"@@VIASH_UNDEFINED_ITEM@@\";
-        }
-
-        # Remove leading and trailing double quotes.
-        if (field ~ /^\".*\"$/) {
-          gsub(/^\"|\"$/, \"\", field);
-        } else if (field ~ /^'.*'$/) {
-          gsub(/^'|'$/, \"\", field);
-        }
-
-        # Unescape escaped characters
-        gsub(/@@VIASH_ESCAPE_SINGLE_QUOTE@@/, \"'\", field);
-        gsub(/@@VIASH_ESCAPE_QUOTE@@/, \"\\\"\", field);
-        gsub(/@@VIASH_ESCAPE_SEMICOLON@@/, \";\", field);
-        gsub(/@@VIASH_ESCAPE_SLASH@@/, \"\\\\\", field);
-
-        # Output each field on a separate line.
-        print field;
-      }
-    }
-  "
-
-  echo "${value}" | awk "$gawk_script"
+  # Parse semicolon-separated values with proper quote handling
+  # This is a bash-native implementation that doesn't rely on gawk's FPAT
+  # (which isn't available in BSD awk on macOS or BusyBox awk)
+  local i=0
+  local len=${#value}
+  local in_double_quote=false
+  local in_single_quote=false
+  local escape_next=false
+  local current_field=""
+  local field_was_quoted=false  # Track if field started with a quote
+  local char
+  
+  while [ $i -lt $len ]; do
+    char="${value:$i:1}"
+    
+    if $escape_next; then
+      # Previous char was backslash - add escaped char to field
+      current_field+="$char"
+      escape_next=false
+    elif [ "$char" = "\\" ]; then
+      # Backslash - escape next character
+      escape_next=true
+    elif [ "$char" = '"' ] && ! $in_single_quote; then
+      # Toggle double quote state (unless we're in single quotes)
+      if $in_double_quote; then
+        in_double_quote=false
+      else
+        in_double_quote=true
+        # Mark field as quoted if this is the first char
+        if [ -z "$current_field" ]; then
+          field_was_quoted=true
+        fi
+      fi
+    elif [ "$char" = "'" ] && ! $in_double_quote; then
+      # Toggle single quote state (unless we're in double quotes)
+      if $in_single_quote; then
+        in_single_quote=false
+      else
+        in_single_quote=true
+        # Mark field as quoted if this is the first char
+        if [ -z "$current_field" ]; then
+          field_was_quoted=true
+        fi
+      fi
+    elif [ "$char" = ";" ] && ! $in_double_quote && ! $in_single_quote; then
+      # Semicolon outside quotes - end of field
+      # Handle UNDEFINED_ITEM replacement (only if not quoted)
+      if [ "$current_field" == "UNDEFINED_ITEM" ] && ! $field_was_quoted; then
+        current_field="@@VIASH_UNDEFINED_ITEM@@"
+      fi
+      echo "$current_field"
+      current_field=""
+      field_was_quoted=false
+    else
+      # Regular character - add to field
+      current_field+="$char"
+    fi
+    
+    i=$((i + 1))
+  done
+  
+  # Don't forget the last field (after the last semicolon or if no semicolon)
+  # Handle UNDEFINED_ITEM replacement (only if not quoted)
+  if [ "$current_field" == "UNDEFINED_ITEM" ] && ! $field_was_quoted; then
+    current_field="@@VIASH_UNDEFINED_ITEM@@"
+  fi
+  echo "$current_field"
 }
