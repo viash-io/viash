@@ -102,6 +102,34 @@ assert_value_equal "test6c_output" '"line1\nline2"' "$output"
 output=$(ViashRenderJsonQuotedValue "key" 'a"b\c')
 assert_value_equal "test6d_output" '"a\"b\\c"' "$output"
 
+# TEST6e: String with backticks (should be preserved as literal)
+output=$(ViashRenderJsonQuotedValue "key" 'echo `whoami`')
+assert_value_equal "test6e_backticks" '"echo `whoami`"' "$output"
+
+# TEST6f: String with dollar sign (should be preserved as literal)
+output=$(ViashRenderJsonQuotedValue "key" 'value is $HOME')
+assert_value_equal "test6f_dollar" '"value is $HOME"' "$output"
+
+# TEST6g: String with command substitution syntax (should be preserved as literal)
+output=$(ViashRenderJsonQuotedValue "key" 'run $(date)')
+assert_value_equal "test6g_subst" '"run $(date)"' "$output"
+
+# TEST6h: String with single quotes
+output=$(ViashRenderJsonQuotedValue "key" "it's a test")
+assert_value_equal "test6h_singlequote" '"it'\''s a test"' "$output"
+
+# TEST6i: String with tab character
+output=$(ViashRenderJsonQuotedValue "key" $'col1\tcol2')
+assert_value_equal "test6i_tab" '"col1\tcol2"' "$output"
+
+# TEST6j: String with carriage return
+output=$(ViashRenderJsonQuotedValue "key" $'line1\rline2')
+assert_value_equal "test6j_cr" '"line1\rline2"' "$output"
+
+# TEST6k: Complex string with multiple special chars
+output=$(ViashRenderJsonQuotedValue "key" 'a\b"c$d`e')
+assert_value_equal "test6k_complex" '"a\\b\"c$d`e"' "$output"
+
 
 ## TEST7: test ViashRenderJsonBooleanValue
 
@@ -147,4 +175,43 @@ assert_value_equal "test9a_output" '    "items": [ "only_one" ]' "$output"
 output=$(ViashRenderJsonKeyValue "empty" "string" "false" "")
 assert_value_equal "test9b_output" '    "empty": ""' "$output"
 
-echo "All ViashRenderJson tests passed!"
+
+## TEST10: test ViashRenderJsonKeyValue with dangerous shell characters
+
+# TEST10a: String value with backticks
+output=$(ViashRenderJsonKeyValue "cmd" "string" "false" 'run `id`')
+assert_value_equal "test10a_backtick" '    "cmd": "run `id`"' "$output"
+
+# TEST10b: String value with dollar sign
+output=$(ViashRenderJsonKeyValue "env" "string" "false" 'path is $PATH')
+assert_value_equal "test10b_dollar" '    "env": "path is $PATH"' "$output"
+
+# TEST10c: String value with command substitution
+output=$(ViashRenderJsonKeyValue "sub" "string" "false" 'time $(date)')
+assert_value_equal "test10c_subst" '    "sub": "time $(date)"' "$output"
+
+# TEST10d: String value with backslash
+output=$(ViashRenderJsonKeyValue "path" "string" "false" 'C:\Users\test')
+assert_value_equal "test10d_backslash" '    "path": "C:\\Users\\test"' "$output"
+
+# TEST10e: Array with dangerous characters
+output=$(ViashRenderJsonKeyValue "items" "string" "true" 'a`b' 'c$d' 'e\f')
+assert_value_equal "test10e_array" '    "items": [ "a`b", "c$d", "e\\f" ]' "$output"
+
+# TEST10f: Multiple backslashes
+output=$(ViashRenderJsonKeyValue "path" "string" "false" 'a\\b\\\\c')
+assert_value_equal "test10f_multibackslash" '    "path": "a\\\\b\\\\\\\\c"' "$output"
+
+# TEST10g: Nested quotes
+output=$(ViashRenderJsonKeyValue "nested" "string" "false" 'He said "Hello"')
+assert_value_equal "test10g_nestedquotes" '    "nested": "He said \"Hello\""' "$output"
+
+# TEST10h: Unicode and special chars (if supported)
+output=$(ViashRenderJsonKeyValue "unicode" "string" "false" 'café')
+assert_value_equal "test10h_unicode" '    "unicode": "café"' "$output"
+
+# INTENTIONAL FAILURE: Remove this test after verifying test framework catches failures
+output=$(ViashRenderJsonKeyValue "test" "string" "false" 'hello')
+assert_value_equal "INTENTIONAL_FAILURE" '    "test": "WRONG_VALUE"' "$output"
+
+print_test_summary
