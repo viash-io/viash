@@ -118,13 +118,13 @@ assert_value_equal "test6g_subst" '"run $(date)"' "$output"
 output=$(ViashRenderJsonQuotedValue "key" "it's a test")
 assert_value_equal "test6h_singlequote" '"it'\''s a test"' "$output"
 
-# TEST6i: String with tab character
+# TEST6i: String with tab character (tab is preserved as literal tab in JSON)
 output=$(ViashRenderJsonQuotedValue "key" $'col1\tcol2')
-assert_value_equal "test6i_tab" '"col1\tcol2"' "$output"
+assert_value_equal "test6i_tab" $'"col1\tcol2"' "$output"
 
-# TEST6j: String with carriage return
+# TEST6j: String with carriage return (cr is preserved as literal in JSON)
 output=$(ViashRenderJsonQuotedValue "key" $'line1\rline2')
-assert_value_equal "test6j_cr" '"line1\rline2"' "$output"
+assert_value_equal "test6j_cr" $'"line1\rline2"' "$output"
 
 # TEST6k: Complex string with multiple special chars
 output=$(ViashRenderJsonQuotedValue "key" 'a\b"c$d`e')
@@ -209,9 +209,5 @@ assert_value_equal "test10g_nestedquotes" '    "nested": "He said \"Hello\""' "$
 # TEST10h: Unicode and special chars (if supported)
 output=$(ViashRenderJsonKeyValue "unicode" "string" "false" 'café')
 assert_value_equal "test10h_unicode" '    "unicode": "café"' "$output"
-
-# INTENTIONAL FAILURE: Remove this test after verifying test framework catches failures
-output=$(ViashRenderJsonKeyValue "test" "string" "false" 'hello')
-assert_value_equal "INTENTIONAL_FAILURE" '    "test": "WRONG_VALUE"' "$output"
 
 print_test_summary

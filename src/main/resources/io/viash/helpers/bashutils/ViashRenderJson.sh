@@ -68,6 +68,13 @@ function ViashRenderJsonKeyValue {
 function ViashRenderJsonQuotedValue {
   local key="$1"
   local value="$2"
+  
+  # Handle empty string case
+  if [ -z "$value" ]; then
+    echo '""'
+    return
+  fi
+  
   # escape backslashes, quotes, and newlines for JSON
   # Note: Uses awk instead of sed for newline replacement for BSD/macOS compatibility
   echo "$value" | \
