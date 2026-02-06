@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - main
-      - develop_0_8
-      - develop_0_9
+      - 'develop_**'
 
 jobs:
   ns-test:
