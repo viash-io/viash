@@ -10,7 +10,6 @@ TODO add summary
   This allows for running a component without having to build it first.
   Example: `viash run vsh://toolbox@v0.1.0/yq -- --input input.yaml --output output.yaml`.
 
-
 ## BREAKING CHANGES
 
 * `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` arguments (PR #792).
@@ -19,6 +18,9 @@ TODO add summary
 
 * Remove deprecated functionality `functionality` and `platforms` (PR #832).
 
+* `Bash scripts`: Arguments with `multiple: true` are now stored as bash arrays instead of semicolon-separated strings (PR #762).
+  Update scripts to use array syntax: `for item in "${par_inputs[@]}"; do ...` instead of IFS splitting.
+
 ## BUG FIXES
 
 * `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
@@ -26,3 +28,10 @@ TODO add summary
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
+
+## INTERNAL CHANGES
+
+* `Parameter passing`: Switch from code injection to JSON-based parameter passing (PR #762).
+  Instead of injecting argument values directly into script code, values are now stored in a JSON file
+  (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
+  robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
