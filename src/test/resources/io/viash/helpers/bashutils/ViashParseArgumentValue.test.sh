@@ -240,11 +240,11 @@ unset par_input
 
 ## TEST8: test empty and whitespace values
 
-# TEST8a: empty string for multiple
+# TEST8a: empty string for multiple (results in 0-length array)
 ViashParseArgumentValue "--input" "par_input" "true" ''
 
 assert_value_equal "par_input_empty_multi" '' "${par_input[@]}"
-assert_value_equal "par_input_empty_multi_len" 1 "${#par_input[@]}"
+assert_value_equal "par_input_empty_multi_len" 0 "${#par_input[@]}"
 
 unset par_input
 
