@@ -1,3 +1,9 @@
+# Viash 0.9.7 (2026-XX-XX): Bug fix release
+
+## BUG FIXES
+
+* `NextflowRunner`: Fix `readCsv` failing on S3 paths with Nextflow 25.10.x (PR #864). The `BufferedReader.ready()` method returns false for S3 streams when no data is pre-buffered, which broke compatibility with AWS SDK v2 used in Nextflow 25.10.x.
+
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
 This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
