@@ -257,4 +257,151 @@ assert_value_equal "par_input_spaces_len" 1 "${#par_input[@]}"
 unset par_input
 
 
-echo "All ViashParseArgumentValue tests passed!"
+## TEST9: comprehensive special character escape tests
+
+# TEST9a: multiple backslashes
+ViashParseArgumentValue "--input" "par_input" "false" 'a\\b\\\\c'
+
+assert_value_equal "par_input_multibackslash" 'a\\b\\\\c' "${par_input[@]}"
+assert_value_equal "par_input_multibackslash_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9b: nested backticks
+ViashParseArgumentValue "--input" "par_input" "false" '`echo `nested``'
+
+assert_value_equal "par_input_nested_backtick" '`echo `nested``' "${par_input[@]}"
+assert_value_equal "par_input_nested_backtick_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9c: nested command substitution
+ViashParseArgumentValue "--input" "par_input" "false" '$(echo $(whoami))'
+
+assert_value_equal "par_input_nested_subst" '$(echo $(whoami))' "${par_input[@]}"
+assert_value_equal "par_input_nested_subst_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9d: mixed dollar signs and brackets
+ViashParseArgumentValue "--input" "par_input" "false" '$HOME/${USER}/$(date)'
+
+assert_value_equal "par_input_mixed_dollar" '$HOME/${USER}/$(date)' "${par_input[@]}"
+assert_value_equal "par_input_mixed_dollar_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9e: arithmetic expansion syntax
+ViashParseArgumentValue "--input" "par_input" "false" '$((1+2))'
+
+assert_value_equal "par_input_arith" '$((1+2))' "${par_input[@]}"
+assert_value_equal "par_input_arith_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9f: process substitution syntax
+ViashParseArgumentValue "--input" "par_input" "false" '<(cat file)'
+
+assert_value_equal "par_input_procsub" '<(cat file)' "${par_input[@]}"
+assert_value_equal "par_input_procsub_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9g: glob patterns (should be preserved as literal)
+ViashParseArgumentValue "--input" "par_input" "false" '*.txt'
+
+assert_value_equal "par_input_glob" '*.txt' "${par_input[@]}"
+assert_value_equal "par_input_glob_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9h: brace expansion syntax
+ViashParseArgumentValue "--input" "par_input" "false" '{a,b,c}'
+
+assert_value_equal "par_input_brace" '{a,b,c}' "${par_input[@]}"
+assert_value_equal "par_input_brace_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9i: exclamation mark (history expansion)
+ViashParseArgumentValue "--input" "par_input" "false" 'hello!world'
+
+assert_value_equal "par_input_exclaim" 'hello!world' "${par_input[@]}"
+assert_value_equal "par_input_exclaim_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9j: pipe and redirect characters
+ViashParseArgumentValue "--input" "par_input" "false" 'cmd | other > file'
+
+assert_value_equal "par_input_pipe" 'cmd | other > file' "${par_input[@]}"
+assert_value_equal "par_input_pipe_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9k: ampersand (background execution)
+ViashParseArgumentValue "--input" "par_input" "false" 'cmd1 && cmd2 & cmd3'
+
+assert_value_equal "par_input_amp" 'cmd1 && cmd2 & cmd3' "${par_input[@]}"
+assert_value_equal "par_input_amp_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9l: semicolon in single value mode (should not split)
+ViashParseArgumentValue "--input" "par_input" "false" 'a;b;c'
+
+assert_value_equal "par_input_semicolon_single" 'a;b;c' "${par_input[@]}"
+assert_value_equal "par_input_semicolon_single_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9m: tab and newline escape sequences
+ViashParseArgumentValue "--input" "par_input" "false" 'line1\tline2\nline3'
+
+assert_value_equal "par_input_escapes" 'line1\tline2\nline3' "${par_input[@]}"
+assert_value_equal "par_input_escapes_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9n: null byte representation
+ViashParseArgumentValue "--input" "par_input" "false" 'before\0after'
+
+assert_value_equal "par_input_null" 'before\0after' "${par_input[@]}"
+assert_value_equal "par_input_null_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9o: unicode characters
+ViashParseArgumentValue "--input" "par_input" "false" 'café résumé 日本語'
+
+assert_value_equal "par_input_unicode" 'café résumé 日本語' "${par_input[@]}"
+assert_value_equal "par_input_unicode_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9p: special characters in multi-value mode
+ViashParseArgumentValue "--input" "par_input" "true" '`cmd`;$var;$(sub)'
+
+assert_value_equal "par_input_special_multi" '`cmd` $var $(sub)' "${par_input[@]}"
+assert_value_equal "par_input_special_multi_len" 3 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9q: Windows path with backslashes
+ViashParseArgumentValue "--input" "par_input" "false" 'C:\Users\test\file.txt'
+
+assert_value_equal "par_input_winpath" 'C:\Users\test\file.txt' "${par_input[@]}"
+assert_value_equal "par_input_winpath_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+# TEST9r: regex-like pattern
+ViashParseArgumentValue "--input" "par_input" "false" '^[a-z]+\.[0-9]*$'
+
+assert_value_equal "par_input_regex" '^[a-z]+\.[0-9]*$' "${par_input[@]}"
+assert_value_equal "par_input_regex_len" 1 "${#par_input[@]}"
+
+unset par_input
+
+
+print_test_summary

@@ -106,4 +106,4 @@ ViashRunCleanupHandlers
 # Chown should run first (LIFO), then workdir cleanup
 assert_value_equal "test4a_log" "[chown][workdir:/tmp/workdir]" "$CLEANUP_LOG"
 
-echo "All ViashCleanupRegistry tests passed!"
+print_test_summary
