@@ -282,7 +282,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-    test("Output directory slashes", NextflowTest) {
+  test("Output directory slashes", NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/output_directory/main.nf",
       args = List(
