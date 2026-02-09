@@ -2,13 +2,17 @@ name: Prepare Viash Release
 
 on:
   workflow_dispatch:
-    
+
 jobs:
-  build-and-release:
+  build-jar:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
+
+    outputs:
+      viash_version: ${{ steps.get_version.outputs.viash_version }}
+      changelog_section: ${{ steps.get_version.outputs.changelog_section }}
 
     steps:
     - name: Checkout code
@@ -43,26 +47,141 @@ jobs:
         echo "Detected Viash version: $viash_version"
         echo "Detected Viash minor version: $viash_minor_version"
         echo "viash_version=$viash_version" >> "$GITHUB_OUTPUT"
-        
+
         # fetch relevant changelog section
         changelog_section=$(awk "/# Viash ${viash_version}.*/{flag=1;print;next}/^# /{flag=0}flag" CHANGELOGS/CHANGELOG_${viash_minor_version}.md)
-        
+
         echo "changelog_section<<GITHUB_EOF" >> "$GITHUB_OUTPUT"
         echo "$changelog_section" >> "$GITHUB_OUTPUT"
         echo "GITHUB_EOF" >> "$GITHUB_OUTPUT"
+
+    - name: Extract fat JAR
+      run: |
+        cp target/viash.jar viash.jar
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: fat-jar
+        path: viash.jar
+        retention-days: 1
+
+    - name: Upload release assets
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-assets
+        path: |
+          bin/viash
+          bin/schema.json
+          bin/viash_install
+        retention-days: 1
+
+  build-native:
+    needs: build-jar
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            label: macos-x86_64
+          - os: macos-14
+            label: macos-aarch64
+          - os: ubuntu-latest
+            label: linux-x86_64
+          - os: ubuntu-24.04-arm
+            label: linux-aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Download JAR
+      uses: actions/download-artifact@v4
+      with:
+        name: fat-jar
+
+    - name: Set up GraalVM
+      uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '21'
+        distribution: 'graalvm'
+
+    - name: Build native image
+      run: |
+        native-image -jar viash.jar \
+          --no-fallback \
+          -H:+ReportExceptionStackTraces \
+          --initialize-at-build-time=scala,org.rogach.scallop \
+          --enable-url-protocols=https \
+          -o viash
+
+    - name: Smoke test
+      run: |
+        ./viash --version
+
+    - name: Upload native binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: viash-${{ matrix.label }}
+        path: viash
+        retention-days: 1
+
+  create-release:
+    needs: [build-jar, build-native]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download release assets
+      uses: actions/download-artifact@v4
+      with:
+        name: release-assets
+        path: release-assets
+
+    - name: Download native binaries
+      uses: actions/download-artifact@v4
+      with:
+        pattern: viash-*
+        path: native-binaries
+        merge-multiple: false
+
+    - name: Prepare release files
+      run: |
+        mkdir -p release
+
+        # JAR-based executable (backward compatible)
+        cp release-assets/bin/viash release/viash
+        cp release-assets/bin/schema.json release/schema.json
+        cp release-assets/bin/viash_install release/viash_install
+
+        # Native binaries with platform suffixes
+        cp native-binaries/viash-linux-x86_64/viash release/viash-linux-x86_64
+        cp native-binaries/viash-linux-aarch64/viash release/viash-linux-aarch64
+        cp native-binaries/viash-macos-x86_64/viash release/viash-macos-x86_64
+        cp native-binaries/viash-macos-aarch64/viash release/viash-macos-aarch64
+
+        chmod +x release/viash-*
 
     - name: Create release
       uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_version.outputs.viash_version }}
+        tag_name: ${{ needs.build-jar.outputs.viash_version }}
         target_commitish: ${{ github.sha }}
-        name: Viash ${{ steps.get_version.outputs.viash_version }}
-        body: ${{ steps.get_version.outputs.changelog_section }}
+        name: Viash ${{ needs.build-jar.outputs.viash_version }}
+        body: ${{ needs.build-jar.outputs.changelog_section }}
         draft: true
         fail_on_unmatched_files: true
         files: |
-          bin/viash
-          bin/schema.json
-          bin/viash_install
+          release/viash
+          release/schema.json
+          release/viash_install
+          release/viash-linux-x86_64
+          release/viash-linux-aarch64
+          release/viash-macos-x86_64
+          release/viash-macos-aarch64
