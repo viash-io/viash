@@ -304,7 +304,7 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  // override def afterAll(): Unit = {
-  //   IO.deleteRecursively(temporaryFolder)
-  // }
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryFolder)
+  }
 }
