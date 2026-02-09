@@ -4,6 +4,8 @@
 
 * `NextflowRunner`: Fix `readCsv` failing on S3 paths with Nextflow 25.10.x (PR #864). The `BufferedReader.ready()` method returns false for S3 streams when no data is pre-buffered, which broke compatibility with AWS SDK v2 used in Nextflow 25.10.x.
 
+* `Nextflowrunner`: fix publishing of directories when the output file name template contains a trailing slash (PR #867).
+
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
 This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
