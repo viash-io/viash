@@ -41,15 +41,16 @@ process publishFilesProc {
     .collectMany{infile, outfile ->
       def infileString = infile.toString()
       def outfileString = outfile.toString()
-      if ( infileString != outfileString) {
+      if (infileString != outfileString) {
         /* Trailing slashes are removed from both the source and destination arguments.
            From source arguments, this is useful when a source argument may have a trailing slash
            and specify a symbolic link to a directory. Without removing the slash, cp will dereference
            the symbolic link. 
            See https://www.gnu.org/software/coreutils/manual/html_node/Trailing-slashes.html#Trailing-slashes-1
 
-           For the destination path, is a problem when handling directories — requiring the destination directory to exist.
-           This fails because we only create the parent directories first.
+           For the destination path addding a trailing slash is a problem when publishing directories: 
+           it requires the destination directory to exist. This fails because we only create the parent
+           directories first.
         */
         def regexTrailingSlashes = ~/\/+$/
         def infileNoTrailingSlash = infileString - regexTrailingSlashes
