@@ -1,4 +1,4 @@
-name: testexecutable
+name: test_languages_scala
 description: |
   List buckets and objects with mc.
 arguments:
