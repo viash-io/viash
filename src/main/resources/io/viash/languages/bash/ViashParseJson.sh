@@ -21,6 +21,8 @@
 
 # -- Parser state (globals for bash 3.2 compatibility) --
 _viash_json=""     # Full JSON input string
+_viash_chars=()    # Characters array for O(1) indexing
+_viash_len=0       # Length of input
 _viash_pos=0       # Current parse position
 _viash_result=""   # Result of last parse operation
 
@@ -28,17 +30,45 @@ _viash_result=""   # Result of last parse operation
 function ViashParseJsonBash {
   _viash_json="$(cat)"
   _viash_pos=0
+  _viash_len=${#_viash_json}
   _viash_result=""
+
+  # Pre-split into character array for O(1) access.
+  # Using fold -w1 to split efficiently
+  _viash_chars=()
+  if [ $_viash_len -gt 0 ]; then
+    local IFS=$'\n'
+    # fold -w1 splits each character onto its own line.
+    # We need to preserve empty lines (which represent newlines in the input)
+    # by using a read loop instead of command substitution word splitting.
+    while IFS= read -r _viash_char || [ -n "$_viash_char" ]; do
+      _viash_chars+=("$_viash_char")
+    done < <(printf '%s' "$_viash_json" | fold -w1)
+  fi
 
   _viash_skip_whitespace
   _viash_parse_toplevel_object
 }
 
+# Helper: extract a substring from the character array.
+# Usage: _viash_substr start length
+# Sets _viash_result to the extracted substring.
+function _viash_substr {
+  local start=$1 len=$2
+  local end=$((start + len))
+  local out=""
+  local i
+  for ((i=start; i<end && i<_viash_len; i++)); do
+    out+="${_viash_chars[$i]}"
+  done
+  _viash_result="$out"
+}
+
 # -- Low-level character operations --
 
 function _viash_skip_whitespace {
-  while [ $_viash_pos -lt ${#_viash_json} ]; do
-    case "${_viash_json:$_viash_pos:1}" in
+  while [ $_viash_pos -lt $_viash_len ]; do
+    case "${_viash_chars[$_viash_pos]}" in
       ' '|$'\t'|$'\n'|$'\r') ((_viash_pos++)) || true ;;
       *) return ;;
     esac
@@ -49,22 +79,22 @@ function _viash_skip_whitespace {
 # Sets _viash_result to the character.
 function _viash_peek {
   _viash_skip_whitespace
-  if [ $_viash_pos -ge ${#_viash_json} ]; then
+  if [ $_viash_pos -ge $_viash_len ]; then
     echo "ViashParseJsonBash: Unexpected end of JSON at position $_viash_pos" >&2
     exit 1
   fi
-  _viash_result="${_viash_json:$_viash_pos:1}"
+  _viash_result="${_viash_chars[$_viash_pos]}"
 }
 
 # Consume an expected character, or exit with error.
 function _viash_consume {
   local expected="$1"
   _viash_skip_whitespace
-  if [ $_viash_pos -ge ${#_viash_json} ]; then
+  if [ $_viash_pos -ge $_viash_len ]; then
     echo "ViashParseJsonBash: Expected '$expected' but reached end of JSON" >&2
     exit 1
   fi
-  local actual="${_viash_json:$_viash_pos:1}"
+  local actual="${_viash_chars[$_viash_pos]}"
   if [ "$actual" != "$expected" ]; then
     echo "ViashParseJsonBash: Expected '$expected' at position $_viash_pos, got '$actual'" >&2
     exit 1
@@ -78,19 +108,19 @@ function _viash_consume {
 function _viash_parse_string {
   _viash_consume '"'
   local result=""
-  while [ $_viash_pos -lt ${#_viash_json} ]; do
-    local char="${_viash_json:$_viash_pos:1}"
+  while [ $_viash_pos -lt $_viash_len ]; do
+    local char="${_viash_chars[$_viash_pos]}"
     if [ "$char" = '"' ]; then
       ((_viash_pos++)) || true
       _viash_result="$result"
       return
     elif [ "$char" = '\' ]; then
       ((_viash_pos++)) || true
-      if [ $_viash_pos -ge ${#_viash_json} ]; then
+      if [ $_viash_pos -ge $_viash_len ]; then
         echo "ViashParseJsonBash: Unterminated string escape at position $_viash_pos" >&2
         exit 1
       fi
-      local esc="${_viash_json:$_viash_pos:1}"
+      local esc="${_viash_chars[$_viash_pos]}"
       case "$esc" in
         # Note: \n and \t are kept as literal two-character sequences (\n, \t)
         # to match Viash YAML parser behavior and test expectations
@@ -104,7 +134,8 @@ function _viash_parse_string {
         '/')  result+='/' ;;
         'u')
           # Unicode escape \uXXXX
-          local hex="${_viash_json:$((_viash_pos+1)):4}"
+          _viash_substr $((_viash_pos+1)) 4
+          local hex="$_viash_result"
           if [ ${#hex} -lt 4 ]; then
             echo "ViashParseJsonBash: Invalid unicode escape at position $_viash_pos" >&2
             exit 1
@@ -129,45 +160,47 @@ function _viash_parse_string {
 function _viash_parse_number {
   local start=$_viash_pos
   # Optional minus
-  if [ "${_viash_json:$_viash_pos:1}" = '-' ]; then
+  if [ "${_viash_chars[$_viash_pos]}" = '-' ]; then
     ((_viash_pos++)) || true
   fi
   # Integer digits
-  while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+  while [ $_viash_pos -lt $_viash_len ] && [[ "${_viash_chars[$_viash_pos]}" =~ [0-9] ]]; do
     ((_viash_pos++)) || true
   done
   # Decimal part
-  if [ $_viash_pos -lt ${#_viash_json} ] && [ "${_viash_json:$_viash_pos:1}" = '.' ]; then
+  if [ $_viash_pos -lt $_viash_len ] && [ "${_viash_chars[$_viash_pos]}" = '.' ]; then
     ((_viash_pos++)) || true
-    while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+    while [ $_viash_pos -lt $_viash_len ] && [[ "${_viash_chars[$_viash_pos]}" =~ [0-9] ]]; do
       ((_viash_pos++)) || true
     done
   fi
   # Exponent part
-  if [ $_viash_pos -lt ${#_viash_json} ]; then
-    local ec="${_viash_json:$_viash_pos:1}"
+  if [ $_viash_pos -lt $_viash_len ]; then
+    local ec="${_viash_chars[$_viash_pos]}"
     if [ "$ec" = 'e' ] || [ "$ec" = 'E' ]; then
       ((_viash_pos++)) || true
-      if [ $_viash_pos -lt ${#_viash_json} ]; then
-        local sign="${_viash_json:$_viash_pos:1}"
+      if [ $_viash_pos -lt $_viash_len ]; then
+        local sign="${_viash_chars[$_viash_pos]}"
         if [ "$sign" = '+' ] || [ "$sign" = '-' ]; then
           ((_viash_pos++)) || true
         fi
       fi
-      while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+      while [ $_viash_pos -lt $_viash_len ] && [[ "${_viash_chars[$_viash_pos]}" =~ [0-9] ]]; do
         ((_viash_pos++)) || true
       done
     fi
   fi
-  _viash_result="${_viash_json:$start:$((_viash_pos - start))}"
+  _viash_substr $start $((_viash_pos - start))
 }
 
 # Parse a JSON boolean (true/false). Sets _viash_result.
 function _viash_parse_boolean {
-  if [ "${_viash_json:$_viash_pos:4}" = "true" ]; then
+  _viash_substr $_viash_pos 5
+  local word="$_viash_result"
+  if [ "${word:0:4}" = "true" ]; then
     _viash_pos=$((_viash_pos + 4))
     _viash_result="true"
-  elif [ "${_viash_json:$_viash_pos:5}" = "false" ]; then
+  elif [ "$word" = "false" ]; then
     _viash_pos=$((_viash_pos + 5))
     _viash_result="false"
   else
@@ -178,7 +211,8 @@ function _viash_parse_boolean {
 
 # Parse a JSON null. Sets _viash_result to empty string.
 function _viash_parse_null {
-  if [ "${_viash_json:$_viash_pos:4}" = "null" ]; then
+  _viash_substr $_viash_pos 4
+  if [ "$_viash_result" = "null" ]; then
     _viash_pos=$((_viash_pos + 4))
     _viash_result=""
   else
@@ -276,11 +310,11 @@ function _viash_serialize_value {
 function _viash_serialize_string {
   local start=$_viash_pos
   _viash_consume '"'
-  while [ $_viash_pos -lt ${#_viash_json} ]; do
-    local char="${_viash_json:$_viash_pos:1}"
+  while [ $_viash_pos -lt $_viash_len ]; do
+    local char="${_viash_chars[$_viash_pos]}"
     if [ "$char" = '"' ]; then
       ((_viash_pos++)) || true
-      _viash_result="${_viash_json:$start:$((_viash_pos - start))}"
+      _viash_substr $start $((_viash_pos - start))
       return
     elif [ "$char" = '\' ]; then
       # Skip escape sequence
