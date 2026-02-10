@@ -2,311 +2,525 @@
 
 # ViashParseJsonBash: Parse JSON parameters into Bash variables
 #
-# This function reads JSON content from stdin and exports variables for each key-value pair.
-# Nested objects (level 2+) are flattened with underscore separators (e.g., par_input, meta_name).
-# Arrays are exported as Bash arrays.
-# Deep nesting (level 4+) is stored as JSON strings.
+# Recursive descent JSON parser (similar to the Scala ViashJsonParser).
+# Reads JSON from stdin and sets variables for each key-value pair.
+#
+# Structure:
+#   - Top-level keys mapping to objects are treated as sections,
+#     with variables named "section_key" (e.g., par_input, meta_name).
+#   - Top-level scalar/array keys are set directly.
+#   - Arrays become Bash arrays.
+#   - Deep nesting (depth 3+) is stored as JSON strings.
 #
 # Usage:
 #   ViashParseJsonBash < json_file
 #   ViashParseJsonBash <<< "$json_content"
 #
-# Spec: See docs/json_parser_spec.md
-#
-# Note: This function is written to be compatible with bash 3.2 (macOS default)
-# and avoids bash 4+ features like declare -g, local -n, and readarray.
+# Note: Compatible with bash 3.2 (macOS default).
+# Avoids bash 4+ features like declare -g, local -n, and readarray.
 
+# -- Parser state (globals for bash 3.2 compatibility) --
+_viash_json=""     # Full JSON input string
+_viash_pos=0       # Current parse position
+_viash_result=""   # Result of last parse operation
+
+# ViashParseJsonBash: entry point -- reads stdin and parses top-level object
 function ViashParseJsonBash {
-  local depth=0
-  local current_section=""
-  local in_array=false
-  local array_name=""
-  local array_items=()
-  local in_nested=false
-  local nested_name=""
-  local nested_json=""
-  local nested_depth=0
-  
-  while IFS= read -r line; do
-    # Trim whitespace
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    
-    # Skip empty lines
-    [ -z "$line" ] && continue
-    
-    # Handle nested object collection (depth 3+)
-    if $in_nested; then
-      nested_json+="$line"
-      
-      # Count braces to track when nested object ends
-      # Must ignore braces inside quoted strings
-      local in_quotes=false
-      local prev_char=""
-      for ((i=0; i<${#line}; i++)); do
-        local char="${line:$i:1}"
-        
-        # Track if we're inside a quoted string (ignore escaped quotes)
-        if [ "$char" = '"' ] && [ "$prev_char" != '\' ]; then
-          in_quotes=$( [ "$in_quotes" = "true" ] && echo "false" || echo "true" )
-        fi
-        
-        # Only count braces outside of quoted strings
-        if [ "$in_quotes" = "false" ]; then
-          if [ "$char" = '{' ]; then
-            ((nested_depth++)) || true
-          elif [ "$char" = '}' ]; then
-            ((nested_depth--)) || true
-            if [ $nested_depth -eq 0 ]; then
-              # Nested object complete - store as JSON string (bash 3.2 compatible)
-              # Use printf %q to safely escape for eval (handles backticks correctly in bash 3.2)
-              printf -v _viash_escaped '%q' "$nested_json"
-              eval "${nested_name}=$_viash_escaped"
-              in_nested=false
-              nested_name=""
-              nested_json=""
-              break
-            fi
-          fi
-        fi
-        
-        prev_char="$char"
-      done
-      continue
-    fi
-    
-    # Handle array collection
-    if $in_array; then
-      if [[ "$line" =~ ^\][[:space:]]*,?[[:space:]]*$ ]]; then
-        # End of array (bash 3.2 compatible)
-        eval "${array_name}=($(printf '%q ' "${array_items[@]}"))"
-        in_array=false
-        array_name=""
-        array_items=()
-      else
-        # Collect array items from current line
-        local items_line="$line"
-        # Remove trailing comma if present
-        items_line="${items_line%,}"
-        
-        # Split by comma (simple approach - works for most cases)
-        local item
-        local in_quotes=false
-        local current_item=""
-        
-        for ((i=0; i<${#items_line}; i++)); do
-          local char="${items_line:$i:1}"
-          
-          if [ "$char" = '"' ] && [ "${items_line:$((i-1)):1}" != '\' ]; then
-            in_quotes=$( [ "$in_quotes" = "true" ] && echo "false" || echo "true" )
-            current_item+="$char"
-          elif [ "$char" = ',' ] && [ "$in_quotes" = "false" ]; then
-            # End of item
-            current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-            current_item="${current_item%"${current_item##*[![:space:]]}"}"
-            if [ -n "$current_item" ]; then
-              array_items+=("$(_viash_unescape_json_value "$current_item")")
-            fi
-            current_item=""
-          else
-            current_item+="$char"
-          fi
-        done
-        
-        # Add last item
-        current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-        current_item="${current_item%"${current_item##*[![:space:]]}"}"
-        if [ -n "$current_item" ]; then
-          array_items+=("$(_viash_unescape_json_value "$current_item")")
-        fi
-      fi
-      continue
-    fi
-    
-    # Root level opening/closing braces
-    if [[ "$line" =~ ^\{[[:space:]]*$ ]]; then
-      ((depth++)) || true
-      continue
-    fi
-    
-    if [[ "$line" =~ ^\}[[:space:]]*,?[[:space:]]*$ ]]; then
-      ((depth--)) || true
-      if [ $depth -eq 1 ]; then
-        current_section=""
-      fi
-      continue
-    fi
-    
-    # Section header: "section": {
-    if [[ "$line" =~ ^\"([^\"]+)\":[[:space:]]*\{[[:space:]]*,?[[:space:]]*$ ]]; then
-      local key="${BASH_REMATCH[1]}"
-      
-      if [ $depth -eq 1 ]; then
-        # Top-level section (par, meta, dep)
-        current_section="$key"
-        ((depth++)) || true
-      elif [ $depth -eq 2 ] && [ -n "$current_section" ]; then
-        # Nested object - start collection
-        in_nested=true
-        nested_name="${current_section}_${key}"
-        nested_json="$line"
-        nested_depth=1
-      fi
-      continue
-    fi
-    
-    # Array: "key": [
-    if [[ "$line" =~ ^\"([^\"]+)\":[[:space:]]*\[(.*)$ ]]; then
-      local key="${BASH_REMATCH[1]}"
-      local rest="${BASH_REMATCH[2]}"
-      local var_name="${current_section:+${current_section}_}${key}"
-      
-      # Check if array ends on same line
-      if [[ "$rest" =~ ^\][[:space:]]*,?[[:space:]]*$ ]]; then
-        # Empty array (bash 3.2 compatible)
-        eval "${var_name}=()"
-      elif [[ "$rest" =~ ^(.*)\][[:space:]]*,?[[:space:]]*$ ]]; then
-        # Single-line array
-        local content="${BASH_REMATCH[1]}"
-        content="${content%,}"
-        
-        # Parse array items (bash 3.2 compatible - using temp array instead of local -n)
-        local items=()
-        _viash_parse_array_content_compat "$content" "items"
-        eval "${var_name}=($(printf '%q ' "${items[@]}"))"
-      else
-        # Multi-line array
-        in_array=true
-        array_name="$var_name"
-        array_items=()
-        
-        # Process any items on this line
-        rest="${rest%,}"
-        if [ -n "$rest" ]; then
-          local item
-          local in_quotes=false
-          local current_item=""
-          
-          for ((i=0; i<${#rest}; i++)); do
-            local char="${rest:$i:1}"
-            
-            if [ "$char" = '"' ] && [ "${rest:$((i-1)):1}" != '\' ]; then
-              in_quotes=$( [ "$in_quotes" = "true" ] && echo "false" || echo "true" )
-              current_item+="$char"
-            elif [ "$char" = ',' ] && [ "$in_quotes" = "false" ]; then
-              current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-              current_item="${current_item%"${current_item##*[![:space:]]}"}"
-              if [ -n "$current_item" ]; then
-                array_items+=("$(_viash_unescape_json_value "$current_item")")
-              fi
-              current_item=""
-            else
-              current_item+="$char"
-            fi
-          done
-          
-          current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-          current_item="${current_item%"${current_item##*[![:space:]]}"}"
-          if [ -n "$current_item" ]; then
-            array_items+=("$(_viash_unescape_json_value "$current_item")")
-          fi
-        fi
-      fi
-      continue
-    fi
-    
-    # Key-value pair: "key": value
-    if [[ "$line" =~ ^[[:space:]]*\"([^\"]+)\":[[:space:]]*([^[:space:]].*[^[:space:],]|[^[:space:],]),?[[:space:]]*$ ]]; then
-      local key="${BASH_REMATCH[1]}"
-      local value="${BASH_REMATCH[2]}"
-      local var_name="${current_section:+${current_section}_}${key}"
-      
-      # Remove trailing comma
-      value="${value%,}"
-      
-      # Parse and assign value (skip null values - leave variable unset)
-      if [ "$value" != "null" ]; then
-        local unescaped="$(_viash_unescape_json_value "$value")"
-        # bash 3.2 compatible - using printf %q to safely escape for eval
-        # (handles backticks correctly which the previous single-quote method didn't)
-        printf -v _viash_escaped '%q' "$unescaped"
-        eval "${var_name}=$_viash_escaped"
-      fi
-      continue
-    fi
+  _viash_json="$(cat)"
+  _viash_pos=0
+  _viash_result=""
+
+  _viash_skip_whitespace
+  _viash_parse_toplevel_object
+}
+
+# -- Low-level character operations --
+
+function _viash_skip_whitespace {
+  while [ $_viash_pos -lt ${#_viash_json} ]; do
+    case "${_viash_json:$_viash_pos:1}" in
+      ' '|$'\t'|$'\n'|$'\r') ((_viash_pos++)) || true ;;
+      *) return ;;
+    esac
   done
 }
 
-# Helper: Unescape JSON value
-function _viash_unescape_json_value {
-  local value="$1"
-  
-  # Handle different value types
-  if [ "$value" = "null" ]; then
-    echo "null"
-  elif [ "$value" = "true" ] || [ "$value" = "false" ]; then
-    echo "$value"
-  elif [[ "$value" =~ ^-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$ ]]; then
-    # Number
-    echo "$value"
-  elif [[ "$value" =~ ^\"(.*)\"$ ]]; then
-    # String - remove quotes and unescape
-    local str="${BASH_REMATCH[1]}"
-    
-    # Unescape JSON escape sequences
-    # Note: We keep \n and \t as literal strings (not actual newline/tab characters)
-    # to match YAML parser behavior and test expectations
-    str="${str//\\\\/\\}"      # \\ -> \
-    str="${str//\\\"/\"}"      # \" -> "
-    # str="${str//\\n/$'\n'}"    # \n -> newline (disabled - keep literal)
-    # str="${str//\\t/$'\t'}"    # \t -> tab (disabled - keep literal)
-    str="${str//\\r/$'\r'}"    # \r -> carriage return
-    str="${str//\\b/$'\b'}"    # \b -> backspace
-    str="${str//\\f/$'\f'}"    # \f -> form feed
-    
-    echo "$str"
-  else
-    # Fallback - return as-is
-    echo "$value"
+# Peek at the current character (after skipping whitespace).
+# Sets _viash_result to the character.
+function _viash_peek {
+  _viash_skip_whitespace
+  if [ $_viash_pos -ge ${#_viash_json} ]; then
+    echo "ViashParseJsonBash: Unexpected end of JSON at position $_viash_pos" >&2
+    exit 1
   fi
+  _viash_result="${_viash_json:$_viash_pos:1}"
 }
 
-# Helper: Parse array content (for single-line arrays)
-# bash 3.2 compatible version - takes array name as string and modifies it via eval
-function _viash_parse_array_content_compat {
-  local content="$1"
-  local array_name="$2"
-  
-  local in_quotes=false
-  local current_item=""
-  local temp_items=()
-  
-  for ((i=0; i<${#content}; i++)); do
-    local char="${content:$i:1}"
-    
-    if [ "$char" = '"' ] && [ "${content:$((i-1)):1}" != '\' ]; then
-      in_quotes=$( [ "$in_quotes" = "true" ] && echo "false" || echo "true" )
-      current_item+="$char"
-    elif [ "$char" = ',' ] && [ "$in_quotes" = "false" ]; then
-      # End of item
-      current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-      current_item="${current_item%"${current_item##*[![:space:]]}"}"
-      if [ -n "$current_item" ]; then
-        temp_items+=("$(_viash_unescape_json_value "$current_item")")
+# Consume an expected character, or exit with error.
+function _viash_consume {
+  local expected="$1"
+  _viash_skip_whitespace
+  if [ $_viash_pos -ge ${#_viash_json} ]; then
+    echo "ViashParseJsonBash: Expected '$expected' but reached end of JSON" >&2
+    exit 1
+  fi
+  local actual="${_viash_json:$_viash_pos:1}"
+  if [ "$actual" != "$expected" ]; then
+    echo "ViashParseJsonBash: Expected '$expected' at position $_viash_pos, got '$actual'" >&2
+    exit 1
+  fi
+  ((_viash_pos++)) || true
+}
+
+# -- Core parse functions --
+
+# Parse a JSON string. Sets _viash_result to the unescaped string content.
+function _viash_parse_string {
+  _viash_consume '"'
+  local result=""
+  while [ $_viash_pos -lt ${#_viash_json} ]; do
+    local char="${_viash_json:$_viash_pos:1}"
+    if [ "$char" = '"' ]; then
+      ((_viash_pos++)) || true
+      _viash_result="$result"
+      return
+    elif [ "$char" = '\' ]; then
+      ((_viash_pos++)) || true
+      if [ $_viash_pos -ge ${#_viash_json} ]; then
+        echo "ViashParseJsonBash: Unterminated string escape at position $_viash_pos" >&2
+        exit 1
       fi
-      current_item=""
+      local esc="${_viash_json:$_viash_pos:1}"
+      case "$esc" in
+        # Note: \n and \t are kept as literal two-character sequences (\n, \t)
+        # to match Viash YAML parser behavior and test expectations
+        'n')  result+='\n' ;;
+        't')  result+='\t' ;;
+        'r')  result+=$'\r' ;;
+        'b')  result+=$'\b' ;;
+        'f')  result+=$'\f' ;;
+        '\\') result+='\' ;;
+        '"')  result+='"' ;;
+        '/')  result+='/' ;;
+        'u')
+          # Unicode escape \uXXXX
+          local hex="${_viash_json:$((_viash_pos+1)):4}"
+          if [ ${#hex} -lt 4 ]; then
+            echo "ViashParseJsonBash: Invalid unicode escape at position $_viash_pos" >&2
+            exit 1
+          fi
+          result+="$(printf "\\$(printf '%03o' "0x$hex")")"
+          _viash_pos=$((_viash_pos + 4))
+          ;;
+        *)
+          # Unknown escape - keep as-is
+          result+="$esc" ;;
+      esac
     else
-      current_item+="$char"
+      result+="$char"
+    fi
+    ((_viash_pos++)) || true
+  done
+  echo "ViashParseJsonBash: Unterminated string starting near position $_viash_pos" >&2
+  exit 1
+}
+
+# Parse a JSON number. Sets _viash_result to the number string.
+function _viash_parse_number {
+  local start=$_viash_pos
+  # Optional minus
+  if [ "${_viash_json:$_viash_pos:1}" = '-' ]; then
+    ((_viash_pos++)) || true
+  fi
+  # Integer digits
+  while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+    ((_viash_pos++)) || true
+  done
+  # Decimal part
+  if [ $_viash_pos -lt ${#_viash_json} ] && [ "${_viash_json:$_viash_pos:1}" = '.' ]; then
+    ((_viash_pos++)) || true
+    while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+      ((_viash_pos++)) || true
+    done
+  fi
+  # Exponent part
+  if [ $_viash_pos -lt ${#_viash_json} ]; then
+    local ec="${_viash_json:$_viash_pos:1}"
+    if [ "$ec" = 'e' ] || [ "$ec" = 'E' ]; then
+      ((_viash_pos++)) || true
+      if [ $_viash_pos -lt ${#_viash_json} ]; then
+        local sign="${_viash_json:$_viash_pos:1}"
+        if [ "$sign" = '+' ] || [ "$sign" = '-' ]; then
+          ((_viash_pos++)) || true
+        fi
+      fi
+      while [ $_viash_pos -lt ${#_viash_json} ] && [[ "${_viash_json:$_viash_pos:1}" =~ [0-9] ]]; do
+        ((_viash_pos++)) || true
+      done
+    fi
+  fi
+  _viash_result="${_viash_json:$start:$((_viash_pos - start))}"
+}
+
+# Parse a JSON boolean (true/false). Sets _viash_result.
+function _viash_parse_boolean {
+  if [ "${_viash_json:$_viash_pos:4}" = "true" ]; then
+    _viash_pos=$((_viash_pos + 4))
+    _viash_result="true"
+  elif [ "${_viash_json:$_viash_pos:5}" = "false" ]; then
+    _viash_pos=$((_viash_pos + 5))
+    _viash_result="false"
+  else
+    echo "ViashParseJsonBash: Invalid boolean at position $_viash_pos" >&2
+    exit 1
+  fi
+}
+
+# Parse a JSON null. Sets _viash_result to empty string.
+function _viash_parse_null {
+  if [ "${_viash_json:$_viash_pos:4}" = "null" ]; then
+    _viash_pos=$((_viash_pos + 4))
+    _viash_result=""
+  else
+    echo "ViashParseJsonBash: Invalid null at position $_viash_pos" >&2
+    exit 1
+  fi
+}
+
+# Skip over any JSON value without storing it (for values we don't need).
+# Correctly handles nested structures.
+function _viash_skip_value {
+  _viash_peek
+  case "$_viash_result" in
+    '"') _viash_parse_string ;;
+    '{') _viash_skip_object ;;
+    '[') _viash_skip_array ;;
+    't'|'f') _viash_parse_boolean ;;
+    'n') _viash_parse_null ;;
+    '-'|[0-9]) _viash_parse_number ;;
+    *)
+      echo "ViashParseJsonBash: Unexpected character '$_viash_result' at position $_viash_pos" >&2
+      exit 1
+      ;;
+  esac
+}
+
+function _viash_skip_object {
+  _viash_consume '{'
+  _viash_peek
+  if [ "$_viash_result" = '}' ]; then
+    _viash_consume '}'
+    return
+  fi
+  while true; do
+    _viash_parse_string  # key
+    _viash_consume ':'
+    _viash_skip_value    # value
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
     fi
   done
-  
-  # Add last item
-  current_item="${current_item#"${current_item%%[![:space:]]*}"}"
-  current_item="${current_item%"${current_item##*[![:space:]]}"}"
-  if [ -n "$current_item" ]; then
-    temp_items+=("$(_viash_unescape_json_value "$current_item")")
+  _viash_consume '}'
+}
+
+function _viash_skip_array {
+  _viash_consume '['
+  _viash_peek
+  if [ "$_viash_result" = ']' ]; then
+    _viash_consume ']'
+    return
   fi
-  
-  # Copy to the target array (bash 3.2 compatible)
-  eval "${array_name}=(\"\${temp_items[@]}\")"
+  while true; do
+    _viash_skip_value
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume ']'
+}
+
+# -- Serialization functions (for deep nesting stored as JSON strings) --
+
+# Serialize the JSON value at the current position back into a JSON string.
+# Sets _viash_result to the JSON fragment.
+function _viash_serialize_value {
+  _viash_peek
+  case "$_viash_result" in
+    '"') _viash_serialize_string ;;
+    '{') _viash_serialize_object ;;
+    '[') _viash_serialize_array ;;
+    't'|'f')
+      _viash_parse_boolean
+      ;;
+    'n')
+      _viash_parse_null
+      _viash_result="null"
+      ;;
+    '-'|[0-9])
+      _viash_parse_number
+      ;;
+    *)
+      echo "ViashParseJsonBash: Unexpected character '$_viash_result' at position $_viash_pos" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# Serialize a JSON string (keeps it in JSON-encoded form with quotes).
+function _viash_serialize_string {
+  local start=$_viash_pos
+  _viash_consume '"'
+  while [ $_viash_pos -lt ${#_viash_json} ]; do
+    local char="${_viash_json:$_viash_pos:1}"
+    if [ "$char" = '"' ]; then
+      ((_viash_pos++)) || true
+      _viash_result="${_viash_json:$start:$((_viash_pos - start))}"
+      return
+    elif [ "$char" = '\' ]; then
+      # Skip escape sequence
+      ((_viash_pos++)) || true
+    fi
+    ((_viash_pos++)) || true
+  done
+  echo "ViashParseJsonBash: Unterminated string at position $start" >&2
+  exit 1
+}
+
+function _viash_serialize_object {
+  local out="{"
+  _viash_consume '{'
+  _viash_peek
+  if [ "$_viash_result" = '}' ]; then
+    _viash_consume '}'
+    _viash_result="{}"
+    return
+  fi
+  local first=true
+  while true; do
+    if [ "$first" = "false" ]; then
+      out+=","
+    fi
+    first=false
+    _viash_serialize_string
+    out+="$_viash_result"
+    _viash_consume ':'
+    out+=":"
+    _viash_serialize_value
+    out+="$_viash_result"
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume '}'
+  out+="}"
+  _viash_result="$out"
+}
+
+function _viash_serialize_array {
+  local out="["
+  _viash_consume '['
+  _viash_peek
+  if [ "$_viash_result" = ']' ]; then
+    _viash_consume ']'
+    _viash_result="[]"
+    return
+  fi
+  local first=true
+  while true; do
+    if [ "$first" = "false" ]; then
+      out+=","
+    fi
+    first=false
+    _viash_serialize_value
+    out+="$_viash_result"
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume ']'
+  out+="]"
+  _viash_result="$out"
+}
+
+# -- Top-level parsing: maps JSON structure to Bash variables --
+
+# Parse the root object. Handles two patterns:
+#   1. Key -> object: treated as a section (variables named section_key)
+#   2. Key -> scalar/array: set directly as variable
+function _viash_parse_toplevel_object {
+  _viash_consume '{'
+  _viash_peek
+  if [ "$_viash_result" = '}' ]; then
+    _viash_consume '}'
+    return
+  fi
+
+  while true; do
+    _viash_parse_string
+    local key="$_viash_result"
+    _viash_consume ':'
+
+    _viash_peek
+    case "$_viash_result" in
+      '{')
+        _viash_parse_section_object "$key"
+        ;;
+      '[')
+        _viash_parse_and_assign_array "$key"
+        ;;
+      *)
+        _viash_parse_and_assign_scalar "$key"
+        ;;
+    esac
+
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume '}'
+}
+
+# Parse a section object (depth 2). Each key becomes a variable "section_key".
+function _viash_parse_section_object {
+  local section="$1"
+  _viash_consume '{'
+  _viash_peek
+  if [ "$_viash_result" = '}' ]; then
+    _viash_consume '}'
+    return
+  fi
+
+  while true; do
+    _viash_parse_string
+    local key="$_viash_result"
+    local var_name="${section}_${key}"
+    _viash_consume ':'
+
+    _viash_peek
+    case "$_viash_result" in
+      '{')
+        # Depth 3+ object -> serialize and store as JSON string
+        _viash_serialize_object
+        printf -v _viash_escaped '%q' "$_viash_result"
+        eval "${var_name}=$_viash_escaped"
+        ;;
+      '[')
+        _viash_parse_and_assign_array "$var_name"
+        ;;
+      *)
+        _viash_parse_and_assign_scalar "$var_name"
+        ;;
+    esac
+
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume '}'
+}
+
+# Parse a scalar value and assign it to the given variable name.
+# Null values leave the variable unset.
+function _viash_parse_and_assign_scalar {
+  local var_name="$1"
+  _viash_peek
+  case "$_viash_result" in
+    '"')
+      _viash_parse_string
+      printf -v _viash_escaped '%q' "$_viash_result"
+      eval "${var_name}=$_viash_escaped"
+      ;;
+    't'|'f')
+      _viash_parse_boolean
+      eval "${var_name}=$_viash_result"
+      ;;
+    'n')
+      _viash_parse_null
+      # Leave variable unset for null
+      ;;
+    '-'|[0-9])
+      _viash_parse_number
+      eval "${var_name}=$_viash_result"
+      ;;
+    *)
+      echo "ViashParseJsonBash: Unexpected value '$_viash_result' at position $_viash_pos" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# Parse a JSON array and assign it to the given variable name as a Bash array.
+function _viash_parse_and_assign_array {
+  local var_name="$1"
+  _viash_consume '['
+  _viash_peek
+  if [ "$_viash_result" = ']' ]; then
+    _viash_consume ']'
+    eval "${var_name}=()"
+    return
+  fi
+
+  local items=()
+  while true; do
+    _viash_peek
+    case "$_viash_result" in
+      '"')
+        _viash_parse_string
+        items+=("$_viash_result")
+        ;;
+      't'|'f')
+        _viash_parse_boolean
+        items+=("$_viash_result")
+        ;;
+      'n')
+        _viash_parse_null
+        items+=("null")
+        ;;
+      '-'|[0-9])
+        _viash_parse_number
+        items+=("$_viash_result")
+        ;;
+      '{')
+        _viash_serialize_object
+        items+=("$_viash_result")
+        ;;
+      '[')
+        _viash_serialize_array
+        items+=("$_viash_result")
+        ;;
+      *)
+        echo "ViashParseJsonBash: Unexpected array element '$_viash_result' at position $_viash_pos" >&2
+        exit 1
+        ;;
+    esac
+
+    _viash_peek
+    if [ "$_viash_result" = ',' ]; then
+      _viash_consume ','
+    else
+      break
+    fi
+  done
+  _viash_consume ']'
+
+  # Assign array (bash 3.2 compatible)
+  eval "${var_name}=($(printf '%q ' "${items[@]}"))"
 }
