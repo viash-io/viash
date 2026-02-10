@@ -210,4 +210,39 @@ assert_value_equal "test10g_nestedquotes" '    "nested": "He said \"Hello\""' "$
 output=$(ViashRenderJsonKeyValue "unicode" "string" "false" 'café')
 assert_value_equal "test10h_unicode" '    "unicode": "café"' "$output"
 
+
+## TEST11: test ViashRenderJsonBooleanValue with invalid values (should exit with error)
+
+# TEST11a: Invalid boolean value should exit with code 1
+set +e  # Temporarily disable exit on error
+stderr=$(ViashRenderJsonBooleanValue "flag" "invalid" 2>&1 >/dev/null)
+exit_code=$?
+set -e  # Re-enable exit on error
+assert_exit_code "test11a_exit_code" 1 "$exit_code"
+assert_contains "test11a_stderr" "Argument 'flag' has to be a boolean" "$stderr"
+
+# TEST11b: Invalid boolean like "maybe" should exit with error
+set +e
+stderr=$(ViashRenderJsonBooleanValue "enabled" "maybe" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test11b_exit_code" 1 "$exit_code"
+assert_contains "test11b_stderr" "has to be a boolean" "$stderr"
+
+# TEST11c: Invalid boolean like "1" should exit with error
+set +e
+stderr=$(ViashRenderJsonBooleanValue "flag" "1" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test11c_exit_code" 1 "$exit_code"
+assert_contains "test11c_stderr" "has to be a boolean" "$stderr"
+
+# TEST11d: Empty boolean value should exit with error
+set +e
+stderr=$(ViashRenderJsonBooleanValue "flag" "" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test11d_exit_code" 1 "$exit_code"
+assert_contains "test11d_stderr" "has to be a boolean" "$stderr"
+
 print_test_summary
