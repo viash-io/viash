@@ -103,5 +103,12 @@ function ViashRenderJsonBooleanValue {
 function ViashRenderJsonUnquotedValue {
   local key="$1"
   local value="$2"
+  
+  # Validate that the value is a valid number (integer, decimal, or scientific notation)
+  if ! [[ "$value" =~ ^-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$ ]]; then
+    echo "Argument '$key' has to be a number, but got '$value'. Use '--help' to get more information on the parameters." >&2
+    exit 1
+  fi
+  
   echo "$value"
 }

@@ -245,4 +245,79 @@ set -e
 assert_exit_code "test11d_exit_code" 1 "$exit_code"
 assert_contains "test11d_stderr" "has to be a boolean" "$stderr"
 
+
+## TEST12: test ViashRenderJsonUnquotedValue with valid and invalid numeric values
+
+# TEST12a: Valid integer
+output=$(ViashRenderJsonUnquotedValue "count" "42")
+assert_value_equal "test12a_valid_int" "42" "$output"
+
+# TEST12b: Valid negative integer
+output=$(ViashRenderJsonUnquotedValue "temp" "-273")
+assert_value_equal "test12b_negative_int" "-273" "$output"
+
+# TEST12c: Valid decimal
+output=$(ViashRenderJsonUnquotedValue "ratio" "3.14159")
+assert_value_equal "test12c_decimal" "3.14159" "$output"
+
+# TEST12d: Valid negative decimal
+output=$(ViashRenderJsonUnquotedValue "temp" "-0.5")
+assert_value_equal "test12d_negative_decimal" "-0.5" "$output"
+
+# TEST12e: Valid scientific notation
+output=$(ViashRenderJsonUnquotedValue "big" "1.5e10")
+assert_value_equal "test12e_scientific" "1.5e10" "$output"
+
+# TEST12f: Valid negative scientific notation
+output=$(ViashRenderJsonUnquotedValue "small" "-2.5E-3")
+assert_value_equal "test12f_neg_scientific" "-2.5E-3" "$output"
+
+# TEST12g: Invalid - text instead of number
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "count" "not-a-number" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12g_exit_code" 1 "$exit_code"
+assert_contains "test12g_stderr" "Argument 'count' has to be a number" "$stderr"
+
+# TEST12h: Invalid - text with numbers
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "12abc" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12h_exit_code" 1 "$exit_code"
+assert_contains "test12h_stderr" "has to be a number" "$stderr"
+
+# TEST12i: Invalid - multiple decimal points
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "1.2.3" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12i_exit_code" 1 "$exit_code"
+assert_contains "test12i_stderr" "has to be a number" "$stderr"
+
+# TEST12j: Invalid - empty string
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12j_exit_code" 1 "$exit_code"
+assert_contains "test12j_stderr" "has to be a number" "$stderr"
+
+# TEST12k: Invalid - just a decimal point
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "." 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12k_exit_code" 1 "$exit_code"
+assert_contains "test12k_stderr" "has to be a number" "$stderr"
+
+# TEST12l: Invalid - multiple minus signs
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "--5" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12l_exit_code" 1 "$exit_code"
+assert_contains "test12l_stderr" "has to be a number" "$stderr"
+
 print_test_summary
