@@ -311,6 +311,13 @@ class CLIConf(arguments: Seq[String]) extends ScallopConf(arguments) with Loggin
         "viash config inject",
         "Inject a Viash header into the main script of a Viash component.",
         "viash config inject config.vsh.yaml")
+      
+      val force = registerOpt[Boolean](
+        name = "force",
+        short = Some('f'),
+        default = Some(false),
+        descr = "Modify the script without asking for confirmation."
+      )
     }
 
     addSubcommand(view)

@@ -163,7 +163,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option '--whole_number': '789' & '123' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Pass only one argument to argument '--whole_number'. Found: '789' & '123'"))
   }
 
   test("Repeated flag arguments are not allowed") {
@@ -179,7 +179,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       )
     )
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option '--falsehood': 'false' & '' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Pass only one argument to argument '--falsehood'. Found: 'false' & 'false'"))
   }
 
   test("Repeated arguments with --multiple defined are allowed") {

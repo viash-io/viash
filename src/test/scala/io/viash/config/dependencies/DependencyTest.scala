@@ -89,7 +89,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_dep1="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -144,7 +144,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_dep1="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -199,7 +199,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_DEP1="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_dep1="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -238,7 +238,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_viash_hub_dep="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -278,7 +278,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_viash_hub_dep="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -325,7 +325,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_VIASH_HUB_DEP="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_viash_hub_dep="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(
@@ -364,7 +364,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
 
     val outputText = IO.read(outputPath.toUri())
-    assert(outputText.contains("VIASH_DEP_VIASH_HUB_TEST_TREE="), "check the dependency is set in the output script")
+    assert(outputText.contains("VIASH_DEP_viash_hub_test_tree="), "check the dependency is set in the output script")
 
     // check output when running
     val out = Exec.runCatch(

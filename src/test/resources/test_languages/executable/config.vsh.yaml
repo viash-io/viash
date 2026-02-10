@@ -1,4 +1,4 @@
-name: testexecutable
+name: test_languages_scala
 description: |
   List buckets and objects with mc.
 arguments:
@@ -15,8 +15,9 @@ test_resources:
   - type: bash_script
     path: test.sh
   - path: ../resource2.txt
-__merge__: [../common-runners.yaml]
+runners:
+  - type: executable
 engines:
   - type: native
   - type: docker
-    image: "bash"
+    image: "bash:3.2"

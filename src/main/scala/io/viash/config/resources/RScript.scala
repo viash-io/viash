@@ -17,13 +17,10 @@
 
 package io.viash.config.resources
 
-import io.viash.helpers.Bash
-import io.viash.config.arguments._
-import io.viash.wrapper.BashWrapper
 import io.viash.schemas._
 
 import java.net.URI
-import io.viash.config.Config
+import io.viash.languages.R
 
 @description("""An executable R script.
                |When defined in resources, only the first entry will be executed when running the built component or when running `viash run`.
@@ -37,68 +34,10 @@ case class RScript(
   parent: Option[URI] = None,
 
   @description("Specifies the resource as a R script.")
-  `type`: String = RScript.`type`
+  `type`: String = "r_script"
 ) extends Script {
-  val companion = RScript
+  val language = R
   def copyResource(path: Option[String], text: Option[String], dest: Option[String], is_executable: Option[Boolean], parent: Option[URI]): Resource = {
     copy(path = path, text = text, dest = dest, is_executable = is_executable, parent = parent)
   }
-
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
-
-      val parSet = params.map { par =>
-
-        // todo: escape multiple_sep?
-        val (lhs, rhs) = par match {
-          case a: BooleanArgumentBase if a.multiple =>
-            ("as.logical(strsplit(toupper(", s"), split = '${a.multiple_sep}')[[1]])")
-          case a: IntegerArgument if a.multiple =>
-            ("as.integer(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: LongArgument if a.multiple =>
-            ("bit64::as.integer64(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: DoubleArgument if a.multiple =>
-            ("as.numeric(strsplit(", s", split = '${a.multiple_sep}')[[1]])")
-          case a: FileArgument if a.multiple =>
-            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
-          case a: StringArgument if a.multiple =>
-            ("strsplit(", s", split = '${a.multiple_sep}')[[1]]")
-          case _: BooleanArgumentBase => ("as.logical(toupper(", "))")
-          case _: IntegerArgument => ("as.integer(", ")")
-          case _: LongArgument => ("bit64::as.integer64(", ")")
-          case _: DoubleArgument => ("as.numeric(", ")")
-          case _: FileArgument => ("", "")
-          case _: StringArgument => ("", "")
-        }
-        val sl = "\\VIASH_SLASH\\" // used instead of "\\", as otherwise the slash gets escaped automatically.
-
-        val notFound = "NULL"
-        
-        s""""${par.plainName}" = $$VIASH_DOLLAR$$( if [ ! -z $${${par.VIASH_PAR}+x} ]; then echo -n "$lhs'"; echo -n "$$${par.VIASH_PAR}" | sed "s#['$sl$sl]#$sl$sl$sl$sl&#g"; echo "'$rhs"; else echo $notFound; fi )"""
-      }
-
-      s"""$dest <- list(
-        |  ${parSet.mkString(",\n  ")}
-        |)
-        |""".stripMargin
-    }
-
-    val outCode = s"""# treat warnings as errors
-       |.viash_orig_warn <- options(warn = 2)
-       |
-       |${paramsCode.mkString}
-       |
-       |# restore original warn setting
-       |options(.viash_orig_warn)
-       |rm(.viash_orig_warn)
-       |""".stripMargin
-    ScriptInjectionMods(params = outCode)
-  }
-}
-
-object RScript extends ScriptCompanion {
-  val commentStr = "#"
-  val extension = "R"
-  val `type` = "r_script"
-  val executor = Seq("Rscript")
 }
