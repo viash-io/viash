@@ -95,7 +95,8 @@ function ViashRenderJsonBooleanValue {
   elif [[ "$value" == "false" || "$value" == "no" ]]; then
     echo "false"
   else
-    echo "Argument '$key' has to be a boolean, but got '$value'. Use '--help' to get more information on the parameters."
+    echo "Argument '$key' has to be a boolean, but got '$value'. Use '--help' to get more information on the parameters." >&2
+    exit 1
   fi
 }
 
