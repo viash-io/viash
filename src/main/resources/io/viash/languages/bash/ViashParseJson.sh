@@ -40,21 +40,38 @@ function ViashParseJsonBash {
       nested_json+="$line"
       
       # Count braces to track when nested object ends
-      if [[ "$line" =~ \{ ]]; then
-        ((nested_depth++)) || true
-      fi
-      if [[ "$line" =~ ^\}[[:space:]]*,?[[:space:]]*$ ]]; then
-        ((nested_depth--)) || true
-        if [ $nested_depth -eq 0 ]; then
-          # Nested object complete - store as JSON string (bash 3.2 compatible)
-          # Use printf %q to safely escape for eval (handles backticks correctly in bash 3.2)
-          printf -v _viash_escaped '%q' "$nested_json"
-          eval "${nested_name}=$_viash_escaped"
-          in_nested=false
-          nested_name=""
-          nested_json=""
+      # Must ignore braces inside quoted strings
+      local in_quotes=false
+      local prev_char=""
+      for ((i=0; i<${#line}; i++)); do
+        local char="${line:$i:1}"
+        
+        # Track if we're inside a quoted string (ignore escaped quotes)
+        if [ "$char" = '"' ] && [ "$prev_char" != '\' ]; then
+          in_quotes=$( [ "$in_quotes" = "true" ] && echo "false" || echo "true" )
         fi
-      fi
+        
+        # Only count braces outside of quoted strings
+        if [ "$in_quotes" = "false" ]; then
+          if [ "$char" = '{' ]; then
+            ((nested_depth++)) || true
+          elif [ "$char" = '}' ]; then
+            ((nested_depth--)) || true
+            if [ $nested_depth -eq 0 ]; then
+              # Nested object complete - store as JSON string (bash 3.2 compatible)
+              # Use printf %q to safely escape for eval (handles backticks correctly in bash 3.2)
+              printf -v _viash_escaped '%q' "$nested_json"
+              eval "${nested_name}=$_viash_escaped"
+              in_nested=false
+              nested_name=""
+              nested_json=""
+              break
+            fi
+          fi
+        fi
+        
+        prev_char="$char"
+      done
       continue
     fi
     
