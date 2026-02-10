@@ -19,7 +19,7 @@ test_equal() {
   local description="$1"
   local actual="$2"
   local expected="$3"
-  
+
   if [ "$actual" = "$expected" ]; then
     echo -e "${GREEN}PASS${RESET}: $description"
     ((test_passed++))
@@ -35,7 +35,7 @@ test_equal() {
 
 # Create test JSON file
 test_json=$(mktemp)
-cat > "$test_json" << 'EOF'
+cat >"$test_json" <<'EOF'
 {
   "par": {
     "input": "file.txt",
@@ -47,6 +47,7 @@ cat > "$test_json" << 'EOF'
     "array_mixed": ["text", 123, true, null],
     "nested": {
       "level1": {
+        "nasty_val": "{nasty}",
         "level2": "deep_value"
       }
     },
@@ -76,7 +77,7 @@ cat > "$test_json" << 'EOF'
 EOF
 
 # Parse the JSON
-ViashParseJsonBash < "$test_json"
+ViashParseJsonBash <"$test_json"
 
 echo "=== Test 1: Basic key-value pairs ==="
 test_equal "par_input" "$par_input" "file.txt"
