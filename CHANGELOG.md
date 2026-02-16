@@ -6,6 +6,8 @@
 
 * `Nextflowrunner`: fix publishing of directories when the output file name template contains a trailing slash (PR #867).
 
+* `Logging`: Reduce log level for fetching repositories from info to debug (PR #871).
+
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
 This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
