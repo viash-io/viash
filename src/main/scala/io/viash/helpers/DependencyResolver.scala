@@ -300,7 +300,7 @@ object DependencyResolver extends Logging {
   }
 
   // Handle dependencies of dependencies. For a given already built component, get their dependencies, copy them to our new target folder and recurse into these.
-  def recurseBuiltDependencies(output: Path, repoPath: Path, builtDependencyPath: String, dependency: Dependency, dependencySourcePath: Option[Path] = None, depth: Int = 0): Unit = {
+  def recurseBuiltDependencies(output: Path, repoPath: Path, builtDependencyPath: String, dependency: Dependency, dependencySourceDestPath: Option[(Path, Path)] = None, depth: Int = 0): Unit = {
     import scala.jdk.CollectionConverters._
 
     // Limit recursion depth to prevent infinite loops in e.g. cross dependencies (TODO)
@@ -309,7 +309,7 @@ object DependencyResolver extends Logging {
 
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
     val (dependencyPaths, relativeOutput) = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
-    logger.debug(s"Paths to relativize: dependencySourcePath: $dependencySourcePath, relativeOutput: $relativeOutput")
+    logger.debug(s"\nPaths to relativize: dependencySourcePath: $dependencySourceDestPath, relativeOutput: $relativeOutput")
     
     // remove the trailing path parts as far as relativeOutputPath matches the dependencySourcePath
     // dependencySourcePath: a/b/c/d/e
@@ -319,16 +319,19 @@ object DependencyResolver extends Logging {
     //   - left: the the path where the dependency is stored down to common root, matching to 'target'
     //   - right: the original 'target' folder name
     // this is needed to relativize paths correctly when resolving a local dependency of this dependency
-    val dependencySourceParts = dependencySourcePath.map { dsp =>
+    val dependencySourceParts = dependencySourceDestPath.map { (dsp, ddp) =>
       val dspParts = dsp.iterator().asScala.toList.map(p => Some(p)).reverse
+      val ddpParts = ddp.iterator().asScala.toList.map(p => Some(p)).reverse
       val relativeOutputPath = Paths.get(relativeOutput).iterator().asScala.toList.map(p => Some(p)).reverse
       // Find the first part that is not in the relative output path
-      val commonParts = dspParts.zipAll(relativeOutputPath, None, None).dropWhile{ case (a, b) => a == b }
+      val commonSourceParts = dspParts.zipAll(relativeOutputPath, None, None).dropWhile{ case (a, b) => a == b }
+      val commonDestParts = ddpParts.zipAll(relativeOutputPath, None, None).dropWhile{ case (a, b) => a == b }
 
-      val leftPath = commonParts.flatMap(_._1).reverse.fold(dsp.getRoot())((p1, p2) => p1.resolve(p2))
-      val rightPath = commonParts.flatMap(_._2).reverse.reduceOption((p1, p2) => p1.resolve(p2)).getOrElse(Paths.get("")) // if there is no right part, use empty path
+      val leftSourcePath = commonSourceParts.flatMap(_._1).reverse.fold(dsp.getRoot())((p1, p2) => p1.resolve(p2))
+      val leftDestPath = commonDestParts.flatMap(_._1).reverse.fold(ddp.getRoot())((p1, p2) => p1.resolve(p2))
+      val rightPath = commonSourceParts.flatMap(_._2).reverse.reduceOption((p1, p2) => p1.resolve(p2)).getOrElse(Paths.get("")) // if there is no right part, use empty path
       
-      (leftPath, rightPath)
+      (leftSourcePath, leftDestPath, rightPath)
     }
     logger.debug(s"dependencySourceParts: $dependencySourceParts")
 
@@ -346,7 +349,7 @@ object DependencyResolver extends Logging {
       IO.copyFolder(sourcePath, destPath)
 
       // Check for more dependencies
-      recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, Some(sourcePath), depth + 1)
+      recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, Some((sourcePath, destPath)), depth + 1)
     }
   }
 
