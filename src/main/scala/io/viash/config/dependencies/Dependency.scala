@@ -159,7 +159,7 @@ object Dependency extends Logging {
   def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency, remoteLocalDependencyResolver: Option[(Path, Path, Path)]): (Path, Path) = {
     import scala.jdk.CollectionConverters._
 
-    logger.debug(s"getSourceAndDestinationFromWrittenPath: dependencyPath: $dependencyPath, output: $output, repoPath: $repoPath, mainDependency: $mainDependency, remoteLocalDependencyResolver: $remoteLocalDependencyResolver")
+    logger.trace(s"getSourceAndDestinationFromWrittenPath: dependencyPath: $dependencyPath, output: $output, repoPath: $repoPath, mainDependency: $mainDependency, remoteLocalDependencyResolver: $remoteLocalDependencyResolver")
 
     val defaultSourcePath = repoPath.resolve(dependencyPath)
     val (sourcePath, relativePath) = if (defaultSourcePath.toFile().exists()) {
@@ -199,15 +199,15 @@ object Dependency extends Logging {
       // Drop the other "target" folder from the found path. This can be multiple folders too
       val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
         .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
-      logger.debug(s"destinationPath case 1: output: $output, relativePath: $relativePath")
+      logger.trace(s"destinationPath case 1: output: $output, relativePath: $relativePath")
       output.resolve(relativePath)
     } else if (remoteLocalDependencyResolver.isDefined && relativePath.isDefined) {
-      logger.debug(s"destinationPath case 2: remoteLocalDependencyResolver._2: ${remoteLocalDependencyResolver.get._2}, relativePath: $relativePath")
+      logger.trace(s"destinationPath case 2: remoteLocalDependencyResolver._2: ${remoteLocalDependencyResolver.get._2}, relativePath: $relativePath")
       remoteLocalDependencyResolver.get._2.resolve(relativePath.get)
     } else {
       val subPath = mainDependency.getRelativePath(sourcePath)
         .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
-      logger.debug(s"destinationPath case 3: output: $output, subPath: $subPath")
+      logger.trace(s"destinationPath case 3: output: $output, subPath: $subPath")
       output.resolve("dependencies").resolve(subPath)
     }
     logger.debug(s"Determined destination path: $destinationPath")
