@@ -309,7 +309,7 @@ object DependencyResolver extends Logging {
 
     // this returns paths relative to `repoPath` of dependencies to be copied to `output`
     val (dependencyPaths, relativeOutput) = getSparseDependencyInfo(builtDependencyPath + "/.config.vsh.yaml")
-    logger.debug(s"\nPaths to relativize: dependencySourcePath: $dependencySourceDestPath, relativeOutput: $relativeOutput")
+    debug(s"\nPaths to relativize: dependencySourcePath: $dependencySourceDestPath, relativeOutput: $relativeOutput")
     
     // remove the trailing path parts as far as relativeOutputPath matches the dependencySourcePath
     // dependencySourcePath: a/b/c/d/e
@@ -333,7 +333,7 @@ object DependencyResolver extends Logging {
       
       (leftSourcePath, leftDestPath, rightPath)
     }
-    logger.debug(s"dependencySourceParts: $dependencySourceParts")
+    debug(s"dependencySourceParts: $dependencySourceParts")
 
     for (dp <- dependencyPaths) {
       // Get the source & destination path for the dependency, functionality depends whether it was a previous dependency or not.
