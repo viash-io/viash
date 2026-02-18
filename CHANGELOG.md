@@ -6,7 +6,7 @@
 
 * `Nextflowrunner`: fix publishing of directories when the output file name template contains a trailing slash (PR #867).
 
-* `Dependencies`: Fix an edge case during dependency resolving (PR# 870). Local dependencies of dependencies of local dependencies were resolved incorrectly and resulted in a wrongly resolved destination path.
+* `Dependencies`: Fix an edge case during dependency resolving (PR #870). Local dependencies of dependencies of local dependencies were resolved incorrectly and resulted in a wrongly resolved destination path.
 
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
