@@ -43,9 +43,62 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   def textBashScript(text: String): List[BashScript] = 
     List(BashScript(text = Some(text), dest = Some("./script.sh")))
 
-  test("Prepare package 1") {
-    val workingDir = createViashSubFolder(temporaryFolder, "pack1")
+  // Build a package with the given configs and return the working directory
+  def buildPackage(
+    packageName: String,
+    configs: List[(String, Config)]
+  ): Path = {
+    val workingDir = createViashSubFolder(temporaryFolder, packageName)
 
+    // Write all configs
+    configs.foreach { case (componentName, config) =>
+      writeTestConfig(workingDir.resolve(s"src/$componentName/config.vsh.yaml"), config)
+    }
+
+    // Build the namespace
+    val testOutput = TestHelper.testMain(
+      workingDir = Some(workingDir),
+      "ns", "build",
+      "-s", workingDir.resolve("src").toString(),
+      "-t", workingDir.resolve("target").toString()
+    )
+
+    assert(testOutput.stderr.strip == s"All ${configs.size} configs built successfully", "check build was successful")
+
+    // Verify executables
+    configs.foreach { case (componentName, config) =>
+      val executable = workingDir.resolve(s"target/executable/${config.name}/${config.name}").toFile()
+      assert(executable.exists, s"executable for ${config.name} should exist")
+      assert(executable.canExecute, s"executable for ${config.name} should be executable")
+    }
+
+    workingDir
+  }
+
+  // Test an executable's output, automatically building expected output based on component name
+  // comp1 -> "Hello from comp1\n"
+  // comp1b -> "Hello from comp1\nHello from comp1b\n"
+  // comp2 -> "Hello from comp1\nHello from comp1b\nHello from comp2\n"
+  def assertExecutableOutput(workingDir: Path, componentName: String): Unit = {
+    val numberPattern = "comp(\\d+)([a-z]*)".r
+    val expectedOutput = componentName match {
+      case numberPattern(num, suffix) =>
+        val n = num.toInt
+        val components = (1 to n).flatMap { i =>
+          if ((i < n) || (suffix == "b")) List(s"comp$i", s"comp${i}b")
+          else List(s"comp$i")
+        }
+        components.map(c => s"Hello from $c").mkString("", "\n", "\n")
+      case _ => ""
+    }
+    
+    val executable = workingDir.resolve(s"target/executable/$componentName/$componentName").toFile()
+    val result = Exec.runCatch(Seq(executable.toString))
+    assert(result.output == expectedOutput, s"output for $componentName should match")
+    assert(result.exitValue == 0, s"exit value for $componentName should be 0")
+  }
+
+  test("Prepare package 1") {
     val conf1 = Config(
       name = "comp1",
       resources = textBashScript("echo 'Hello from comp1'"),
@@ -61,44 +114,17 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       resources = textBashScript("$dep_comp1\necho 'Hello from comp1b'"),
     )
 
-    writeTestConfig(workingDir.resolve("src/comp1/config.vsh.yaml"), conf1)
-    writeTestConfig(workingDir.resolve("src/comp1b/config.vsh.yaml"), conf1b)
+    val workingDir = buildPackage("pack1", List(
+      ("comp1", conf1),
+      ("comp1b", conf1b)
+    ))
 
-    val testOutput = TestHelper.testMain(
-      workingDir = Some(workingDir),
-      "ns", "build",
-      "-s", workingDir.resolve("src").toString(),
-      "-t", workingDir.resolve("target").toString()
-    )
-
-    assert(testOutput.stderr.strip == "All 2 configs built successfully", "check build was successful")
-
-    val executable1 = workingDir.resolve("target/executable/comp1/comp1").toFile()
-    val executable1b = workingDir.resolve("target/executable/comp1b/comp1b").toFile()
-    assert(executable1.exists)
-    assert(executable1.canExecute)
-    assert(executable1b.exists)
-    assert(executable1b.canExecute)
-
-    // check output when running
-    val out1 = Exec.runCatch(
-      Seq(executable1.toString)
-    )
-
-    assert(out1.output == "Hello from comp1\n")
-    assert(out1.exitValue == 0)
-
-    val out1b = Exec.runCatch(
-      Seq(executable1b.toString)
-    )
-
-    assert(out1b.output == "Hello from comp1\nHello from comp1b\n")
-    assert(out1b.exitValue == 0)
+    // Test outputs
+    assertExecutableOutput(workingDir, "comp1")
+    assertExecutableOutput(workingDir, "comp1b")
   }
 
   test("Prepare package 2") {
-    val workingDir = createViashSubFolder(temporaryFolder, "pack2")
-
     val conf2 = Config(
       name = "comp2",
       dependencies = List(
@@ -120,43 +146,17 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       resources = textBashScript("$dep_comp2\necho 'Hello from comp2b'"),
     )
 
-    writeTestConfig(workingDir.resolve("src/comp2/config.vsh.yaml"), conf2)
-    writeTestConfig(workingDir.resolve("src/comp2b/config.vsh.yaml"), conf2b)
+    val workingDir = buildPackage("pack2", List(
+      ("comp2", conf2),
+      ("comp2b", conf2b)
+    ))
 
-    val testOutput = TestHelper.testMain(
-      workingDir = Some(workingDir),
-      "ns", "build",
-      "-s", workingDir.resolve("src").toString(),
-      "-t", workingDir.resolve("target").toString()
-    )
-
-    assert(testOutput.stderr.strip == "All 2 configs built successfully", "check build was successful")
-
-    val executable2 = workingDir.resolve("target/executable/comp2/comp2").toFile()
-    val executable2b = workingDir.resolve("target/executable/comp2b/comp2b").toFile()
-    assert(executable2.exists)
-    assert(executable2.canExecute)
-    assert(executable2b.exists)
-    assert(executable2b.canExecute)
-
-    // check output when running
-    val out2 = Exec.runCatch(
-      Seq(executable2.toString)
-    )
-    assert(out2.output == "Hello from comp1\nHello from comp1b\nHello from comp2\n")
-    assert(out2.exitValue == 0)
-
-    val out2b = Exec.runCatch(
-      Seq(executable2b.toString)
-    )
-
-    assert(out2b.output == "Hello from comp1\nHello from comp1b\nHello from comp2\nHello from comp2b\n")
-    assert(out2b.exitValue == 0)
+    // Test outputs
+    assertExecutableOutput(workingDir, "comp2")
+    assertExecutableOutput(workingDir, "comp2b")
   }
 
   test("Prepare package 3") {
-    val workingDir = createViashSubFolder(temporaryFolder, "pack3")
-
     val conf3 = Config(
       name = "comp3",
       dependencies = List(
@@ -177,45 +177,17 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       resources = textBashScript("$dep_comp3\necho 'Hello from comp3b'"),
     )
 
-    writeTestConfig(workingDir.resolve("src/comp3/config.vsh.yaml"), conf3)
-    writeTestConfig(workingDir.resolve("src/comp3b/config.vsh.yaml"), conf3b)
+    val workingDir = buildPackage("pack3", List(
+      ("comp3", conf3),
+      ("comp3b", conf3b)
+    ))
 
-    val testOutput = TestHelper.testMain(
-      workingDir = Some(workingDir),
-      "ns", "build",
-      "-s", workingDir.resolve("src").toString(),
-      "-t", workingDir.resolve("target").toString()
-    )
-
-    assert(testOutput.stderr.strip == "All 2 configs built successfully", "check build was successful")
-
-    
-    val executable3 = workingDir.resolve("target/executable/comp3/comp3").toFile()
-    val executable3b = workingDir.resolve("target/executable/comp3b/comp3b").toFile()
-    assert(executable3.exists)
-    assert(executable3.canExecute)
-    assert(executable3b.exists)
-    assert(executable3b.canExecute)
-
-    // check output when running
-    val out3 = Exec.runCatch(
-      Seq(executable3.toString)
-    )
-
-    assert(out3.output == "Hello from comp1\nHello from comp1b\nHello from comp2\nHello from comp2b\nHello from comp3\n")
-    assert(out3.exitValue == 0)
-
-    val out3b = Exec.runCatch(
-      Seq(executable3b.toString)
-    )
-
-    assert(out3b.output == "Hello from comp1\nHello from comp1b\nHello from comp2\nHello from comp2b\nHello from comp3\nHello from comp3b\n")
-    assert(out3b.exitValue == 0)
+    // Test outputs
+    assertExecutableOutput(workingDir, "comp3")
+    assertExecutableOutput(workingDir, "comp3b")
   }
 
   test("Prepare package 4") {
-    val workingDir = createViashSubFolder(temporaryFolder, "pack4")
-
     val conf4 = Config(
       name = "comp4",
       dependencies = List(
@@ -236,43 +208,18 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       resources = textBashScript("$dep_comp4\necho 'Hello from comp4b'"),
     )
 
-    writeTestConfig(workingDir.resolve("src/comp4/config.vsh.yaml"), conf4)
-    writeTestConfig(workingDir.resolve("src/comp4b/config.vsh.yaml"), conf4b)
+    val workingDir = buildPackage("pack4", List(
+      ("comp4", conf4),
+      ("comp4b", conf4b)
+    ))
 
-    val testOutput = TestHelper.testMain(
-      workingDir = Some(workingDir),
-      "ns", "build",
-      "-s", workingDir.resolve("src").toString(),
-      "-t", workingDir.resolve("target").toString()
-    )
-
-    assert(testOutput.stderr.strip == "All 2 configs built successfully", "check build was successful")
-
-    val executable4 = workingDir.resolve("target/executable/comp4/comp4").toFile()
-    val executable4b = workingDir.resolve("target/executable/comp4b/comp4b").toFile()
-    assert(executable4.exists)
-    assert(executable4.canExecute)
-    assert(executable4b.exists)
-    assert(executable4b.canExecute)
-
-    // check output when running
-    val out4 = Exec.runCatch(
-      Seq(executable4.toString)
-    )
-
-    assert(out4.output == "Hello from comp1\nHello from comp1b\nHello from comp2\nHello from comp2b\nHello from comp3\nHello from comp3b\nHello from comp4\n")
-    assert(out4.exitValue == 0)
-
-    val out4b = Exec.runCatch(
-      Seq(executable4b.toString)
-    )
-
-    assert(out4b.output == "Hello from comp1\nHello from comp1b\nHello from comp2\nHello from comp2b\nHello from comp3\nHello from comp3b\nHello from comp4\nHello from comp4b\n")
-    assert(out4b.exitValue == 0)
+    // Test outputs
+    assertExecutableOutput(workingDir, "comp4")
+    assertExecutableOutput(workingDir, "comp4b")
   }
 
   override def afterAll(): Unit = {
-    IO.copyFolder(temporaryFolder, Path.of("/home/hendrik/DI/temp/dep_tests2/"))
+    // IO.copyFolder(temporaryFolder, Path.of("/home/hendrik/DI/temp/dep_tests2/"))
     IO.deleteRecursively(temporaryFolder)
   }
 }
