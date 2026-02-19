@@ -219,7 +219,6 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   override def afterAll(): Unit = {
-    // IO.copyFolder(temporaryFolder, Path.of("/home/hendrik/DI/temp/dep_tests2/"))
     IO.deleteRecursively(temporaryFolder)
   }
 }
