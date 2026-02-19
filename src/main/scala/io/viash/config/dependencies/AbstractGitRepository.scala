@@ -90,7 +90,7 @@ trait AbstractGitRepository extends Repository with Logging {
   // If a new one is checked out, copy it to the cache
   // If a cached repo is used, copy it to a new temporary folder
   def getSparseRepoInTemp(): AbstractGitRepository = {
-    info(s"Fetching repo for $uri")
+    debug(s"Fetching repo for $uri")
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
         debug(s"Using cached repo from ${repo.localPath}")
