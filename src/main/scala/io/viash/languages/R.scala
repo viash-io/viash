@@ -45,7 +45,8 @@ object R extends Language {
         // Extract the section
         val sectionExtract = s"$dest <- if (is.null(.viash_json_data[['$dest']])) list() else .viash_json_data[['$dest']]"
         
-        // Generate type conversions for long arguments (which come in as character due to bigint_as_char = TRUE)
+        // Generate type conversions for long arguments (which are parsed as
+        // character strings for values > 2^53 to preserve precision)
         val longConversions = args.collect {
           case arg: LongArgument =>
             val name = arg.plainName
