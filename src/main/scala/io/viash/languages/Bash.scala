@@ -41,7 +41,13 @@ object Bash extends Language {
 
     useJq match {
       case Some(true) =>
-        generateJqInjectionMods(argsMetaAndDeps)
+        val parseCode = s"""|${viashParseJsonCode}
+          |
+          |# Parse JSON parameters using jq
+          |_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
+          |ViashParseJsonBash <<< "$$_viash_json_content"
+          |""".stripMargin
+        ScriptInjectionMods(params = parseCode)
       case Some(false) =>
         generateCompatInjectionMods(argsMetaAndDeps)
       case None =>
@@ -88,21 +94,6 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     ScriptInjectionMods(params = fullCode)
   }
 
-  /**
-   * Generate injection mods for jq mode:
-   * Uses jq to parse JSON and populate bash variables directly.
-   * Multiple-value arguments are stored as bash arrays.
-   */
-  private def generateJqInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
-    val parseCode = s"""${viashParseJsonCode}
-
-# Parse JSON parameters using jq
-_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
-ViashParseJsonBash <<< "$$_viash_json_content"
-"""
-    ScriptInjectionMods(params = parseCode)
-  }
-
   def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
     // Determine use_jq setting from the BashScript resource
     val useJq = config.resources.collectFirst {
@@ -113,18 +104,11 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     val parSet = argsMetaAndDeps.flatMap { case (_, params) =>
       params.map { par =>
         val value = getExampleValue(par, useArrays)
-        if (par.multiple) {
-          if (useArrays) {
-            // jq mode: bash array
-            val values = value match {
-              case v if v.isEmpty => ""
-              case v => v
-            }
-            s"""${par.par}=($values)"""
-          } else {
-            // compat mode: IFS-separated string
-            s"""${par.par}='$value'"""
-          }
+        if (value.isEmpty) {
+          return ""
+        } else if (par.multiple && par.direction != ArgumentDirection.Output && useArrays) {
+          // jq mode with arrays
+          s"""${par.par}=($value)"""
         } else {
           s"""${par.par}='$value'"""
         }
@@ -138,7 +122,7 @@ ViashParseJsonBash <<< "$$_viash_json_content"
   private def getExampleValue(arg: Argument[_], useArrays: Boolean = true): String = {
     val values = getArgumentValues(arg)
 
-    if (arg.multiple) {
+    if (arg.multiple && arg.direction != ArgumentDirection.Output) {
       if (useArrays) {
         values.map(v => s"'$v'").mkString(" ")
       } else {
