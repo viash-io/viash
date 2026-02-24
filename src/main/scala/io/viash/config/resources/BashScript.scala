@@ -33,6 +33,14 @@ case class BashScript(
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
 
+  @description("""Whether to use jq for JSON parameter parsing and store multiple-value arguments as Bash arrays.
+               |  - `true`: Use jq for JSON parsing. Arguments with `multiple: true` are stored as Bash arrays (e.g. `par_input=("a" "b" "c")`). Requires jq to be installed.
+               |  - `false`: Use the built-in JSON parser. Arguments with `multiple: true` are stored as separator-delimited strings (e.g. `par_input="a;b;c"`), using the argument's `multiple_sep` (default `";"`).
+               |  - Not specified (default): Same behavior as `false`, but a deprecation warning is shown at build time indicating that the default will change to `true` in a future version of Viash.""")
+  @example("use_jq: true", "yaml")
+  @since("Viash 0.10.0")
+  use_jq: Option[Boolean] = None,
+
   @description("Specifies the resource as a Bash script.")
   `type`: String = "bash_script"
 ) extends Script {

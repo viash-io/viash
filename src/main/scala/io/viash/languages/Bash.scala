@@ -17,10 +17,10 @@
 
 package io.viash.languages
 
-import io.viash.helpers.Resources
+import io.viash.helpers.{Resources, Logger}
 import io.viash.config.arguments._
 import io.viash.config.Config
-import io.viash.config.resources.ScriptInjectionMods
+import io.viash.config.resources.{ScriptInjectionMods, BashScript}
 
 object Bash extends Language {
   val id: String = "bash"
@@ -29,29 +29,102 @@ object Bash extends Language {
   val commentStr: String = "#"
   val executor: Seq[String] = Seq("bash")
   val viashParseJsonCode: String = Resources.read("languages/bash/ViashParseJson.sh")
+  val viashParseJsonCompatCode: String = Resources.read("languages/bash/ViashParseJsonCompatibility.sh")
+
+  private val logger = Logger("Bash")
 
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    val fullCode = s"""${viashParseJsonCode}
+    // Determine use_jq setting from the BashScript resource
+    val useJq = config.resources.collectFirst {
+      case bs: BashScript => bs.use_jq
+    }.flatten
+
+    useJq match {
+      case Some(true) =>
+        generateJqInjectionMods(argsMetaAndDeps)
+      case Some(false) =>
+        generateCompatInjectionMods(argsMetaAndDeps)
+      case None =>
+        logger.warn(
+          "Deprecation warning: 'use_jq' is not set for bash_script resource. " +
+          "Currently defaulting to compatibility mode (built-in parser, separator-delimited strings for multiple-value arguments). " +
+          "In a future version of Viash, the default will change to 'use_jq: true', " +
+          "which requires jq to be installed. " +
+          "Please set 'use_jq: true' or 'use_jq: false' explicitly in your bash_script resource to silence this warning."
+        )
+        generateCompatInjectionMods(argsMetaAndDeps)
+    }
+  }
+
+  /**
+   * Generate injection mods for compatibility mode:
+   * Uses the built-in bash JSON parser, then converts multiple-value
+   * arguments from bash arrays to separator-delimited strings.
+   */
+  private def generateCompatInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+    val parseCode = s"""${viashParseJsonCompatCode}
 
 # Parse JSON parameters
 _viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
 ViashParseJsonBash <<< "$$_viash_json_content"
-
 """
+
+    // Convert multiple-value arguments from arrays to IFS-separated strings
+    val multipleArgs = argsMetaAndDeps.toList.flatMap { case (_, args) =>
+      args.collect {
+        case arg if arg.multiple =>
+          val sep = arg.multiple_sep
+          s"""${arg.par}="$$(IFS='${sep}'; printf '%s' "$${${arg.par}[*]}")""""
+      }
+    }
+
+    val fullCode = if (multipleArgs.nonEmpty) {
+      parseCode + "\n# Convert arrays to separator-delimited strings for compatibility\n" +
+        multipleArgs.mkString("\n") + "\n"
+    } else {
+      parseCode
+    }
+
     ScriptInjectionMods(params = fullCode)
   }
 
+  /**
+   * Generate injection mods for jq mode:
+   * Uses jq to parse JSON and populate bash variables directly.
+   * Multiple-value arguments are stored as bash arrays.
+   */
+  private def generateJqInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+    val parseCode = s"""${viashParseJsonCode}
+
+# Parse JSON parameters using jq
+_viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
+ViashParseJsonBash <<< "$$_viash_json_content"
+"""
+    ScriptInjectionMods(params = parseCode)
+  }
+
   def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+    // Determine use_jq setting from the BashScript resource
+    val useJq = config.resources.collectFirst {
+      case bs: BashScript => bs.use_jq
+    }.flatten
+    val useArrays = useJq.contains(true)
+
     val parSet = argsMetaAndDeps.flatMap { case (_, params) =>
       params.map { par =>
-        val value = getExampleValue(par)
+        val value = getExampleValue(par, useArrays)
         if (par.multiple) {
-          // For multiple values, create a bash array
-          val values = value match {
-            case v if v.isEmpty => ""
-            case v => v
+          if (useArrays) {
+            // jq mode: bash array
+            val values = value match {
+              case v if v.isEmpty => ""
+              case v => v
+            }
+            s"""${par.par}=($values)"""
+          } else {
+            // compat mode: IFS-separated string
+            s"""${par.par}='$value'"""
           }
-          s"""${par.par}=($values)"""
         } else {
           s"""${par.par}='$value'"""
         }
@@ -62,11 +135,15 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     ScriptInjectionMods(params = paramsCode)
   }
 
-  private def getExampleValue(arg: Argument[_]): String = {
+  private def getExampleValue(arg: Argument[_], useArrays: Boolean = true): String = {
     val values = getArgumentValues(arg)
-    
+
     if (arg.multiple) {
-      values.map(v => s"'$v'").mkString(" ")
+      if (useArrays) {
+        values.map(v => s"'$v'").mkString(" ")
+      } else {
+        values.mkString(arg.multiple_sep)
+      }
     } else {
       values.headOption.getOrElse("")
     }
