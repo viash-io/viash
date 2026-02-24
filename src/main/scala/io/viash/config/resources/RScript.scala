@@ -33,6 +33,14 @@ case class RScript(
   is_executable: Option[Boolean] = Some(true),
   parent: Option[URI] = None,
 
+  @description("""Whether to use the jsonlite R package for JSON parameter parsing.
+               |  - `true`: Use only jsonlite for JSON parsing. An error will be raised if jsonlite is not installed.
+               |  - `false`: Use only the built-in JSON parser. No deprecation warning will be shown.
+               |  - Not specified (default): Use jsonlite if available, otherwise fall back to the built-in parser with a deprecation warning that jsonlite will be required in a future version of Viash.""")
+  @example("use_jsonlite: true", "yaml")
+  @since("Viash 0.10.0")
+  use_jsonlite: Option[Boolean] = None,
+
   @description("Specifies the resource as a R script.")
   `type`: String = "r_script"
 ) extends Script {

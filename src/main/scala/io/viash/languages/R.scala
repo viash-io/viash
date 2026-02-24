@@ -17,10 +17,10 @@
 
 package io.viash.languages
 
-import io.viash.helpers.Resources
+import io.viash.helpers.{Resources, Logger}
 import io.viash.config.arguments._
 import io.viash.config.Config
-import io.viash.config.resources.ScriptInjectionMods
+import io.viash.config.resources.{ScriptInjectionMods, RScript}
 
 object R extends Language {
   val id: String = "r"
@@ -28,14 +28,39 @@ object R extends Language {
   val extensions: Seq[String] = Seq(".R", ".r")
   val commentStr: String = "#"
   val executor: Seq[String] = Seq("Rscript")
+  val viashParseJsonHybridCode: String = Resources.read("languages/r/ViashParseJsonHybrid.R")
   val viashParseJsonCode: String = Resources.read("languages/r/ViashParseJson.R")
 
+  private val logger = Logger("R")
+
   def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
-    // Extract only the functions, not the main execution part  
-    val helperFunctions = viashParseJsonCode
-      .split("\n")
-      .takeWhile(line => !line.contains("if (!interactive() && identical(environment(), globalenv()))"))
-      .mkString("\n")
+    // Determine use_jsonlite setting from the RScript resource
+    val useJsonlite = config.resources.collectFirst {
+      case rs: RScript => rs.use_jsonlite
+    }.flatten
+
+    // Select the appropriate parser code based on the use_jsonlite setting:
+    //   Some(true)  -> jsonlite only (no fallback)
+    //   Some(false) -> hybrid (jsonlite preferred, custom parser fallback), no warning
+    //   None        -> hybrid + build-time deprecation warning
+    val helperFunctions = useJsonlite match {
+      case Some(true) =>
+        // jsonlite-only: small wrapper, no fallback parser
+        viashParseJsonCode
+      case Some(false) =>
+        // Hybrid: jsonlite preferred with custom parser fallback, no warning
+        viashParseJsonHybridCode
+      case None =>
+        // Hybrid + build-time deprecation warning
+        logger.warn(
+          "Deprecation warning: 'use_jsonlite' is not set for r_script resource. " +
+          "Currently defaulting to a hybrid mode (jsonlite preferred, built-in parser fallback). " +
+          "In a future version of Viash, the default will change to 'use_jsonlite: true', " +
+          "which requires the jsonlite R package to be installed. " +
+          "Please set 'use_jsonlite: true' or 'use_jsonlite: false' explicitly in your r_script resource to silence this warning."
+        )
+        viashParseJsonHybridCode
+    }
     
     val paramsCode = if (argsMetaAndDeps.nonEmpty) {
       // Parse JSON once and extract all sections
