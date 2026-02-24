@@ -18,13 +18,23 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
     language: String,
     parserFileName: String
   ): (Path, Path) = {
+    setupTempDirWithParserFiles(
+      language,
+      s"test_ViashParseJson.$parserFileName",
+      List(s"ViashParseJson.$parserFileName")
+    )
+  }
+
+  // Helper to set up temp dir with explicit test and parser file names
+  private def setupTempDirWithParserFiles(
+    language: String,
+    testFileName: String,
+    parserFileNames: List[String]
+  ): (Path, Path) = {
     val tempDir = Files.createTempDirectory("viash_json_parser_test_")
     
-    val testScriptSrc = projectRoot.resolve(s"src/test/resources/io/viash/helpers/languages/$language/test_ViashParseJson.$parserFileName")
-    val parserScriptSrc = projectRoot.resolve(s"src/main/resources/io/viash/languages/$language/ViashParseJson.$parserFileName")
-    
-    val testSubPath = s"src/test/resources/io/viash/helpers/languages/$language/test_ViashParseJson.$parserFileName"
-    val parserSubPath = s"src/main/resources/io/viash/languages/$language/ViashParseJson.$parserFileName"
+    val testScriptSrc = projectRoot.resolve(s"src/test/resources/io/viash/helpers/languages/$language/$testFileName")
+    val testSubPath = s"src/test/resources/io/viash/helpers/languages/$language/$testFileName"
     
     // Create directory structure for test file
     val testDir = tempDir.resolve(testSubPath).getParent
@@ -32,11 +42,15 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
     val testScript = tempDir.resolve(testSubPath)
     Files.copy(testScriptSrc, testScript, StandardCopyOption.REPLACE_EXISTING)
     
-    // Create directory structure for parser file
-    val parserDir = tempDir.resolve(parserSubPath).getParent
-    Files.createDirectories(parserDir)
-    val parserScript = tempDir.resolve(parserSubPath)
-    Files.copy(parserScriptSrc, parserScript, StandardCopyOption.REPLACE_EXISTING)
+    // Create directory structure for parser file(s)
+    for (parserFileName <- parserFileNames) {
+      val parserScriptSrc = projectRoot.resolve(s"src/main/resources/io/viash/languages/$language/$parserFileName")
+      val parserSubPath = s"src/main/resources/io/viash/languages/$language/$parserFileName"
+      val parserDir = tempDir.resolve(parserSubPath).getParent
+      Files.createDirectories(parserDir)
+      val parserScript = tempDir.resolve(parserSubPath)
+      Files.copy(parserScriptSrc, parserScript, StandardCopyOption.REPLACE_EXISTING)
+    }
     
     (tempDir, testScript)
   }
@@ -76,8 +90,12 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("R JSON parser") {
-    val (tempDir, testScript) = setupTempDirWithParser("r", "R")
+  test("R JSON parser (hybrid)") {
+    val (tempDir, testScript) = setupTempDirWithParserFiles(
+      "r",
+      "test_ViashParseJsonHybrid.R",
+      List("ViashParseJsonHybrid.R")
+    )
     
     try {
       val result = Exec.runCatchPath(
@@ -85,7 +103,30 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
         cwd = Some(tempDir)
       )
       
-      assert(result.exitValue == 0, s"R JSON parser test failed:\n${result.output}")
+      assert(result.exitValue == 0, s"R JSON parser (hybrid) test failed:\n${result.output}")
+    } finally {
+      cleanupTempDir(tempDir)
+    }
+  }
+
+  test("R JSON parser (jsonlite)") {
+    // Check if jsonlite is available
+    val jsonliteCheck = Exec.runCatch(List("Rscript", "-e", "library(jsonlite)"))
+    assume(jsonliteCheck.exitValue == 0, "jsonlite not available, skipping jsonlite-only R test")
+
+    val (tempDir, testScript) = setupTempDirWithParserFiles(
+      "r",
+      "test_ViashParseJson.R",
+      List("ViashParseJson.R")
+    )
+    
+    try {
+      val result = Exec.runCatchPath(
+        List("Rscript", testScript.toString),
+        cwd = Some(tempDir)
+      )
+      
+      assert(result.exitValue == 0, s"R JSON parser (jsonlite) test failed:\n${result.output}")
     } finally {
       cleanupTempDir(tempDir)
     }
