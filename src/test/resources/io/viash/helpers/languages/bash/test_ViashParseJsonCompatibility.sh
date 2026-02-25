@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# Test suite for viash_parse_json Bash function
-echo "Running viash_parse_json Bash unit tests..."
+# Test suite for viash_parse_json Bash function (compatibility parser)
+echo "Running viash_parse_json Bash compatibility unit tests..."
 
 # Load the parser
-source src/main/resources/io/viash/languages/bash/ViashParseJson.sh
+source src/main/resources/io/viash/languages/bash/ViashParseJsonCompatibility.sh
 
 # Colors for test output
 RED='\033[0;31m'
@@ -53,8 +53,8 @@ cat >"$test_json" <<'EOF'
     },
     "path_with_spaces": "/path/with spaces/file.txt",
     "quotes": "She said \"hello\"",
-    "newlines": "line1\\nline2",
-    "tabs": "col1\\tcol2",
+    "newlines": "line1\nline2",
+    "tabs": "col1\tcol2",
     "string": "text",
     "integer": 123,
     "float": 3.14,
@@ -114,10 +114,9 @@ echo
 echo "=== Test 4: Quoted strings ==="
 test_equal "par_path_with_spaces" "$par_path_with_spaces" "/path/with spaces/file.txt"
 test_equal "par_quotes" "$par_quotes" "She said \"hello\""
-# Note: JSON \\n (literal backslash-n) is correctly preserved by jq
-# This matches Viash YAML parser behavior where \n in configs is a literal backslash-n
-test_equal "par_newlines" "$par_newlines" 'line1\nline2'
-test_equal "par_tabs" "$par_tabs" 'col1\tcol2'
+# Note: In bash, \n and \t are literal strings, not escape sequences
+test_equal "par_newlines" "$par_newlines" "line1\nline2"
+test_equal "par_tabs" "$par_tabs" "col1\tcol2"
 
 echo
 echo "=== Test 5: Type conversions ==="
@@ -200,8 +199,8 @@ echo "=== Test 10: Numeric edge cases ==="
 ViashParseJsonBash <<< '{"par":{"neg":-7,"sci":1.5e10,"neg_sci":-2.5E-3,"big":999999999}}'
 
 test_equal "numeric: neg" "$par_neg" "-7"
-test_equal "numeric: sci" "$par_sci" "1.5E+10"
-test_equal "numeric: neg_sci" "$par_neg_sci" "-0.0025"
+test_equal "numeric: sci" "$par_sci" "1.5e10"
+test_equal "numeric: neg_sci" "$par_neg_sci" "-2.5E-3"
 test_equal "numeric: big" "$par_big" "999999999"
 
 ## ===================================================================

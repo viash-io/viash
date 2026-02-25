@@ -61,7 +61,15 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Bash JSON parser") {
-    val (tempDir, testScript) = setupTempDirWithParser("bash", "sh")
+    // Check if jq is available
+    val jqCheck = Exec.runCatch(List("jq", "--version"))
+    assume(jqCheck.exitValue == 0, "jq not available, skipping jq-based Bash test")
+
+    val (tempDir, testScript) = setupTempDirWithParserFiles(
+      "bash",
+      "test_ViashParseJson.sh",
+      List("ViashParseJson.sh")
+    )
     
     try {
       val result = Exec.runCatchPath(
@@ -69,7 +77,26 @@ class JsonParserTest extends AnyFunSuite with BeforeAndAfterAll {
         cwd = Some(tempDir)
       )
       
-      assert(result.exitValue == 0, s"Bash JSON parser test failed:\n${result.output}")
+      assert(result.exitValue == 0, s"Bash JSON parser (jq) test failed:\n${result.output}")
+    } finally {
+      cleanupTempDir(tempDir)
+    }
+  }
+
+  test("Bash JSON parser (compatibility)") {
+    val (tempDir, testScript) = setupTempDirWithParserFiles(
+      "bash",
+      "test_ViashParseJsonCompatibility.sh",
+      List("ViashParseJsonCompatibility.sh")
+    )
+    
+    try {
+      val result = Exec.runCatchPath(
+        List("bash", testScript.toString),
+        cwd = Some(tempDir)
+      )
+      
+      assert(result.exitValue == 0, s"Bash JSON parser (compatibility) test failed:\n${result.output}")
     } finally {
       cleanupTempDir(tempDir)
     }
