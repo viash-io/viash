@@ -102,15 +102,15 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     val useArrays = useJq.contains(true)
 
     val parSet = argsMetaAndDeps.flatMap { case (_, params) =>
-      params.map { par =>
+      params.flatMap { par =>
         val value = getExampleValue(par, useArrays)
         if (value.isEmpty) {
-          return ""
-        } else if (par.multiple && par.direction != ArgumentDirection.Output && useArrays) {
+          None
+        } else if (par.multiple && par.direction != Output && useArrays) {
           // jq mode with arrays
-          s"""${par.par}=($value)"""
+          Some(s"""${par.par}=($value)""")
         } else {
-          s"""${par.par}='$value'"""
+          Some(s"""${par.par}='$value'""")
         }
       }
     }
@@ -122,7 +122,7 @@ ViashParseJsonBash <<< "$$_viash_json_content"
   private def getExampleValue(arg: Argument[_], useArrays: Boolean = true): String = {
     val values = getArgumentValues(arg)
 
-    if (arg.multiple && arg.direction != ArgumentDirection.Output) {
+    if (arg.multiple && arg.direction != Output) {
       if (useArrays) {
         values.map(v => s"'$v'").mkString(" ")
       } else {
