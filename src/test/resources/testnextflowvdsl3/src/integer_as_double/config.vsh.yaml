@@ -16,6 +16,7 @@ arguments:
     example: 10.5
 resources:
   - type: bash_script
+    use_jq: true
     path: script.sh
 engines:
   - type: native

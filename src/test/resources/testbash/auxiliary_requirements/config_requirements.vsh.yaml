@@ -14,9 +14,11 @@ arguments:
 
 resources:
   - type: bash_script
+    use_jq: true
     path: ./check_requirements.sh
 test_resources:
   - type: bash_script
+    use_jq: true
     path: ./check_requirements_test.sh
 
 engines:

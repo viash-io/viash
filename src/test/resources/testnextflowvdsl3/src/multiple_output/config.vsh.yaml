@@ -15,6 +15,7 @@ arguments:
     example: output_*.txt
 resources:
   - type: bash_script
+    use_jq: true
     path: script.sh
 engines:
   - type: native

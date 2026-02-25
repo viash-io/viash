@@ -5,6 +5,7 @@ description: |
   Check setting of computational requirements
 resources:
   - type: bash_script
+    use_jq: true
     text: |
       if [ -n "$meta_cpus" ]; then
         echo "cpus: $meta_cpus"
@@ -19,6 +20,7 @@ resources:
       fi
 test_resources:
   - type: bash_script
+    use_jq: true
     path: "test_script.sh"
     text: |
       if [ -n "$meta_cpus" ] && [ -n "$meta_memory_mb" ]; then

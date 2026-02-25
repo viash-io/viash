@@ -3,8 +3,10 @@ description: |
   Test various ways of specifying resources and check they ended up being in the right place.
 resources:
   - type: bash_script
+    use_jq: true
     path: ./check_bash_version.sh
   - type: bash_script
+    use_jq: true
     path: ./code.sh
   - path: resource1.txt
   - path: ./resource2.txt

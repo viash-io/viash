@@ -12,6 +12,7 @@ arguments:
     required: true
 resources:
   - type: bash_script
+    use_jq: true
     text: ajv validate -s $par_schema $par_data
 engines:
   - type: docker
