@@ -8,6 +8,10 @@ engines:
   - type: native
   - type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - type: docker
     image: "bash:3.2"
     id: "throwawayimage"
@@ -15,4 +19,5 @@ engines:
     setup:
       - type: apk
         packages:
+          - jq
           - fortune

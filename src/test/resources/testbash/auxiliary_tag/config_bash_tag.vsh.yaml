@@ -13,13 +13,24 @@ engines:
   - id: "testtag1"
     type: docker
     image: "bash:5.0"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - id: "testtag2"
     type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - id: "testtargetimage1"
     type: docker
     image: "bash:5.0"
     setup:
+      - type: apk
+        packages:
+          - jq
       - type: docker
         run: [ ls ]
   - id: "testtargetimage2"
@@ -29,6 +40,9 @@ engines:
     target_registry: foo.io
     target_tag: 0.0.1
     setup:
+      - type: apk
+        packages:
+          - jq
       - type: docker
         run: [ ls ]
   - id: "testtargetimage3"
@@ -37,6 +51,9 @@ engines:
     target_image: bar
     target_tag: 0.0.2
     setup:
+      - type: apk
+        packages:
+          - jq
       - type: docker
         run: [ ls ]
 

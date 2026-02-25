@@ -22,6 +22,10 @@ engines:
   - type: native
   - type: docker
     image: nextflow/bash:latest
+    setup:
+      - type: apk
+        packages:
+          - jq
 runners:
   - type: executable
   - type: nextflow

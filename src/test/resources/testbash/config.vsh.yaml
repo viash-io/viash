@@ -104,6 +104,10 @@ engines:
     id: native
   - type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - type: docker
     id: throwawayimage
     image: "bash:3.2"
@@ -111,4 +115,5 @@ engines:
     setup:
       - type: apk
         packages:
+          - jq
           - fortune
