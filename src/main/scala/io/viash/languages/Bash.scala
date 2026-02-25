@@ -75,12 +75,19 @@ _viash_json_content=$$(cat "$$VIASH_WORK_PARAMS")
 ViashParseJsonBash <<< "$$_viash_json_content"
 """
 
-    // Convert multiple-value arguments from arrays to IFS-separated strings
+    // Convert multiple-value arguments from arrays to IFS-separated strings.
+    // Note: We must unset the array variable before reassigning as a scalar,
+    // because assigning a string to a bash array variable only sets index [0]
+    // while leaving other indices intact.
     val multipleArgs = argsMetaAndDeps.toList.flatMap { case (_, args) =>
       args.collect {
         case arg if arg.multiple =>
           val sep = arg.multiple_sep
-          s"""${arg.par}="$$(IFS='${sep}'; printf '%s' "$${${arg.par}[*]}")""""
+          val par = arg.par
+          s"""|_viash_tmp="$$(IFS='${sep}'; printf '%s' "$${${par}[*]}")"
+            |unset ${par}
+            |${par}="$$_viash_tmp"
+            |unset _viash_tmp""".stripMargin
       }
     }
 
