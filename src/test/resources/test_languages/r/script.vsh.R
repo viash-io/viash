@@ -5,6 +5,9 @@
 #' - type: docker
 #'   image: rocker/tidyverse:3.6
 #'   setup:
+#'     - type: apt
+#'       packages:
+#'         - jq
 #'     - type: r
 #'       cran: optparse
 #'       github: tidyverse/glue@main

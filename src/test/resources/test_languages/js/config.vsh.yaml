@@ -8,5 +8,8 @@ engines:
   - type: docker
     image: node:15-buster
     setup:
+      - type: apt
+        packages:
+          - jq
       - type: javascript
         npm: [ plot ]
