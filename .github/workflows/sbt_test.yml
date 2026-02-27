@@ -47,13 +47,13 @@ jobs:
         distribution: temurin
         java-version: ${{ matrix.java.ver }}
 
-    - name: Set up sbt
-      uses: sbt/setup-sbt@v1
+    # - name: Set up sbt
+    #   uses: sbt/setup-sbt@v1
 
     - name: Set up Scala (via Coursier)
       uses: coursier/setup-action@v2
       with:
-        apps: scala
+        apps: bloop sbt scala
 
     - name: Set up .NET SDK
       if: ${{ runner.os == 'Linux' }}
