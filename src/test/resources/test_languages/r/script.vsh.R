@@ -3,7 +3,7 @@
 #' engines:
 #' - type: native
 #' - type: docker
-#'   image: rocker/tidyverse:3.6
+#'   image: rocker/tidyverse:4.5
 #'   setup:
 #'     - type: apt
 #'       packages:
