@@ -1,4 +1,6 @@
-# Viash 0.9.7 (2026-XX-XX): Bug fix release
+# Viash 0.9.7 (2026-03-03): Bug fix release
+
+Fix a few issues with how Viash interracts with Nextflow and fix an issue with dependency resolving.
 
 ## BUG FIXES
 
@@ -7,7 +9,7 @@
 * `Nextflowrunner`: fix publishing of directories when the output file name template contains a trailing slash (PR #867).
 
 * `Logging`: Reduce log level for fetching repositories from info to debug (PR #871).
-* 
+
 * `Dependencies`: Fix an edge case during dependency resolving (PR #870). Local dependencies of dependencies of local dependencies were resolved incorrectly and resulted in a wrongly resolved destination path.
 
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
