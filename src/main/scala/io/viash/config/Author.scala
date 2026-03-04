@@ -27,7 +27,7 @@ import io.viash.schemas._
 @example(
   """authors:
     |- name: Jane Doe
-    |  role: [author, maintainer]
+    |  roles: [author, maintainer]
     |  email: jane@doe.com
     |  info:
     |    github: janedoe
