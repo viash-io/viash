@@ -4,7 +4,7 @@ TODO add summary
 
 # Viash 0.9.7 (2026-03-03): Bug fix release
 
-Fix a few issues with how Viash interracts with Nextflow and fix an issue with dependency resolving.
+Fix a few issues with how Viash interacts with Nextflow and fix an issue with dependency resolving.
 
 ## BUG FIXES
 
