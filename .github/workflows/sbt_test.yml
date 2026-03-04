@@ -71,6 +71,8 @@ jobs:
         version: ${{ matrix.java.nxf_ver }}
 
     - name: Run tests
+      env:
+        NXF_SYNTAX_PARSER: v1
       run: |
         if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
           # only run coverage on main runner
