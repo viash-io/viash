@@ -163,7 +163,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option '--whole_number': '789' & '123' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Pass only one argument to argument '--whole_number'. Found: '789' & '123'"))
   }
 
   test("Repeated flag arguments are not allowed") {
@@ -179,7 +179,7 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
       )
     )
     assert(out.exitValue == 1)
-    assert(out.output.contains("[error] Bad arguments for option '--falsehood': 'false' & '' - you should provide exactly one argument for this option."))
+    assert(out.output.contains("[error] Pass only one argument to argument '--falsehood'. Found: 'false' & 'false'"))
   }
 
   test("Repeated arguments with --multiple defined are allowed") {
@@ -197,6 +197,92 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     
     assert(out.exitValue == 0)
     assert(out.output.contains("multiple: |foo;bar|"))
+  }
+
+  test("Build and run with use_jq set to false") {
+    val useJqFalseDir = Paths.get(tempFolStr, "use_jq_false").toString
+    val newConfigFilePath = configDeriver.derive(
+      """.resources[.type == "bash_script"].use_jq := false""",
+      "use_jq_false"
+    )
+    TestHelper.testMain(
+      "build",
+      "--engine", "native",
+      "--runner", "executable",
+      "-o", useJqFalseDir,
+      newConfigFilePath
+    )
+
+    val useJqFalseExecutable = Paths.get(useJqFalseDir, config.name).toFile
+    assert(useJqFalseExecutable.exists)
+    assert(useJqFalseExecutable.canExecute)
+
+    val output = Paths.get(useJqFalseDir, "output_jqf.txt").toFile
+    Exec.run(
+      Seq(
+        useJqFalseExecutable.toString,
+        useJqFalseExecutable.toString,
+        "--real_number", "10.5",
+        "--whole_number=10",
+        "-s", "a string with a few spaces",
+        "--truth",
+        "--output", output.toString,
+        "--multiple", "foo",
+        "--multiple=bar"
+      )
+    )
+
+    assert(output.exists())
+    val outputSrc = Source.fromFile(output)
+    try {
+      val outputLines = outputSrc.mkString
+      assert(outputLines.contains("""multiple: |foo;bar|"""))
+    } finally {
+      outputSrc.close()
+    }
+  }
+
+  test("Build and run with use_jq unset") {
+    val useJqUnsetDir = Paths.get(tempFolStr, "use_jq_unset").toString
+    val newConfigFilePath = configDeriver.derive(
+      List(""".resources[.type == "bash_script"].use_jq := null""", """.test_resources[.type == "bash_script"].use_jq := null"""),
+      "use_jq_unset"
+    )
+    TestHelper.testMain(
+      "build",
+      "--engine", "native",
+      "--runner", "executable",
+      "-o", useJqUnsetDir,
+      newConfigFilePath
+    )
+
+    val useJqUnsetExecutable = Paths.get(useJqUnsetDir, config.name).toFile
+    assert(useJqUnsetExecutable.exists)
+    assert(useJqUnsetExecutable.canExecute)
+
+    val output = Paths.get(useJqUnsetDir, "output_jqu.txt").toFile
+    Exec.run(
+      Seq(
+        useJqUnsetExecutable.toString,
+        useJqUnsetExecutable.toString,
+        "--real_number", "10.5",
+        "--whole_number=10",
+        "-s", "a string with a few spaces",
+        "--truth",
+        "--output", output.toString,
+        "--multiple", "foo",
+        "--multiple=bar"
+      )
+    )
+
+    assert(output.exists())
+    val outputSrc = Source.fromFile(output)
+    try {
+      val outputLines = outputSrc.mkString
+      assert(outputLines.contains("""multiple: |foo;bar|"""))
+    } finally {
+      outputSrc.close()
+    }
   }
 
   test("when --runner is omitted, the system should run as native") {

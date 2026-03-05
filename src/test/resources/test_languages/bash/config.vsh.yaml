@@ -2,11 +2,16 @@ __merge__: [., ../common.yaml, ../common-runners.yaml]
 name: test_languages_bash
 resources:
   - type: bash_script
+    use_jq: true
     path: ./code.sh
 engines:
   - type: native
   - type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - type: docker
     image: "bash:3.2"
     id: "throwawayimage"
@@ -14,4 +19,5 @@ engines:
     setup:
       - type: apk
         packages:
+          - jq
           - fortune

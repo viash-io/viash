@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -ex
 
+# Helper function to check output with verbose error messages
+check_output() {
+  local pattern="$1"
+  local file="$2"
+  if ! grep -q "$pattern" "$file"; then
+    echo "FAILED: Pattern not found: $pattern"
+    echo "Actual content of relevant lines:"
+    # Try to show relevant lines by extracting the key name
+    local key=$(echo "$pattern" | sed 's/[:|].*//; s/.*|//')
+    grep "$key" "$file" || echo "(no lines matching '$key' found)"
+    echo "---"
+    return 1
+  fi
+}
+
 echo ">>> Checking whether expected resources exist"
 [[ ! -f "$meta_executable" ]] && echo "executable could not be found!" && exit 1
 [[ ! -f "$meta_resources_dir/.config.vsh.yaml" ]] && echo ".config.vsh.yaml could not be found!" && exit 1
@@ -18,20 +33,20 @@ echo ">>> Checking whether output is correct"
   --multiple_output './output_*.txt'
 
 [[ ! -f output.txt ]] && echo "Output file could not be found!" && exit 1
-grep -q 'input: |NOTICE|' output.txt
-grep -q 'real_number: |10.5|' output.txt
-grep -q 'whole_number: |10|' output.txt
-grep -q 'long_number: |112589990684262400|' output.txt
-grep -q 's: |a string with spaces|' output.txt
-grep -q 'truth: |true|' output.txt
-grep -q 'falsehood: |false|' output.txt
-grep -q 'reality: |true|' output.txt
-grep -q 'output: |.*/output.txt|' output.txt
-grep -q 'log: |.*/log.txt|' output.txt
-grep -q 'optional: |foo|' output.txt
-grep -q 'optional_with_default: |bar|' output.txt
-grep -q 'multiple: |one;two|' output.txt
-grep -q 'multiple_pos: |a;b;c;d;e;f|' output.txt
-grep -q 'multiple_output: |.*/output_\*.txt|' output.txt
+check_output 'input: |NOTICE|' output.txt
+check_output 'real_number: |10.5|' output.txt
+check_output 'whole_number: |10|' output.txt
+check_output 'long_number: |112589990684262400|' output.txt
+check_output 's: |a string with spaces|' output.txt
+check_output 'truth: |true|' output.txt
+check_output 'falsehood: |false|' output.txt
+check_output 'reality: |true|' output.txt
+check_output 'output: |.*/output.txt|' output.txt
+check_output 'log: |.*/log.txt|' output.txt
+check_output 'optional: |foo|' output.txt
+check_output 'optional_with_default: |bar|' output.txt
+check_output 'multiple: |one;two|' output.txt
+check_output 'multiple_pos: |a;b;c;d;e;f|' output.txt
+check_output 'multiple_output: |.*/output_\*.txt|' output.txt
 
 echo ">>> Test finished successfully"

@@ -363,7 +363,7 @@ object Main extends Logging {
           addOptMainScript = false,
           applyRunnerAndEngine = false
         )
-        ViashConfig.inject(config.config)
+        ViashConfig.inject(config.config, force = cli.config.inject.force())
         0
       case List(cli.`export`, cli.`export`.cli_schema) =>
         val output = cli.`export`.cli_schema.output.toOption.map(Paths.get(_))

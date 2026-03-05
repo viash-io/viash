@@ -6,7 +6,10 @@ resources:
 engines:
   - type: native
   - type: docker
-    image: node:15-buster
+    image: node:24-bookworm
     setup:
+      - type: apt
+        packages:
+          - jq
       - type: javascript
         npm: [ plot ]

@@ -204,19 +204,20 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
 
   // create dirs for output files (based on BashWrapper.createParentFiles)
   def createParentStr = meta.config.allArguments
-    .findAll { it.type == "file" && it.direction == "output" && it.create_parent }
+    .findAll { par -> par.type == "file" && par.direction == "output" && par.create_parent }
     .collect { par -> 
       def contents = "args[\"${par.plainName}\"] instanceof List ? args[\"${par.plainName}\"].join('\" \"') : args[\"${par.plainName}\"]"
       "\${ args.containsKey(\"${par.plainName}\") ? \"mkdir_parent '\" + escapeText(${contents}) + \"'\" : \"\" }"
     }
     .join("\n")
 
-  // construct inputFileExports
-  def inputFileExports = meta.config.allArguments
-    .findAll { it.type == "file" && it.direction.toLowerCase() == "input" }
+  // construct input file additions to viashPar (convert Path objects to strings, keep lists as arrays)
+  def inputFileAdditions = meta.config.allArguments
+    .findAll { par -> par.type == "file" && par.direction.toLowerCase() == "input" }
     .collect { par ->
-      def contents = "viash_par_${par.plainName} instanceof List ? viash_par_${par.plainName}.join(\"${par.multiple_sep}\") : viash_par_${par.plainName}"
-      "\n\${viash_par_${par.plainName}.empty ? \"\" : \"export VIASH_PAR_${par.plainName.toUpperCase()}='\" + escapeText(${contents}) + \"'\"}"
+      def varName = "viash_par_${par.plainName}"
+      // Convert Path objects to strings, keep lists as arrays
+      "\n  |if (!${varName}.empty) { viashPar[\"${par.plainName}\"] = ${varName} instanceof List ? ${varName}.collect{it.toString()} : ${varName}.toString() }"
     }
 
   // NOTE: if using docker, use /tmp instead of tmpDir!
@@ -253,6 +254,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   def procStr = 
   """nextflow.enable.dsl=2
   |
+  |import groovy.json.JsonOutput
   |def escapeText = { s -> s.toString().replaceAll("'", "'\\\"'\\\"'") }
   |process $procKey {$drctvStrs
   |input:
@@ -265,36 +267,39 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |$stub
   |\"\"\"
   |script:$assertStr
-  |def parInject = args
-  |  .findAll{key, value -> value != null}
-  |  .collect{key, value -> "export VIASH_PAR_\${key.toUpperCase()}='\${escapeText(value)}'"}
-  |  .join("\\n")
+  |// Construct meta map
+  |def viashMeta = [
+  |  "resources_dir": "\${resourcesDir}",
+  |  "temp_dir": "${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}",
+  |  "name": "${meta.config.name}",
+  |  "config": "\${resourcesDir}/.config.vsh.yaml"
+  |]
+  |if (task.cpus) { viashMeta["cpus"] = task.cpus }
+  |if (task.memory?.bytes != null) {
+  |  def memB = task.memory.bytes
+  |  viashMeta["memory_b"] = memB
+  |  viashMeta["memory_kb"] = (long)((memB + 999) / 1000)
+  |  viashMeta["memory_mb"] = (long)((viashMeta["memory_kb"] + 999) / 1000)
+  |  viashMeta["memory_gb"] = (long)((viashMeta["memory_mb"] + 999) / 1000)
+  |  viashMeta["memory_tb"] = (long)((viashMeta["memory_gb"] + 999) / 1000)
+  |  viashMeta["memory_pb"] = (long)((viashMeta["memory_tb"] + 999) / 1000)
+  |  viashMeta["memory_kib"] = (long)((memB + 1023) / 1024)
+  |  viashMeta["memory_mib"] = (long)((viashMeta["memory_kib"] + 1023) / 1024)
+  |  viashMeta["memory_gib"] = (long)((viashMeta["memory_mib"] + 1023) / 1024)
+  |  viashMeta["memory_tib"] = (long)((viashMeta["memory_gib"] + 1023) / 1024)
+  |  viashMeta["memory_pib"] = (long)((viashMeta["memory_tib"] + 1023) / 1024)
+  |}
+  |// Define args
+  |def viashPar = args + [:]${inputFileAdditions.join()}
+  |
+  |// Construct full params object
+  |def viashParams = [
+  |  "par": viashPar,
+  |  "meta": viashMeta,
+  |  "dep": [:]
+  |]
+  |def paramsJson = JsonOutput.prettyPrint(JsonOutput.toJson(viashParams))
   |\"\"\"
-  |# meta exports
-  |export VIASH_META_RESOURCES_DIR="\${resourcesDir}"
-  |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
-  |export VIASH_META_NAME="${meta.config.name}"
-  |# export VIASH_META_EXECUTABLE="\\\$VIASH_META_RESOURCES_DIR/\\\$VIASH_META_NAME"
-  |export VIASH_META_CONFIG="\\\$VIASH_META_RESOURCES_DIR/.config.vsh.yaml"
-  |\${task.cpus ? "export VIASH_META_CPUS=\$task.cpus" : "" }
-  |\${task.memory?.bytes != null ? "export VIASH_META_MEMORY_B=\$task.memory.bytes" : "" }
-  |if [ ! -z \\\${VIASH_META_MEMORY_B+x} ]; then
-  |  export VIASH_META_MEMORY_KB=\\\$(( (\\\$VIASH_META_MEMORY_B+999) / 1000 ))
-  |  export VIASH_META_MEMORY_MB=\\\$(( (\\\$VIASH_META_MEMORY_KB+999) / 1000 ))
-  |  export VIASH_META_MEMORY_GB=\\\$(( (\\\$VIASH_META_MEMORY_MB+999) / 1000 ))
-  |  export VIASH_META_MEMORY_TB=\\\$(( (\\\$VIASH_META_MEMORY_GB+999) / 1000 ))
-  |  export VIASH_META_MEMORY_PB=\\\$(( (\\\$VIASH_META_MEMORY_TB+999) / 1000 ))
-  |  export VIASH_META_MEMORY_KIB=\\\$(( (\\\$VIASH_META_MEMORY_B+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_MIB=\\\$(( (\\\$VIASH_META_MEMORY_KIB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_GIB=\\\$(( (\\\$VIASH_META_MEMORY_MIB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_TIB=\\\$(( (\\\$VIASH_META_MEMORY_GIB+1023) / 1024 ))
-  |  export VIASH_META_MEMORY_PIB=\\\$(( (\\\$VIASH_META_MEMORY_TIB+1023) / 1024 ))
-  |fi
-  |
-  |# meta synonyms
-  |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
-  |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
-  |
   |# create output dirs if need be
   |function mkdir_parent {
   |  for file in "\\\$@"; do 
@@ -303,8 +308,16 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |}
   |$createParentStr
   |
-  |# argument exports${inputFileExports.join()}
-  |\$parInject
+  |# Write params.json file
+  |cat > .viash_params.json << 'VIASH_PARAMS_JSON'
+  |\$paramsJson
+  |VIASH_PARAMS_JSON
+  |export VIASH_WORK_PARAMS=".viash_params.json"
+  |
+  |# Also export VIASH_META_TEMP_DIR for backwards compatibility
+  |export VIASH_META_TEMP_DIR="${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}"
+  |export VIASH_TEMP="\\\$VIASH_META_TEMP_DIR"
+  |export TEMP_DIR="\\\$VIASH_META_TEMP_DIR"
   |
   |# process script
   |${escapedScript}
