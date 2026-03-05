@@ -60,13 +60,12 @@ jobs:
         scala -version
 
         bloop server &
-        # Poll until Bloop is ready
         for i in $(seq 1 30); do
-          bloop about && break
-          echo "Waiting for Bloop... ($i)"
+          timeout 5 bloop about 2>/dev/null && echo "Bloop is ready!" && break
+          echo "Waiting for Bloop... ($i/30)"
           sleep 2
         done
-        
+
         scala -e 'println("Hello, Scala!")'
 
     - name: Set up .NET SDK
