@@ -53,7 +53,7 @@ jobs:
     - name: Set up Scala (via Coursier)
       uses: coursier/setup-action@v2
       with:
-        apps: scala@3.6.2
+        apps: scala:3.6.2
 
     - name: Warm up scala
       run: |
