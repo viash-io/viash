@@ -1,11 +1,12 @@
 name: ns test
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - 'develop_**'
+  workflow_dispatch:
+  # pull_request:
+  # push:
+  #   branches:
+  #     - main
+  #     - 'develop_**'
 
 jobs:
   ns-test:

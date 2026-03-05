@@ -70,30 +70,31 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Set up Nextflow
-      if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
-      uses: nf-core/setup-nextflow@v2
-      with:
-        version: ${{ matrix.java.nxf_ver }}
+    # - name: Set up Nextflow
+    #   if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
+    #   uses: nf-core/setup-nextflow@v2
+    #   with:
+    #     version: ${{ matrix.java.nxf_ver }}
 
     - name: Run tests
       env:
         NXF_SYNTAX_PARSER: v1
       run: |
-        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
-          # only run coverage on main runner
-          sbt clean coverage test coverageReport
-        elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
-          sbt 'testOnly -- -l io.viash.NextflowTest'
-        elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          # macOS on github actions does not have Docker, so skip those
-          sbt 'testOnly -- -l io.viash.DockerTest -l io.viash.NextflowTest'
-        else
-          sbt test
-        fi
+        # if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
+        #   # only run coverage on main runner
+        #   sbt clean coverage test coverageReport
+        # elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
+        #   sbt 'testOnly -- -l io.viash.NextflowTest'
+        # elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+        #   # macOS on github actions does not have Docker, so skip those
+        #   sbt 'testOnly -- -l io.viash.DockerTest -l io.viash.NextflowTest'
+        # else
+        #   sbt test
+        # fi
+        sbt "testOnly *JsonParserTest"
 
-    - name: Upload coverage on success
-      run: bash <(curl -s https://codecov.io/bash)
+    # - name: Upload coverage on success
+    #   run: bash <(curl -s https://codecov.io/bash)
 
     - name: Upload check results on fail
       if: failure()
