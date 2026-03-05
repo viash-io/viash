@@ -57,8 +57,8 @@ jobs:
 
     - name: Warm up scala
       run: |
-        scala -version
-
+        # start the bloop server, it'll download a lot of dependencies, so do it early
+        # also we need to start it before running any scala code, otherwise it will often timeout and cause the whole job to fail
         bloop server &
         for i in $(seq 1 30); do
           timeout 5 bloop about 2>/dev/null && echo "Bloop is ready!" && break
@@ -66,6 +66,7 @@ jobs:
           sleep 2
         done
 
+        scala -version
         scala -e 'println("Hello, Scala!")'
 
     - name: Set up .NET SDK
