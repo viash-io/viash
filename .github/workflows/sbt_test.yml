@@ -56,7 +56,9 @@ jobs:
         apps: scala
 
     - name: Warm up scala
-      run: scala -e 'println("Hello, Scala!")'
+      run: |
+        scala -version
+        scala -e 'println("Hello, Scala!")'
 
     - name: Set up .NET SDK
       if: ${{ runner.os == 'Linux' }}
