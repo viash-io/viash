@@ -58,6 +58,15 @@ jobs:
     - name: Warm up scala
       run: |
         scala -version
+
+        bloop server &
+        # Poll until Bloop is ready
+        for i in $(seq 1 30); do
+          bloop about && break
+          echo "Waiting for Bloop... ($i)"
+          sleep 2
+        done
+        
         scala -e 'println("Hello, Scala!")'
 
     - name: Set up .NET SDK
