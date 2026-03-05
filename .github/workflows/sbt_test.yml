@@ -53,11 +53,9 @@ jobs:
     - name: Set up Scala (via Coursier)
       uses: coursier/setup-action@v2
       with:
-        apps: scala:3.6.2
+        apps: scala:3.6.2 bloop
 
     - name: Warm up scala
-      env:
-        SCALA_CLI_SERVER: "false"
       run: |
         scala -version
         scala -e 'println("Hello, Scala!")'
