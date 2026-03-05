@@ -50,10 +50,19 @@ jobs:
     - name: Set up sbt
       uses: sbt/setup-sbt@v1
 
-    - name: Set up Scala (via Coursier)
-      uses: coursier/setup-action@v2
-      with:
-        apps: scala:3.6.2
+    # - name: Set up Scala (via Coursier)
+    #   uses: coursier/setup-action@v2
+    #   with:
+    #     apps: scala:3.6.2
+    
+    - name: Set up Scala
+      run: |
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          brew install scala
+        else
+          sudo apt-get update
+          sudo apt-get install -y scala
+        fi
 
     - name: Warm up scala
       run: |
