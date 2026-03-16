@@ -1,0 +1,25 @@
+name: "CAA Bot"
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+jobs:
+  CAABot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CAA Assistant"
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I agree to the Data Intuitive Contributor Assignment Agreement.') || github.event_name == 'pull_request_target'
+        uses: cla-assistant/github-action@v2.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          path-to-signatures: 'signatures/caa.json'
+          path-to-document: 'https://github.com/viash-io/viash/blob/main/CAA.md'
+          branch: 'main'
+          allowlist: 'dependabot[bot],github-actions[bot]'
+          custom-notsigned-message: 'Thanks for your PR to Viash! 🚀<br><br>Before we can review and merge your code, we need you to accept our Contributor Assignment Agreement (CAA). This assigns the copyright of your contribution to Data Intuitive, while ensuring you retain a license to use your own code anywhere else.<br><br>📝 **How to proceed:**<br>1. Read our short agreement here: [CAA.md](https://github.com/viash-io/viash/blob/main/CAA.md)<br>2. Reply to this comment with the following exact phrase:<br><br>**I agree to the Data Intuitive Contributor Assignment Agreement.**'
+          custom-pr-sign-comment: 'I have read the Contributor Assignment Agreement and I hereby assign the copyright of my contributions to Data Intuitive.'
+          custom-allsigned-message: 'All contributors have signed the CAA. Thank you! ✅'
