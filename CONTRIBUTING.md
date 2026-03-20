@@ -1,7 +1,5 @@
 # Contributing
 
-# Contributing
-
 Welcome to the Viash project, and thank you for considering contributing! We are open to a variety of contributions, including documentation updates, bug fixes, new features, and more. 
 
 By participating in this project, you agree to abide by our [Code of Conduct](CONDUCT.md). 
