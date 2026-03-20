@@ -98,7 +98,7 @@ jobs:
 
     steps:
     - name: Download JAR
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: fat-jar
 
@@ -137,14 +137,14 @@ jobs:
 
     steps:
     - name: Download release assets
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: release-assets
         path: release-assets
         merge-multiple: true
 
     - name: Download native binaries
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         pattern: viash-*
         path: native-binaries
