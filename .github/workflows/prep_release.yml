@@ -60,14 +60,14 @@ jobs:
         cp target/viash.jar viash.jar
 
     - name: Upload JAR artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: fat-jar
         path: viash.jar
         retention-days: 1
 
     - name: Upload release assets
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: release-assets
         path: |
@@ -122,7 +122,7 @@ jobs:
         ./viash --version
 
     - name: Upload native binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: viash-${{ matrix.label }}
         path: viash
