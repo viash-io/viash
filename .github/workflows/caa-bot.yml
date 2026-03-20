@@ -5,8 +5,15 @@ on:
   pull_request_target:
     types: [opened, closed, synchronize]
 
+# explicitly configure permissions, in case your GITHUB_TOKEN workflow permissions are set to read-only in repository settings
+permissions:
+  actions: write
+  contents: write # this can be 'read' if the signatures are in remote repository
+  pull-requests: write
+  statuses: write
+
 jobs:
-  CAABot:
+  CLAAssistant:
     runs-on: ubuntu-latest
     steps:
       - name: "CAA Assistant"
@@ -20,6 +27,6 @@ jobs:
           path-to-document: 'https://github.com/viash-io/viash/blob/main/CAA.md'
           branch: 'main'
           allowlist: 'dependabot[bot],github-actions[bot]'
-          custom-notsigned-message: 'Thanks for your PR to Viash! 🚀<br><br>Before we can review and merge your code, we need you to accept our Contributor Assignment Agreement (CAA). This assigns the copyright of your contribution to Data Intuitive, while ensuring you retain a license to use your own code anywhere else.<br><br>📝 **How to proceed:**<br>1. Read our short agreement here: [CAA.md](https://github.com/viash-io/viash/blob/main/CAA.md)<br>2. Reply to this comment with the following exact phrase:<br><br>**I agree to the Data Intuitive Contributor Assignment Agreement.**'
+          custom-notsigned-prcomment: 'Thanks for your PR to Viash! 🚀<br><br>Before we can review and merge your code, we need you to accept our Contributor Assignment Agreement (CAA). This assigns the copyright of your contribution to Data Intuitive, while ensuring you retain a license to use your own code anywhere else.<br><br>📝 **How to proceed:**<br>1. Read our short agreement here: [CAA.md](https://github.com/viash-io/viash/blob/main/CAA.md)<br>2. Reply to this comment with the following exact phrase:<br><br>**I agree to the Data Intuitive Contributor Assignment Agreement.**'
           custom-pr-sign-comment: 'I have read the Contributor Assignment Agreement and I hereby assign the copyright of my contributions to Data Intuitive.'
-          custom-allsigned-message: 'All contributors have signed the CAA. Thank you! ✅'
+          custom-allsigned-prcomment: 'All contributors have signed the CAA. Thank you! ✅'
