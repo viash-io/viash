@@ -18,6 +18,7 @@ arguments:
     required: true
 resources:
   - type: bash_script
+    use_jq: true
     text: |
       while IFS= read -r line
       do

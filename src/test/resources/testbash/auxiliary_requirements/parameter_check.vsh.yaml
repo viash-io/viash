@@ -162,6 +162,7 @@ arguments:
 
 resources:
   - type: bash_script
+    use_jq: true
     path: ./parameter_check.sh
 info:
   foo: bar

@@ -37,7 +37,17 @@ case class ComputationalRequirements(
   @description("A list of commands which should be present on the system for the script to function.")
   @example("commands: [ which, bash, awk, date, grep, egrep, ps, sed, tail, tee ]", "yaml")
   @default("Empty")
-  commands: List[String] = Nil
+  commands: List[String] = Nil,
+  @description("A list of Python packages which should be available for the script to function.")
+  @example("python_packages: [ numpy, pandas, scikit-learn ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.10.0")
+  python_packages: List[String] = Nil,
+  @description("A list of R packages which should be available for the script to function.")
+  @example("r_packages: [ tidyverse, ggplot2, dplyr ]", "yaml")
+  @default("Empty")
+  @since("Viash 0.10.0")
+  r_packages: List[String] = Nil
 ) {
 
   def memoryAsBytes: Option[BigInt] = {

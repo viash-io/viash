@@ -68,7 +68,7 @@ class MainTestDockerSuite extends AnyFunSuite with BeforeAndAfterAll with Parall
   }
 
   test("Check setup strategy", DockerTest) {
-    val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
+    val newConfigFilePath = configDeriver.derive(""".engines[.type == "docker" && !has(.id) ].setup := [{ type: "apk", packages: ["jq"] }, { type: "docker", run: "echo 'Hello world!'" }]""", "cache_config")
     // first run to create cache entries
     val testOutput = TestHelper.testMain(
       "test",

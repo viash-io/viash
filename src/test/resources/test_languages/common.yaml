@@ -68,6 +68,7 @@ resources:
   - path: ../resource1.txt        
 test_resources:
   - type: bash_script
+    use_jq: true
     path: ../test.sh
   - path: ../resource2.txt
 info:

@@ -14,11 +14,17 @@ arguments:
 
 resources:
   - type: bash_script
+    use_jq: true
     path: ./check_requirements.sh
 test_resources:
   - type: bash_script
+    use_jq: true
     path: ./check_requirements_test.sh
 
 engines:
   - type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq

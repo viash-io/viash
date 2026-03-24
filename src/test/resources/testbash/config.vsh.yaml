@@ -78,13 +78,16 @@ argument_groups:
         direction: output
 resources:
   - type: bash_script
+    use_jq: true
     path: ./code.sh
   - path: resource1.txt
   - path: https://raw.githubusercontent.com/scala/scala/fff4ec3539ac58f56fdc8f1382c365f32a9fd25a/NOTICE
 test_resources:
   - type: bash_script
+    use_jq: true
     path: tests/check_outputs.sh
   - type: bash_script
+    use_jq: true
     path: tests/fail.sh
   - path: resource2.txt
 info:
@@ -101,6 +104,10 @@ engines:
     id: native
   - type: docker
     image: "bash:3.2"
+    setup:
+      - type: apk
+        packages:
+          - jq
   - type: docker
     id: throwawayimage
     image: "bash:3.2"
@@ -108,4 +115,5 @@ engines:
     setup:
       - type: apk
         packages:
+          - jq
           - fortune

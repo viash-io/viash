@@ -31,6 +31,7 @@ arguments:
     example: Test {test_detect} example value
 resources:
   - type: bash_script
+    use_jq: true
     path: ./code.sh
 engines:
   - type: native

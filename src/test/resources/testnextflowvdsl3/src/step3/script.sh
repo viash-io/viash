@@ -7,10 +7,8 @@ function clean_up {
 trap clean_up EXIT
 
 
-if [ ! -z "$par_input" ]; then
-  IFS=";"
-  for var in $par_input; do
-    unset IFS
+if [ ${#par_input[@]} -gt 0 ]; then
+  for var in "${par_input[@]}"; do
     cat "$var" >> "$tmpfile"
   done
 fi

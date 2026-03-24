@@ -72,7 +72,7 @@ try
             var array = p.GetValue(par) as Array;
 
             if (array.Length == 0)
-                Output($"{p.Name}: |empty array|");
+                Output($"{p.Name}: ||");
             else if (array is bool[])
             {
                 var array2 = (array as bool[]).Select(x => x.ToString().ToLower());
@@ -116,7 +116,7 @@ try
     {
         Output($"head of input: |{input.ReadLine()}|");
     }
-    using(StreamReader input = new StreamReader("resource1.txt"))
+    using(StreamReader input = new StreamReader($"{meta.resources_dir}/resource1.txt"))
     {
         Output($"head of resource1: |{input.ReadLine()}|");
     }
@@ -126,15 +126,20 @@ try
 
     foreach (PropertyInfo p in pi)
     {
-        if (p.PropertyType.IsArray)
+        var value = p.GetValue(meta);
+        if (value == null)
         {
-            object[] array = (object[])p.GetValue(meta);
+            Output($"meta_{p.Name}: ||");
+        }
+        else if (p.PropertyType.IsArray)
+        {
+            object[] array = (object[])value;
 
             Output($"meta_{p.Name}: |{string.Join(", ", array)}|");
         }
         else
         {
-            Output($"meta_{p.Name}: |{p.GetValue(meta)}|");
+            Output($"meta_{p.Name}: |{value}|");
         }
     }
 }
