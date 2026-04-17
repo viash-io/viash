@@ -71,7 +71,7 @@ jobs:
 
     - name: Set up Nextflow
       if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
-      uses: nf-core/setup-nextflow@v2
+      uses: nf-core/setup-nextflow@v3
       with:
         version: ${{ matrix.java.nxf_ver }}
 
