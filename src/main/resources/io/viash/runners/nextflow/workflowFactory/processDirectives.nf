@@ -15,7 +15,7 @@ def processDirectives(Map drctv) {
 
   // check for unexpected keys
   def expectedKeys = [
-    "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
+    "accelerator", "afterScript", "beforeScript", "cache", "conda", "container", "containerOptions", "cpus", "disk", "echo", "errorStrategy", "executor", "machineType", "maxErrors", "maxForks", "maxRetries", "memory", "module", "penv", "pod", "publishDir", "queue", "label", "scratch", "secret", "storeDir", "stageInMode", "stageOutMode", "tag", "time"
   ]
   def unexpectedKeys = drctv.keySet() - expectedKeys
   assert unexpectedKeys.isEmpty() : "Unexpected keys in process directive: '${unexpectedKeys.join("', '")}'"
@@ -343,6 +343,21 @@ def processDirectives(Map drctv) {
   */
   if (drctv.containsKey("scratch")) {
     assert drctv["scratch"] == true || drctv["scratch"] instanceof CharSequence
+  }
+
+  /* DIRECTIVE secret
+    accepted examples:
+    - "MY_ACCESS_KEY"
+    - ["MY_ACCESS_KEY", "MY_SECRET_KEY"]
+  */
+  if (drctv.containsKey("secret")) {
+    if (drctv["secret"] instanceof CharSequence) {
+      drctv["secret"] = [ drctv["secret"] ]
+    }
+    assert drctv["secret"] instanceof List
+    drctv["secret"].forEach { secret ->
+      assert secret instanceof CharSequence
+    }
   }
 
   /* DIRECTIVE storeDir
