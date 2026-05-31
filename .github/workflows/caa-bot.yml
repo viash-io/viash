@@ -17,16 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "CAA Assistant"
-        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I agree to the Data Intuitive Contributor Assignment Agreement.') || github.event_name == 'pull_request_target'
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the Contributor Assignment Agreement and I hereby assign the copyright of my contributions to Data Intuitive.') || github.event_name == 'pull_request_target'
         uses: contributor-assistant/github-action@v2.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.CAA_SIGNATURES_PAT }}
         with:
           path-to-signatures: 'signatures/caa.json'
           path-to-document: 'https://github.com/viash-io/viash/blob/main/CAA.md'
           branch: 'main'
+          remote-repository-name: 'viash-caa-signatures'
           allowlist: 'dependabot[bot],github-actions[bot]'
-          custom-notsigned-prcomment: 'Thanks for your PR to Viash! 🚀<br><br>Before we can review and merge your code, we need you to accept our Contributor Assignment Agreement (CAA). This assigns the copyright of your contribution to Data Intuitive, while ensuring you retain a license to use your own code anywhere else.<br><br>📝 **How to proceed:**<br>1. Read our short agreement here: [CAA.md](https://github.com/viash-io/viash/blob/main/CAA.md)<br>2. Reply to this comment with the following exact phrase:<br><br>**I agree to the Data Intuitive Contributor Assignment Agreement.**'
+          custom-notsigned-prcomment: 'Thanks for your PR to Viash! 🚀<br><br>Before we can review and merge your code, we need you to accept our Contributor Assignment Agreement (CAA). This assigns the copyright of your contribution to Data Intuitive, while ensuring you retain a license to use your own code anywhere else.<br><br>📝 **How to proceed:**<br>1. Read our short agreement here: [CAA.md](https://github.com/viash-io/viash/blob/main/CAA.md)<br>2. Copy and paste the exact sentence below as a new PR comment (must match exactly):<br><br>**I have read the Contributor Assignment Agreement and I hereby assign the copyright of my contributions to Data Intuitive.**'
           custom-pr-sign-comment: 'I have read the Contributor Assignment Agreement and I hereby assign the copyright of my contributions to Data Intuitive.'
           custom-allsigned-prcomment: 'All contributors have signed the CAA. Thank you! ✅'
