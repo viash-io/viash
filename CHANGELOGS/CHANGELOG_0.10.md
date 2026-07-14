@@ -40,6 +40,8 @@ TODO add summary
 
 * `Executable`: Add more info to the --help (PR #802).
 
+* `ANC`: Improve error handling and reduce log spamming (PR #890).
+
 ## INTERNAL CHANGES
 
 * `Parameter passing`: Switch from code injection to JSON-based parameter passing (PR #762).
