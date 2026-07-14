@@ -50,14 +50,34 @@ jobs:
     - name: Set up sbt
       uses: sbt/setup-sbt@v1
 
-    - name: Set up Scala
+    - name: Set up Scala (via Coursier)
+      uses: coursier/setup-action@v2
+      with:
+        apps: scala:3.6.2 bloop
+
+    - name: Warm up scala
       run: |
-        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          brew install scala
-        else
-          sudo apt-get update
-          sudo apt-get install -y scala
-        fi
+        # start the bloop server, it'll download a lot of dependencies, so do it early
+        # also we need to start it before running any scala code, otherwise it will often timeout and cause the whole job to fail
+        bloop server &
+        for i in $(seq 1 30); do
+          timeout 5 bloop about 2>/dev/null && echo "Bloop is ready!" && break
+          echo "Waiting for Bloop... ($i/30)"
+          sleep 2
+        done
+
+        scala -version
+        scala -e 'println("Hello, Scala!")'
+
+    - name: Set up .NET SDK
+      if: ${{ runner.os == 'Linux' }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Set up dotnet-script
+      if: ${{ runner.os == 'Linux' }}
+      run: dotnet tool install -g dotnet-script
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -91,7 +111,7 @@ jobs:
 
     - name: Upload check results on fail
       if: failure()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.config.name }}_results
         path: check

@@ -30,7 +30,7 @@ import io.viash.schemas._
 @example(
   """engines:
     |  - type: docker
-    |    image: "bash:4.0"
+    |    image: "bash:3.2"
     |  - type: native
     |""",
   "yaml")

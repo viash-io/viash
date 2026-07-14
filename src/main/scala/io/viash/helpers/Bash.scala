@@ -30,41 +30,13 @@ object Bash {
   lazy val ViashRemoveFlags: String = readUtils("ViashRemoveFlags")
   lazy val ViashAbsolutePath: String = readUtils("ViashAbsolutePath")
   lazy val ViashDockerAutodetectMount: String = readUtils("ViashDockerAutodetectMount")
-  // backwards compatibility, for now
-  lazy val ViashAutodetectMount: String = ViashDockerAutodetectMount.replace("ViashDocker", "Viash")
   lazy val ViashSourceDir: String = readUtils("ViashSourceDir")
   lazy val ViashFindTargetDir: String = readUtils("ViashFindTargetDir")
   lazy val ViashDockerFuns: String = readUtils("ViashDockerFuns")
   lazy val ViashLogging: String = readUtils("ViashLogging")
-
-  def save(saveVariable: String, args: Seq[String]): String = {
-    saveVariable + "=\"$" + saveVariable + " " + args.mkString(" ") + "\""
-  }
-
-  // generate strings in the form of:
-  // SAVEVARIABLE="$SAVEVARIABLE $(Quote arg1) $(Quote arg2)"
-  def quoteSave(saveVariable: String, args: Seq[String]): String = {
-    saveVariable + "=\"$" + saveVariable +
-      args.map(" $(ViashQuote \"" + _ + "\")").mkString +
-      "\""
-  }
-
-  def argStore(name: String, plainName: String, store: String, argsConsumed: Int, storeUnparsed: Option[String]): String = {
-    val passStr =
-      if (storeUnparsed.isDefined) {
-        "\n            " + quoteSave(storeUnparsed.get, (1 to argsConsumed).map("$" + _))
-      } else {
-        ""
-      }
-    s"""         $name)
-       |            $plainName=$store$passStr
-       |            shift $argsConsumed
-       |            ;;""".stripMargin
-  }
-
-  def argStoreSed(name: String, plainName: String, storeUnparsed: Option[String]): String = {
-    argStore(name + "=*", plainName, "$(ViashRemoveFlags \"$1\")", 1, storeUnparsed)
-  }
+  lazy val ViashCleanupRegistry: String = readUtils("ViashCleanupRegistry")
+  lazy val ViashRenderJson: String = readUtils("ViashRenderJson")
+  lazy val ViashParseArgumentValue: String = readUtils("ViashParseArgumentValue")
 
   /** 
    * Access the parameters contents in a bash script,
@@ -104,4 +76,21 @@ object Bash {
       .replaceWith("\\\\\\$VIASH_", "\\$VIASH_", allowUnescape)
       .replaceWith("\\\\\\$\\{VIASH_", "\\${VIASH_", allowUnescape)
   }
-}
+  /**
+    * Generate a VIASH variable name for use in bash scripts.
+    * 
+    * For backwards compatibility, meta variables use uppercase names.
+    * Par and dep variables use lowercase names so variables with similar names
+    * (e.g. "--input" and "--INPUT") do not clash.
+    * 
+    * Examples: VIASH_META_NAME, VIASH_PAR_input, VIASH_DEP_my_dependency
+    *
+    * @param dest The destination type: "par", "meta", or "dep"
+    * @param name The variable name (may contain slashes which are replaced with underscores)
+    * @return The formatted VIASH variable name
+    */
+  def viashVarName(dest: String, name: String): String = {
+    val sanitizedName = name.replace("/", "_")
+    val formattedName = if (dest == "meta") sanitizedName.toUpperCase() else sanitizedName
+    s"VIASH_${dest.toUpperCase()}_$formattedName"
+  }}

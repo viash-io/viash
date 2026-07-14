@@ -10,7 +10,11 @@ $(obj): $(shell find src/ -name "*.scala")
 	cat src/stub.sh target/viash.jar > $(obj)
 	chmod +x $(obj)
 	@echo "==================================> $(obj)"
-	
+
+touch: $(obj)
+	@echo "Touching src/main/scala/io/viash/Main.scala to trigger rebuild"
+	touch src/main/scala/io/viash/Main.scala
+
 tools: $(obj) $(shell find src/viash)
 	bin/viash ns build -s src/viash -t bin --flatten -c ".version := '$(VERSION)'"
 	@echo "==================================> tools"

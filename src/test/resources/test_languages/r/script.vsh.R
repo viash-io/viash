@@ -3,8 +3,11 @@
 #' engines:
 #' - type: native
 #' - type: docker
-#'   image: rocker/tidyverse:3.6
+#'   image: rocker/tidyverse:4.5
 #'   setup:
+#'     - type: apt
+#'       packages:
+#'         - jq
 #'     - type: r
 #'       cran: optparse
 #'       github: tidyverse/glue@main
@@ -46,15 +49,19 @@ str <- sapply(names(par), function(n) {
 })
 write_fun(par$output, str)
 
-con = file(par[["input"]], "r")
-str = paste0("head of input: |", readLines(con, n = 1), "|\n")
+con <- file(par[["input"]], "r")
+str <- paste0("head of input: |", readLines(con, n = 1), "|\n")
 write_fun(par$output, str)
 
-con = file("resource1.txt", "r")
-str = paste0("head of resource1: |", readLines(con, n = 1), "|\n")
+con <- file(paste0(meta$resources_dir, "/resource1.txt"), "r")
+str <- paste0("head of resource1: |", readLines(con, n = 1), "|\n")
 write_fun(par$output, str)
 
 str <- sapply(names(meta), function(n) {
-  paste0("meta_", n, ": |", paste(meta[[n]], collapse = ";"), "|\n")
+  if (is.null(meta[[n]])) {
+    paste0("meta_", n, ": ||\n")
+  } else {
+    paste0("meta_", n, ": |", paste(meta[[n]], collapse = ";"), "|\n")
+  }
 })
 write_fun(par$output, str)

@@ -2,7 +2,7 @@
 set -x
 
 echo ">>> This test should always fail but that is to be expected"
-./testbash "missingresource" --real_number abc --whole_number abc -s "a string with spaces" --truth \
+"$meta_executable" "missingresource" --real_number abc --whole_number abc -s "a string with spaces" --truth \
   --output ./output_fail.txt --log ./log.txt \
   --optional foo --optional_with_default bar
 

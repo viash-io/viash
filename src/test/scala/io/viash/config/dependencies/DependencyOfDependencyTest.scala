@@ -40,7 +40,7 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
   // Short wrapper for creating a bash script containing some text and using it as a single resource
   def textBashScript(text: String): List[BashScript] = 
-    List(BashScript(text = Some(text), dest = Some("./script.sh")))
+    List(BashScript(text = Some(text), dest = Some("./script.sh"), use_jq = Some(true)))
 
   test("Prepare package 1") {
     val workingDir = createViashSubFolder(temporaryFolder, "pack1")

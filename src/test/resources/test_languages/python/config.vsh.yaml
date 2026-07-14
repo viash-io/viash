@@ -8,6 +8,9 @@ engines:
   - type: docker
     image: python
     setup:
+      - type: apt
+        packages:
+          - jq
       - type: docker
         build_args:
           - TESTING_FOO=bar

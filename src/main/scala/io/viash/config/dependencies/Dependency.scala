@@ -112,8 +112,8 @@ case class Dependency(
   // So after that step we must always use the righthand object. This makes that much easier.
   def workRepository: Option[Repository] = repository.toOption
 
-  // Name in BashWrapper
-  def VIASH_DEP: String = s"VIASH_DEP_${alias.getOrElse(name).replace("/", "_").toUpperCase()}"
+  // Name in BashWrapper - see Bash.viashVarName for naming convention
+  def VIASH_DEP: String = io.viash.helpers.Bash.viashVarName("dep", alias.getOrElse(name))
   // Name to be used in scripts
   def scriptName: String = alias.getOrElse(name).replace("/", "_")
   // Part of the folder structure where dependencies should be written to, contains the repository & dependency name

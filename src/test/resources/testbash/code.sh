@@ -33,6 +33,21 @@ function output {
   fi
 }
 
+# Helper function to join array elements with semicolon
+function join_by_semicolon {
+  local varname=$1
+  # Check if variable is an array
+  if declare -p "$varname" 2>/dev/null | grep -q '^declare -a'; then
+    local arr_name="${varname}[@]"
+    local arr=("${!arr_name}")
+    local IFS=";"
+    echo "${arr[*]}"
+  else
+    # Not an array, just echo the value
+    echo "${!varname}"
+  fi
+}
+
 log "INFO: Parsed input arguments."
 
 if [ -z "$par_output" ]; then
@@ -42,7 +57,7 @@ else
 fi
 
 output "input: |$par_input|"
-output "real_number: |$par_real_number|"
+output "real_number: |$(join_by_semicolon par_real_number)|"
 output "whole_number: |$par_whole_number|"
 output "long_number: |$par_long_number|"
 output "s: |$par_s|"
@@ -53,8 +68,8 @@ output "output: |$par_output|"
 output "log: |$par_log|"
 output "optional: |$par_optional|"
 output "optional_with_default: |$par_optional_with_default|"
-output "multiple: |$par_multiple|"
-output "multiple_pos: |$par_multiple_pos|"
+output "multiple: |$(join_by_semicolon par_multiple)|"
+output "multiple_pos: |$(join_by_semicolon par_multiple_pos)|"
 output "multiple_output: |$par_multiple_output|"
 output "meta_resources_dir: |$meta_resources_dir|"
 

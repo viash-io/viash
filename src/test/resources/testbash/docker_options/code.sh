@@ -32,6 +32,21 @@ function output {
   fi
 }
 
+# Helper function to join array elements with semicolon
+function join_by_semicolon {
+  local varname=$1
+  # Check if variable is an array
+  if declare -p "$varname" 2>/dev/null | grep -q '^declare -a'; then
+    local arr_name="${varname}[@]"
+    local arr=("${!arr_name}")
+    local IFS=";"
+    echo "${arr[*]}"
+  else
+    # Not an array, just echo the value
+    echo "${!varname}"
+  fi
+}
+
 log "INFO: Parsed input arguments."
 
 if [ -z "$par_output" ]; then
@@ -56,5 +71,5 @@ INPUT=`head -1 "$par_input"`
 output "head of input: |$INPUT|"
 RESOURCE=`head -1 "$meta_resources_dir/resource1.txt"`
 output "head of resource1: |$RESOURCE|"
-output "multiple: |$par_multiple|"
-output "multiple_pos: |$par_multiple_pos|"
+output "multiple: |$(join_by_semicolon par_multiple)|"
+output "multiple_pos: |$(join_by_semicolon par_multiple_pos)|"
