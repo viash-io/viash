@@ -26,3 +26,5 @@ TODO add summary
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
+
+* `ANC`: Improve error handling and reduce log spamming (PR #890).
