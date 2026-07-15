@@ -77,8 +77,8 @@ abstract class Argument[Type] {
   @internalFunctionality
   val dest: String
 
-  private val pattern = "^(-*)(.*)$".r
-  val pattern(flags, plainName) = name : @unchecked
+  val flags: String = name.takeWhile(_ == '-')
+  val plainName: String = name.drop(flags.length)
 
   /** Common parameter name for this argument */
   val par: String = dest + "_" + plainName

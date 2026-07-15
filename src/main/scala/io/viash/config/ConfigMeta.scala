@@ -118,7 +118,9 @@ object ConfigMeta {
     val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
       case (configStr, (res, placeholder)) =>
         val IndentRegex = ("( *)text: \"" + placeholder + "\"").r
-        val IndentRegex(indent) = IndentRegex.findFirstIn(configStr).getOrElse("") : @unchecked
+        val indent = IndentRegex.findFirstMatchIn(configStr)
+          .map(_.group(1))
+          .getOrElse(throw new RuntimeException(s"Could not find placeholder for text field in generated yaml: $placeholder"))
         configStr.replace(
           "\"" + placeholder + "\"",
           "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n"
