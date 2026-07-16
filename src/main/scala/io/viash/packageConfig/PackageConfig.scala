@@ -246,8 +246,9 @@ object PackageConfig {
 
     /* PACKAGE 0: converted from json */
     // convert Json into ViashPackage
-    // val pack0 = Convert.jsonToClass[PackageConfig](json2, path.toString())
-    // TODO fix empty json getting parsed as 'false' and then failing to create a PackageConfig from that
+    // circe-yaml resolves an empty/blank YAML document to `Json.False` rather than `Json.Null`
+    // (see io.circe.yaml.Parser: `if (node == null) Right(Json.False)`). An empty package config
+    // file is valid and just means "no package-level overrides", so fall back to the defaults.
     val pack0 = json match {
       case json if json == Json.False => PackageConfig()
       case json => Convert.jsonToClass[PackageConfig](json, path.toString())

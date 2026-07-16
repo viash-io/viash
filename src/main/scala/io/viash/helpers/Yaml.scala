@@ -37,14 +37,19 @@ object Yaml {
 
       // Convert yaml text to Node tree
       val yamlTree = yaml.compose(new StringReader(data))
-      
-      // Search for number values of "+.inf" and replace them in place
-      recurseReplaceInfinities(yamlTree)
 
-      // Save yaml back to string
-      val writer = new StringWriter()
-      yaml.serialize(yamlTree, writer)
-      writer.toString
+      if (yamlTree == null) {
+        // an empty (or comment-only) yaml document composes to a `null` node; nothing to replace
+        data
+      } else {
+        // Search for number values of "+.inf" and replace them in place
+        recurseReplaceInfinities(yamlTree)
+
+        // Save yaml back to string
+        val writer = new StringWriter()
+        yaml.serialize(yamlTree, writer)
+        writer.toString
+      }
     }.get
   }
 

@@ -3,8 +3,9 @@ package io.viash.packageConfig
 import io.circe.Json
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import io.viash.helpers.Logger
+import io.viash.helpers.IO
 
 class PackageTest extends AnyFunSuite {
   Logger.UseColorOverride.value = Some(false)
@@ -46,5 +47,14 @@ class PackageTest extends AnyFunSuite {
 
     assert(pack2 == pack)
     assert(pack2.rootDir == Some(rootPath.resolve("testns")))
+  }
+
+  test("reading an empty package config file returns the defaults") {
+    val tempFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
+    val emptyPackPath = tempFolder.resolve("_viash.yaml")
+    IO.write("", emptyPackPath)
+
+    val pack = PackageConfig.read(emptyPackPath)
+    assert(pack == PackageConfig(rootDir = Some(tempFolder)))
   }
 }
