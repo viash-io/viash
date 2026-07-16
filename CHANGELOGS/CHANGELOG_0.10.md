@@ -36,6 +36,9 @@ TODO add summary
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
 
+* `Dependencies`: Provide a clear error message when a dependency's config fails to parse instead of an opaque `NoSuchElementException` (PR #896).
+  This can happen when running Viash with Java 17 and a non-UTF-8 default file encoding (e.g. `-Dfile.encoding=ascii`).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
