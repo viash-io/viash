@@ -21,6 +21,8 @@ import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._ // for .widen
 
 import io.circe.ACursor
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object resources {
 
@@ -43,23 +45,6 @@ package object resources {
   implicit val encodeCSharpScript: Encoder.AsObject[CSharpScript] = deriveConfiguredEncoderStrict[CSharpScript]
   implicit val encodeExecutable: Encoder.AsObject[Executable] = deriveConfiguredEncoderStrict[Executable]
   implicit val encodePlainFile: Encoder.AsObject[PlainFile] = deriveConfiguredEncoderStrict[PlainFile]
-
-  implicit def encodeResource[A <: Resource]: Encoder[A] = Encoder.instance {
-    par =>
-      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
-      val objJson = par match {
-        case s: BashScript => encodeBashScript(s)
-        case s: PythonScript => encodePythonScript(s)
-        case s: RScript => encodeRScript(s)
-        case s: JavaScriptScript => encodeJavaScriptScript(s)
-        case s: NextflowScript => encodeNextflowScript(s)
-        case s: ScalaScript => encodeScalaScript(s)
-        case s: CSharpScript => encodeCSharpScript(s)
-        case s: Executable => encodeExecutable(s)
-        case s: PlainFile => encodePlainFile(s)
-      }
-      objJson deepMerge typeJson
-  }
 
   val setDestToPathOrDefault = (default: String) => (aCursor: ACursor) => {aCursor.withFocus(js => {
     js.mapObject{ obj =>
@@ -87,25 +72,27 @@ package object resources {
   implicit val decodeExecutable: Decoder[Executable] = deriveConfiguredDecoderFullChecks
   implicit val decodePlainFile: Decoder[PlainFile] = deriveConfiguredDecoderFullChecks[PlainFile].prepare { setDestToPathOrDefault("./text.txt") }
 
-  implicit def decodeResource: Decoder[Resource] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Resource] =
-        cursor.downField("type").as[String] match {
-          case Right("bash_script") => decodeBashScript.widen
-          case Right("python_script") => decodePythonScript.widen
-          case Right("r_script") => decodeRScript.widen
-          case Right("javascript_script") => decodeJavaScriptScript.widen
-          case Right("nextflow_script") => decodeNextflowScript.widen
-          case Right("scala_script") => decodeScalaScript.widen
-          case Right("csharp_script") => decodeCSharpScript.widen
-          case Right("executable") => decodeExecutable.widen
-          case Right("file") => decodePlainFile.widen
-          case Right(typ) => 
-            val validTypes = Script.languages.map(lang => lang.id + "_script") :+ "file"
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, validTypes).widen
-          case Left(_) => decodePlainFile.widen // default is a simple file
-        }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order, so referencing them earlier
+  // would see them as still-uninitialized (null)
+  private val resourceBranches: List[DeriveConfiguredSumType.Branch[Resource]] = List(
+    branch[Resource, BashScript]("bash_script"),
+    branch[Resource, PythonScript]("python_script"),
+    branch[Resource, RScript]("r_script"),
+    branch[Resource, JavaScriptScript]("javascript_script"),
+    branch[Resource, NextflowScript]("nextflow_script"),
+    branch[Resource, ScalaScript]("scala_script"),
+    branch[Resource, CSharpScript]("csharp_script"),
+    branch[Resource, Executable]("executable"),
+    branch[Resource, PlainFile]("file"),
+  )
 
-      decoder(cursor)
-  }
+  implicit val encodeResource: Encoder[Resource] = DeriveConfiguredSumType.encoder(resourceBranches)
+
+  implicit val decodeResource: Decoder[Resource] = DeriveConfiguredSumType.decoder[Resource](
+    "type",
+    resourceBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[BashScript](typ, validTypes).widen,
+    whenMissing = Some(decodePlainFile.widen) // default is a simple file
+  )
 }

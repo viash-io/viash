@@ -19,6 +19,8 @@ package io.viash.engines
 
 import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object requirements {
   import io.viash.helpers.circe._
@@ -47,39 +49,24 @@ package object requirements {
   implicit val encodeDockerRequirements: Encoder.AsObject[DockerRequirements] = deriveConfiguredEncoder
   implicit val decodeDockerRequirements: Decoder[DockerRequirements] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodeRequirements[A <: Requirements]: Encoder[A] = Encoder.instance {
-    reqs =>
-      val typeJson = Json.obj("type" -> Json.fromString(reqs.`type`))
-      val objJson = reqs match {
-        case s: ApkRequirements => encodeApkRequirements(s)
-        case s: AptRequirements => encodeAptRequirements(s)
-        case s: YumRequirements => encodeYumRequirements(s)
-        case s: DockerRequirements => encodeDockerRequirements(s)
-        case s: PythonRequirements => encodePythonRequirements(s)
-        case s: RRequirements => encodeRRequirements(s)
-        case s: JavaScriptRequirements => encodeJavaScriptRequirements(s)
-        case s: RubyRequirements => encodeRubyRequirements(s)
-      }
-      objJson deepMerge typeJson
-  }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order
+  private val requirementsBranches: List[DeriveConfiguredSumType.Branch[Requirements]] = List(
+    branch[Requirements, ApkRequirements]("apk"),
+    branch[Requirements, AptRequirements]("apt"),
+    branch[Requirements, YumRequirements]("yum"),
+    branch[Requirements, DockerRequirements]("docker"),
+    branch[Requirements, PythonRequirements]("python"),
+    branch[Requirements, RRequirements]("r"),
+    branch[Requirements, JavaScriptRequirements]("javascript"),
+    branch[Requirements, RubyRequirements]("ruby"),
+  )
 
-  implicit def decodeRequirements: Decoder[Requirements] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Requirements] =
-        cursor.downField("type").as[String] match {
-          case Right("apk") => decodeApkRequirements.widen
-          case Right("apt") => decodeAptRequirements.widen
-          case Right("yum") => decodeYumRequirements.widen
-          case Right("docker") => decodeDockerRequirements.widen
-          case Right("python") => decodePythonRequirements.widen
-          case Right("r") => decodeRRequirements.widen
-          case Right("javascript") => decodeJavaScriptRequirements.widen
-          case Right("ruby") => decodeRubyRequirements.widen
-          case Right(typ) =>
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ApkRequirements](typ, List("apk", "apt", "yum", "docker", "python", "r", "javascript", "ruby")).widen
-          case Left(exception) => throw exception
-        }
+  implicit val encodeRequirements: Encoder[Requirements] = DeriveConfiguredSumType.encoder(requirementsBranches)
 
-      decoder(cursor)
-  }
+  implicit val decodeRequirements: Decoder[Requirements] = DeriveConfiguredSumType.decoder[Requirements](
+    "type",
+    requirementsBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ApkRequirements](typ, validTypes).widen
+  )
 }
