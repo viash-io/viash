@@ -21,7 +21,7 @@ jobs:
         java-version: '11'
 
     - name: Set up sbt
-      uses: sbt/setup-sbt@v1
+      uses: sbt/setup-sbt@v1.5.4
 
     - name: Build viash
       run: |
