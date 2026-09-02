@@ -39,10 +39,25 @@ process publishFilesProc {
   ]
     .transpose()
     .collectMany{infile, outfile ->
-      if (infile.toString() != outfile.toString()) {
+      def infileString = infile.toString()
+      def outfileString = outfile.toString()
+      if (infileString != outfileString) {
+        /* Trailing slashes are removed from both the source and destination arguments.
+           From source arguments, this is useful when a source argument may have a trailing slash
+           and specify a symbolic link to a directory. Without removing the slash, cp will dereference
+           the symbolic link. 
+           See https://www.gnu.org/software/coreutils/manual/html_node/Trailing-slashes.html#Trailing-slashes-1
+
+           For the destination path addding a trailing slash is a problem when publishing directories: 
+           it requires the destination directory to exist. This fails because we only create the parent
+           directories first.
+        */
+        def regexTrailingSlashes = ~/\/+$/
+        def infileNoTrailingSlash = infileString - regexTrailingSlashes
+        def outfileNoTrailingSlash = outfileString - regexTrailingSlashes
         [
-          "[ -d \"\$(dirname '${outfile.toString()}')\" ] || mkdir -p \"\$(dirname '${outfile.toString()}')\"",
-          "cp -r '${infile.toString()}' '${outfile.toString()}'"
+          "[ -d \"\$(dirname '${outfileNoTrailingSlash}')\" ] || mkdir -p \"\$(dirname '${outfileNoTrailingSlash}')\"",
+          "cp -a '${infileNoTrailingSlash}' '${outfileNoTrailingSlash}'"
         ]
       } else {
         // no need to copy if infile is the same as outfile

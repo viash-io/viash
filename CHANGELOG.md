@@ -8,9 +8,41 @@
 
 Fix an issue for deeply nested dependencies.
 
+# Viash 0.9.7 (2026-03-03): Bug fix release
+
+Fix a few issues with how Viash interacts with Nextflow and fix an issue with dependency resolving.
+
+## BUG FIXES
+
+* `NextflowRunner`: Fix `readCsv` failing on S3 paths with Nextflow 25.10.x (PR #864). The `BufferedReader.ready()` method returns false for S3 streams when no data is pre-buffered, which broke compatibility with AWS SDK v2 used in Nextflow 25.10.x.
+
+* `Nextflowrunner`: fix publishing of directories when the output file name template contains a trailing slash (PR #867).
+
+* `Logging`: Reduce log level for fetching repositories from info to debug (PR #871).
+
+* `Dependencies`: Fix an edge case during dependency resolving (PR #870). Local dependencies of dependencies of local dependencies were resolved incorrectly and resulted in a wrongly resolved destination path.
+
+# Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
+
+This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
+
+## BUG FIXES
+
+* `Dependencies`: Fix an issue when trying to relativize a relative path results in an empty array (PR #857). The empty array then throws an error when trying to reduce it.
+
+# Viash 0.9.5 (2025-10-06): Hotfix for internal CI usage
+
+This is a hotfix release to support internal CI usage and testing.
+There is no functionality change for regular users.
+
+## MINOR CHANGES
+
+* `Vsh repository`: Add support for overriding host resolving (PR #854). This is meant for internal usage and testing and will be replaced in the near future.
+
 ## BUG FIXES
 
 * `Dependencies`: Fix an issue where deeply nested dependencies are not resolvable if they require a local dependency (PR #838).
+  This solves a build issue, some issues still remain with running components with such dependencies.
 
 # Viash 0.9.4 (2025-04-24): Hotfix for Nextflow edge
 

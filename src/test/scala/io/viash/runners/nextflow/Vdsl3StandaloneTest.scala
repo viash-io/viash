@@ -282,6 +282,28 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Output directory slashes", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/output_directory/main.nf",
+      args = List(
+        "--output", "$id.$key.foo/",
+        "--publish_dir", "moduleOutputDir1"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    
+    val src = Source.fromFile(tempFolStr + "/moduleOutputDir1/run.output_directory.foo/test1.txt")
+
+    try {
+      val moduleOut = src.getLines().mkString(",")
+      assert(moduleOut.equals("test123"))
+    } finally {
+      src.close()
+    }
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
