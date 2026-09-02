@@ -49,4 +49,4 @@ TODO add summary
   (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
   robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
 
-* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #)
+* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
