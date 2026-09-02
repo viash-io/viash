@@ -6,6 +6,23 @@ import sys.process._
 
 object NextflowTestHelper {
   /**
+    * Splits Nextflow's stdout into one line per debug record.
+    *
+    * Nextflow >= 26.02.0-edge routes `view` output through
+    * Session.printConsole -> LogObserver.appendInfo(String), which drops the
+    * operator's `newLine` flag (passing `newLine: true` explicitly does not
+    * help either). As a result consecutive `view` emissions end up
+    * concatenated on a single line. Re-insert a line break before every record
+    * so that parsing stays line-based on every Nextflow version.
+    *
+    * @param output Output string
+    * @param headerKeyword Keyword every record starts with (may be a regex)
+    * @return The output lines, with at most one record per line
+    */
+  private def splitOnHeader(output: String, headerKeyword: String): Array[String] =
+    output.replaceAll(s"(?=$headerKeyword: \\[)", "\n").split("\n")
+
+  /**
     * Checks if the output contains the expected string
     *
     * @param output Output string
@@ -17,12 +34,18 @@ object NextflowTestHelper {
       headerKeyword: String,
       fileContentMatcher: String
   ): Unit = {
-    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
+    // The capture is non-greedy and is matched anywhere in the line instead of
+    // being anchored to the whole line, so that a record of a *different* debug
+    // keyword glued onto the same line (see splitOnHeader) does not end up
+    // inside the captured path.
+    val DebugRegex = s"$headerKeyword: \\[foo, (.*?)\\]".r
 
-    val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
+    val firstMatch = splitOnHeader(output, headerKeyword)
+      .flatMap(DebugRegex.findFirstMatchIn(_))
+      .headOption
 
-    assert(lines.isDefined)
-    val DebugRegex(path) = lines.get : @unchecked
+    assert(firstMatch.isDefined)
+    val path = firstMatch.get.group(1)
 
     val src = Source.fromFile(path)
     try {
@@ -41,7 +64,7 @@ object NextflowTestHelper {
     * @return Returns a tuple of the id and the arguments
     */
   def outputTupleProcessor(output: String, headerKeyword: String): Array[(String, Map[String, String])] = {
-    val stdOutLines = output.split("\n")
+    val stdOutLines = splitOnHeader(output, headerKeyword)
 
     val DebugRegex = s"$headerKeyword: \\[(.*), \\[(.*)\\]\\]".r
     val debugPrints = stdOutLines.flatMap {
