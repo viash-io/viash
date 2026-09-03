@@ -245,7 +245,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Test secret directive", NextflowTest) {
     // First set the secret
-    val secretCommand = List("nextflow", "secret", "set", "MY_SUPER_SECRET_SECRET", "Lorem ipsum")
+    val secretCommand = List("nextflow", "secrets", "set", "MY_SUPER_SECRET_SECRET", "Lorem ipsum")
     
     val secretStdOut = new StringBuilder
     val secretStdErr = new StringBuilder
