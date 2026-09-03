@@ -25,6 +25,9 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
 
   protected val image = "bash:3.2"
   protected val dockerTag = "viash_requirements_testbench"
+  // jq setup requirement to be prepended to Docker engine setup.
+  // Subclasses should override this for non-Alpine images.
+  protected val jqSetup: String = """{ "type": "apk", "packages": ["jq"] }"""
 
   case class FixtureParam()
 
@@ -45,7 +48,13 @@ abstract class AbstractMainBuildAuxiliaryDockerRequirements extends FixtureAnyFu
   }
 
   def deriveEngineConfig(setup: Option[String], test_setup: Option[String], name: String): String = {
-    val setupStr = setup.map(s => s""", "setup": $s""").getOrElse("")
+    val allSetupItems = setup match {
+      case Some(s) =>
+        val inner = s.trim.stripPrefix("[").stripSuffix("]").trim
+        if (inner.nonEmpty) s"$jqSetup, $inner" else jqSetup
+      case None => jqSetup
+    }
+    val setupStr = s""", "setup": [$allSetupItems]"""
     val testSetupStr = test_setup.map(s => s""", "test_setup": $s""").getOrElse("")
 
     configDeriver.derive(
@@ -142,6 +151,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
 class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apt"
   override val image = "debian:bullseye-slim"
+  override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "apt_base")
@@ -219,6 +229,7 @@ class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliary
 class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_yum"
   override val image = "fedora:38"
+  override protected val jqSetup: String = """{ "type": "yum", "packages": ["jq"] }"""
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "yum_base")
@@ -296,6 +307,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
 class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_ruby"
   override val image = "ruby:slim-bullseye"
+  override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "ruby_base")
@@ -373,6 +385,7 @@ class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliar
 class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_r"
   override val image = "r-base:4.3.1"
+  override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for r still does not contain the glue package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "r_base")
@@ -484,6 +497,7 @@ class MainBuildAuxiliaryDockerRequirementsR extends AbstractMainBuildAuxiliaryDo
 class MainBuildAuxiliaryDockerRequirementsRBioc extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_rbioc"
   override val image = "r-base:4.3.1"
+  override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for r-bioc still does not contain the BiocGenerics package", DockerTest) { f =>
     val newConfigFilePath = deriveEngineConfig(None, None, "rbioc_base")

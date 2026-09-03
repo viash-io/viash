@@ -49,7 +49,7 @@ try {
 
   val input = Source.fromFile(par.input).getLines().toArray
   outputFun(s"head of input: |${input(0)}|")
-  val resource1 = Source.fromFile("resource1.txt").getLines().toArray
+  val resource1 = Source.fromFile(s"${meta.resources_dir}/resource1.txt").getLines().toArray
   outputFun(s"head of resource1: |${resource1(0)}|")
   
 } finally {

@@ -38,6 +38,38 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, false)
   }
 
+  test("Check test output with use_jq set to false") {
+    val newConfigFilePath = configDeriver.derive(
+      """.resources[.type == "bash_script"].use_jq := false""",
+      "use_jq_false"
+    )
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
+  test("Check test output with use_jq unset") {
+    val newConfigFilePath = configDeriver.derive(
+      List(""".resources[.type == "bash_script"].use_jq := null""", """.test_resources[.type == "bash_script"].use_jq := null"""),
+      "use_jq_unset"
+    )
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      newConfigFilePath
+    )
+
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+    checkTempDirAndRemove(testOutput.stdout, false)
+  }
+
   test("Check standard test output with trailing arguments") {
     val testOutput = TestHelper.testMain(
       "test",

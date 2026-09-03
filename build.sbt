@@ -78,5 +78,41 @@ generateWorkflowHelper := {
   streams.value.log.info(s"Generated WorkflowHelper.nf at ${wfHelper.toAbsolutePath}")
 }
 
+// Generate BuildInfo.scala with name and version baked in at compile time.
+// The JAR manifest approach doesn't work in GraalVM native binaries.
+Compile / sourceGenerators += Def.task {
+  val file = (Compile / sourceManaged).value / "io" / "viash" / "BuildInfo.scala"
+  IO.write(file,
+    s"""package io.viash
+       |
+       |object BuildInfo {
+       |  val name: String = "${name.value}"
+       |  val version: String = "${version.value}"
+       |}
+       |""".stripMargin)
+  Seq(file)
+}.taskValue
+
 assembly := ((assembly) dependsOn generateWorkflowHelper).value
 Test / testOptions := ((Test / testOptions) dependsOn generateWorkflowHelper).value
+
+// GraalVM native-image configuration
+enablePlugins(NativeImagePlugin)
+
+Compile / mainClass := Some("io.viash.Main")
+
+nativeImageJvm := "graalvm-java21"
+nativeImageVersion := "21.0.2"
+Global / excludeLintKeys ++= Set(nativeImageJvm, nativeImageVersion)
+
+nativeImageOptions ++= Seq(
+  "--no-fallback",
+  "-H:+ReportExceptionStackTraces",
+  // Scala 3 lazy vals use reflection for bitmap fields (scala/scala3#13985).
+  // Initializing at build time lets reflection resolve during the build.
+  "--initialize-at-build-time=scala,org.rogach.scallop",
+  // viash downloads remote resources and version binaries over HTTPS
+  "--enable-url-protocols=https",
+)
+
+nativeImage := ((nativeImage) dependsOn generateWorkflowHelper).value

@@ -21,8 +21,10 @@ resources:
     path: code.py
 test_resources:
   - type: bash_script
+    use_jq: true
     path: test.sh
   - type: bash_script
+    use_jq: true
     path: test_div0.sh
 engines:
   - type: native

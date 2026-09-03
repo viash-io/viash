@@ -54,10 +54,15 @@ arguments:
       \n\r\t\s\
 resources:
   - type: bash_script
+    use_jq: true
     path: script.sh
 engines:
   - type: native
   - type: docker
     image: nextflow/bash:latest
+    setup:
+      - type: apk
+        packages:
+          - jq
 runners:
   - type: nextflow

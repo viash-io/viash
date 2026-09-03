@@ -78,7 +78,7 @@ object NextflowHelper {
 
     val executionCode = 
       s"""set -e
-        |tempscript=".viash_script.${res.companion.extension}"
+        |tempscript=".viash_script${res.language.extensions.head}"
         |cat > "$scriptPath" << VIASHMAIN
         |$escapedCode
         |VIASHMAIN

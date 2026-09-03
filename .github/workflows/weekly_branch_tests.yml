@@ -27,7 +27,7 @@ jobs:
 
     steps:
     - name: Checkout ${{ matrix.branch }} branch
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
       with:
         ref: ${{ matrix.branch }}
 
@@ -47,7 +47,7 @@ jobs:
           testthat
 
     - name: Set up java
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
         distribution: temurin
         java-version: ${{ matrix.java.ver }}
@@ -65,13 +65,13 @@ jobs:
         fi
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: '3.x'
 
     - name: Set up Nextflow
       if: ${{ runner.os == 'Linux' && matrix.java.run_nextflow }}
-      uses: nf-core/setup-nextflow@v2
+      uses: nf-core/setup-nextflow@v3
       with:
         version: ${{ matrix.java.nxf_ver }}
 

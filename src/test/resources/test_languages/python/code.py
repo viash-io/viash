@@ -57,7 +57,10 @@ try:
             echo(f"{key}: |{value}|")
 
     for key, value in meta.items():
-        echo(f"meta_{key}: |{value}|")
+        if value is None:
+            echo(f"meta_{key}: ||")
+        else:
+            echo(f"meta_{key}: |{value}|")
 
     with open(par['input'], 'r') as infile:
         input = infile.readline().strip()

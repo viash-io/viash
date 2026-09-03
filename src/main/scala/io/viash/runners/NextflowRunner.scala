@@ -30,6 +30,7 @@ import io.viash.runners.{Runner, RunnerResources}
 import io.viash.engines.DockerEngine
 import io.viash.runners.nextflow._
 import io.viash.config.resources.{Executable, NextflowScript, PlainFile}
+import io.viash.languages.Nextflow
 
 @description(
   """Run a Viash component on a Nextflow backend engine.
@@ -162,7 +163,7 @@ final case class NextflowRunner(
 
     // TODO: define profiles
     val profileStr = 
-      if (containerDirective.isDefined || config.mainScript.map(_.`type`) == Some(NextflowScript.`type`)) {
+      if (containerDirective.isDefined || config.mainScript.map(_.`type`) == Some(Nextflow.scriptTypeId)) {
         "\n\n" + NextflowHelper.profilesHelper
       } else {
         ""

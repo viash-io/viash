@@ -20,25 +20,21 @@ jobs:
         echo "Testing viash download from https://dl.viash.io"
         
         # Download viash
-        if [[ "${{ matrix.os }}" =~ ^ubuntu.*$ ]]; then
-          curl -fsSL https://dl.viash.io | bash
-        elif [[ "${{ matrix.os }}" =~ ^macos.*$ ]]; then
-          curl -fsSL https://dl.viash.io | bash
-        fi
+        curl -fsSL https://dl.viash.io | bash
         
         # Verify installation
-        if command -v viash &> /dev/null; then
-          echo "✅ viash command is available"
-          viash --version
+        if [ -f "./viash" ]; then
+          echo "✅ viash binary exists locally"
+          ./viash --version
           echo "✅ viash version check successful"
         else
-          echo "❌ viash command not found after installation"
+          echo "❌ viash binary not found in local directory after installation"
           exit 1
         fi
         
         # Test basic functionality
         echo "Testing basic viash functionality..."
-        viash --help > /dev/null
+        ./viash --help > /dev/null
         echo "✅ viash help command works"
 
     - name: Notify download test failure

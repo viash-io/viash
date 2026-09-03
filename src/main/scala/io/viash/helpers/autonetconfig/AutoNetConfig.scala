@@ -37,15 +37,15 @@ case class AutoNetConfig(
 object AutoNetConfig extends Logging {
   def fetchAnc(uri: String): Option[(AutoNetConfig, String)] = {
     info(s"Fetching ANC from ${uri}")
-    val txt = IO.readSome(URI(uri))
-    if (txt.isEmpty) return None
-
-    txt match {
-      case None => None
-      case Some(s) => {
+    IO.readSome(URI(uri)).flatMap { s =>
+      try {
         val json = Convert.textToJson(s, uri)
-        val anc = Convert.jsonToClass[AutoNetConfig](json, uri)    
+        val anc = Convert.jsonToClass[AutoNetConfig](json, uri)
         Some((anc, s))
+      } catch {
+        case e: Exception =>
+          debug(s"Failed to parse ANC from ${uri}: ${e.getMessage()}")
+          None
       }
     }
   }
@@ -95,7 +95,7 @@ object AutoNetConfig extends Logging {
       .orElse(fetchAnc(s"http://${base}/auto-net-config/auto-net-config"))
       .orElse(fetchAnc(s"http://auto-net-config.${base}/auto-net-config/auto-net-config"))
 
-    info(s"Result of fetching ANC from ${base}: ${res}")
+    debug(s"Result of fetching ANC from ${base}: ${res}")
     
     if (res.isDefined) {
       cachePath.getParent().toFile().mkdirs()
