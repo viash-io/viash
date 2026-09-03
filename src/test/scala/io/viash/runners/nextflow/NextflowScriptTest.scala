@@ -1,6 +1,6 @@
 package io.viash.runners.nextflow
 
-import io.viash.helpers.{IO, Logger}
+import io.viash.helpers.{IO, Logger, Exec}
 import io.viash.{DockerTest, NextflowTest, TestHelper}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
@@ -244,6 +244,11 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("Test secret directive", NextflowTest) {
+
+    // Check if this version of nextflow has support for secrets
+    val secretCheck = Exec.runCatch(List("nextflow", "secrets", "-help"))
+    assume(secretCheck.exitValue == 0, "Nextflow version does not have secret support. Skipping test")
+
     // First set the secret
     val secretCommand = List("nextflow", "secrets", "set", "MY_SUPER_SECRET_SECRET", "Lorem ipsum")
     
