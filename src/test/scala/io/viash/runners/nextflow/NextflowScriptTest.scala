@@ -12,6 +12,7 @@ import scala.io.Source
 import java.io.IOException
 import java.io.UncheckedIOException
 
+import sys.process._
 import NextflowTestHelper._
 
 /**
@@ -240,6 +241,40 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+  }
+
+  test("Test secret directive", NextflowTest) {
+    // First set the secret
+    val secretCommand = List("nextflow", "secret", "set", "MY_SUPER_SECRET_SECRET", "Lorem ipsum")
+    
+    val secretStdOut = new StringBuilder
+    val secretStdErr = new StringBuilder
+
+    val setSecretExitCode = Process(secretCommand, tempFolFile).!(
+      ProcessLogger(str => secretStdOut ++= s"$str\n", str => secretStdErr ++= s"$str\n")
+    )
+
+    assert(setSecretExitCode == 0, s"\ncould not set secret, exit code was $setSecretExitCode\nStd output:\n$secretStdOut\nStd error:\n$secretStdErr")
+
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/write_secret_to_file/main.nf",
+      args = List(
+        "--id", "foo",
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+    val outputPath = temporaryFolder.resolve("output/foo.write_secret_to_file.output.txt")
+
+    val src = Source.fromFile(outputPath.toFile())
+    try {
+      val outputContents = src.getLines().mkString("\n")
+      assert(outputContents.equals("Lorem ipsum"))
+    } finally {
+      src.close()
+    }
   }
 
 
