@@ -36,6 +36,8 @@ TODO add summary
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
 
+* `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #886).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
