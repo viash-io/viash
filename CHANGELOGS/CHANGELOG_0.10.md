@@ -39,6 +39,9 @@ TODO add summary
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
 
+* `Config build`: Strip credentials from the git remote URL before storing it in `.build_info.git_remote`, even when the
+  username contains characters outside `\w` (e.g. `x-access-token`) (PR #897).
+
 * `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
 ## MINOR FIXES
