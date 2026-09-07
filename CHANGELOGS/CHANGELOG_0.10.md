@@ -4,6 +4,9 @@ TODO add summary
 
 ## NEW FEATURES
 
+* `Nextflow` runner: Add support for the `secret` directive (PR #886).
+  This allows Nextflow secrets to be injected into a process as environment variables, e.g. `secret "MY_SECRET"`.
+
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
 
 * `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
@@ -39,6 +42,8 @@ TODO add summary
 * `Config build`: Strip credentials from the git remote URL before storing it in `.build_info.git_remote`, even when the
   username contains characters outside `\w` (e.g. `x-access-token`) (PR #897).
 
+* `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
@@ -51,3 +56,5 @@ TODO add summary
   Instead of injecting argument values directly into script code, values are now stored in a JSON file
   (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
   robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
+
+* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
