@@ -48,3 +48,5 @@ TODO add summary
   Instead of injecting argument values directly into script code, values are now stored in a JSON file
   (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
   robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
+
+* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
