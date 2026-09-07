@@ -39,6 +39,9 @@ TODO add summary
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
 
+* `Dependencies`: Provide a clear error message when a dependency's config fails to parse instead of an opaque `NoSuchElementException` (PR #896).
+  This can happen when running Viash with Java 17 and a non-UTF-8 default file encoding (e.g. `-Dfile.encoding=ascii`).
+
 * `Config build`: Strip credentials from the git remote URL before storing it in `.build_info.git_remote`, even when the
   username contains characters outside `\w` (e.g. `x-access-token`) (PR #897).
 
