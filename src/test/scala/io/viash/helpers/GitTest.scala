@@ -98,6 +98,25 @@ class GitTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
   }
 
+  test("Check git metadata after git remote add, but remote definition contains a username with special characters") {
+    val fakeGitRepo = "https://x-access-token:ghs_yoloSGFoLCB0aGlzIGlzIG5vdCBhIHJlYWwgUEFU@github.com/viash/meta-test.git"
+    val tempDir = makeTemp("viash_test_meta_5b_").toFile
+
+    val gitInitOut = Exec.runCatch(List("git", "init"), cwd = Some(tempDir))
+    assert(gitInitOut.exitValue == 0, s"git init: ${gitInitOut.output}")
+
+    val gitRemoteAddOut = Exec.runCatch(List("git", "remote", "add", "origin", fakeGitRepo), cwd = Some(tempDir))
+    assert(gitRemoteAddOut.exitValue == 0, s"git remote add: ${gitRemoteAddOut.output}")
+
+    val gitInfo = Git.getInfo(tempDir)
+    assert(Git.isGitRepo(tempDir), "Git.isGitRepo")
+    assert(Git.getCommit(tempDir).isEmpty, "Git.getCommit")
+    val lr = Git.getLocalRepo(tempDir)
+    assert(lr.isDefined && lr.get.contains(tempDir.toString), "Git.getLocalRepo")
+    assert(Git.getRemoteRepo(tempDir) == Some("https://github.com/viash/meta-test.git"), "Git.getRemoteRepo")
+    assert(Git.getTag(tempDir).isEmpty, "Git.getTag")
+  }
+
   test("Check git metadata after git commit") {
     val tempDir = makeTemp("viash_test_meta_6_").toFile
 

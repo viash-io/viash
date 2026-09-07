@@ -143,6 +143,7 @@ object NextflowTestHelper {
       "nextflow" :: 
         { if (quiet) List("-q") else Nil } ::: 
         "run" :: "." ::
+        "-ansi-log" :: "false" ::
         "-main-script" :: mainScript ::
         { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
         { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::

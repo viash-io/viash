@@ -4,6 +4,9 @@ TODO add summary
 
 ## NEW FEATURES
 
+* `Nextflow` runner: Add support for the `secret` directive (PR #886).
+  This allows Nextflow secrets to be injected into a process as environment variables, e.g. `secret "MY_SECRET"`.
+
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
 
 * `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
@@ -38,6 +41,14 @@ TODO add summary
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
 
+* `Dependencies`: Provide a clear error message when a dependency's config fails to parse instead of an opaque `NoSuchElementException` (PR #896).
+  This can happen when running Viash with Java 17 and a non-UTF-8 default file encoding (e.g. `-Dfile.encoding=ascii`).
+
+* `Config build`: Strip credentials from the git remote URL before storing it in `.build_info.git_remote`, even when the
+  username contains characters outside `\w` (e.g. `x-access-token`) (PR #897).
+
+* `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
@@ -54,3 +65,5 @@ TODO add summary
 * `Regex`: Rewrite regexes with potentially incomplete matches so they no longer need to be marked `@unchecked` (PR #895).
 
 * `Circe`: Add a helper method for combined encoding & decoding of top-level sealed traits, reducing the chance of errors in this pattern (PR #895).
+
+* `NextflowRunner`: Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
