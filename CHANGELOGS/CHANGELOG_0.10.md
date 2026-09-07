@@ -4,6 +4,9 @@ TODO add summary
 
 ## NEW FEATURES
 
+* `Nextflow` runner: Add support for the `secret` directive (PR #886).
+  This allows Nextflow secrets to be injected into a process as environment variables, e.g. `secret "MY_SECRET"`.
+
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
 
 * `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
