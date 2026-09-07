@@ -159,9 +159,9 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
     }
   }
 
-  // multiple entries allowed: label, publishdir
+  // multiple entries allowed: label, publishdir, secret
   def drctvStrs = drctv.collect { key, value ->
-    if (key in ["label", "publishDir"]) {
+    if (key in ["label", "publishDir", "secret"]) {
       value.collect{ val ->
         if (val instanceof Map) {
           "\n$key " + val.collect{ k, v -> k + ": " + valueToStr(v) }.join(", ")
