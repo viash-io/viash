@@ -219,5 +219,6 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

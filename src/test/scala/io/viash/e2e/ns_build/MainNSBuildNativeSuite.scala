@@ -135,6 +135,9 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(testOutput.exitCode == Some(0))
     assert(testOutput.stderr.contains("All 2 configs built successfully"))
+
+    IO.deleteRecursively(tempSrcDir)
+    IO.deleteRecursively(tempTargetDir)
   }
 
   test("Check uniqueness of component names, different name, same namespace") {
@@ -156,6 +159,9 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(testOutput.exitCode == Some(0))
     assert(testOutput.stderr.contains("All 2 configs built successfully"))
+
+    IO.deleteRecursively(tempSrcDir)
+    IO.deleteRecursively(tempTargetDir)
   }
 
   test("Check uniqueness of component names, same name, same namespace") {
@@ -177,6 +183,9 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(!testOutput.stderr.contains("All 2 configs built successfully"))
     assert(testOutput.exceptionText.contains("Duplicate component name found: ns/comp"))
+
+    IO.deleteRecursively(tempSrcDir)
+    IO.deleteRecursively(tempTargetDir)
   }
 
   test("Check uniqueness of component names, same name, same namespace - multiple duplicates") {
@@ -200,6 +209,9 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
 
     assert(!testOutput.stderr.contains("All 2 configs built successfully"))
     assert(testOutput.exceptionText.contains("Duplicate component names found: ns/comp1, ns/comp2"))
+
+    IO.deleteRecursively(tempSrcDir)
+    IO.deleteRecursively(tempTargetDir)
   }
 
   override def afterAll(): Unit = {

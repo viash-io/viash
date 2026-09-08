@@ -546,6 +546,8 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(testOutput.stdout.isEmpty())
     assert(testOutput.stderr.isEmpty())
+
+    IO.deleteRecursively(temporaryFolder)
   }
 
   /**

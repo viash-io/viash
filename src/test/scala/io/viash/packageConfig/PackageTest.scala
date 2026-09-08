@@ -1,19 +1,22 @@
 package io.viash.packageConfig
 
 import io.circe.Json
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import io.circe.syntax._
-import java.nio.file.{Files, Paths}
+import java.nio.file.Paths
 import io.viash.helpers.Logger
 import io.viash.helpers.IO
 
-class PackageTest extends AnyFunSuite {
+class PackageTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   private val rootPath = Paths.get(getClass.getResource("/").getPath)
   private val testBashPath = rootPath.resolve("testbash")
   private val testNsPath = rootPath.resolve("testns")
 
   private val testNsPackPath = rootPath.resolve("testns/_viash.yaml")
+
+  private val tempFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
 
   test("no package config file is found in testbash") {
     val packagePath = PackageConfig.findPackageFile(testBashPath)
@@ -50,11 +53,14 @@ class PackageTest extends AnyFunSuite {
   }
 
   test("reading an empty package config file returns the defaults") {
-    val tempFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
     val emptyPackPath = tempFolder.resolve("_viash.yaml")
     IO.write("", emptyPackPath)
 
     val pack = PackageConfig.read(emptyPackPath)
     assert(pack == PackageConfig(rootDir = Some(tempFolder)))
+  }
+
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(tempFolder)
   }
 }
