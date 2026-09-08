@@ -19,6 +19,7 @@ package io.viash.config
 
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.regex.Pattern
 import io.circe.yaml.Printer
 
 import io.viash.config.resources.PlainFile
@@ -117,7 +118,7 @@ object ConfigMeta {
     // replace text placeholders with nice multiline string
     val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
       case (configStr, (res, placeholder)) =>
-        val IndentRegex = ("( *)text: \"" + placeholder + "\"").r
+        val IndentRegex = ("( *)text: \"" + Pattern.quote(placeholder) + "\"").r
         val indent = IndentRegex.findFirstMatchIn(configStr)
           .map(_.group(1))
           .getOrElse(throw new RuntimeException(s"Could not find placeholder for text field in generated yaml: $placeholder"))
