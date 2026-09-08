@@ -17,6 +17,7 @@
 
 package io.viash.config
 
+import java.net.URLEncoder
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.regex.Pattern
@@ -77,8 +78,11 @@ object ConfigMeta {
     val config = appliedConfig.config
 
     // get resources
+    // the filename is url-encoded so the placeholder is guaranteed to consist only of characters
+    // that the yaml printer never needs to escape (e.g. '"' or '\'), regardless of what the
+    // filename itself contains; this keeps the placeholder search below exact and unambiguous
     val placeholderMap = config.resources.filter(_.text.isDefined).map{ res =>
-      (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
+      (res, "VIASH_PLACEHOLDER~" + URLEncoder.encode(res.filename, "UTF-8") + "~")
     }.toMap
 
     val executableName = appliedConfig.runner match {
