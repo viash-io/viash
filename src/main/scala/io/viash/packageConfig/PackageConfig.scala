@@ -250,7 +250,7 @@ object PackageConfig {
     // (see io.circe.yaml.Parser: `if (node == null) Right(Json.False)`). An empty package config
     // file is valid and just means "no package-level overrides", so fall back to the defaults.
     val pack0 = json match {
-      case json if json == Json.False => PackageConfig()
+      case json if json == Json.False || json == Json.Null => PackageConfig()
       case json => Convert.jsonToClass[PackageConfig](json, path.toString())
     }
 
