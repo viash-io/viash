@@ -150,7 +150,7 @@ class MainBuildAuxiliaryDockerRequirementsApk extends AbstractMainBuildAuxiliary
 
 class MainBuildAuxiliaryDockerRequirementsApt extends AbstractMainBuildAuxiliaryDockerRequirements {
   override val dockerTag = "viash_requirements_testbench_apt"
-  override val image = "debian:bullseye-slim"
+  override val image = "debian:trixie-slim"
   override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for apt still does not contain the cowsay package", DockerTest) { f =>
@@ -306,7 +306,7 @@ class MainBuildAuxiliaryDockerRequirementsYum extends AbstractMainBuildAuxiliary
 
 class MainBuildAuxiliaryDockerRequirementsRuby extends AbstractMainBuildAuxiliaryDockerRequirements{
   override val dockerTag = "viash_requirements_testbench_ruby"
-  override val image = "ruby:slim-bullseye"
+  override val image = "ruby:slim-trixie"
   override protected val jqSetup: String = """{ "type": "apt", "packages": ["jq"] }"""
 
   test("setup; check base image for yum still does not contain the which package", DockerTest) { f =>
