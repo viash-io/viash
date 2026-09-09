@@ -573,7 +573,10 @@ object Config extends Logging {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    if ((extension == ".yml" || extension == ".yaml") && configStr.contains("name:")) {
+    // an empty or whitespace-only yaml file is also accepted here so that it can be caught
+    // downstream by the Json0 empty-document check and reported as ConfigParserEmptyException,
+    // instead of falling through to the generic "must be a yaml file" error below
+    if ((extension == ".yml" || extension == ".yaml") && (configStr.contains("name:") || configStr.trim.isEmpty)) {
       (configStr, None)
     } else if (Script.extensions.contains(extension)) {
       // detect scripting language from extension

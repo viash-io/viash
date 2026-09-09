@@ -167,6 +167,19 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(ex.getMessage() == "The Viash config file is empty.")
   }
 
+  test("Reading a blank config file throws a clean, dedicated error") {
+    val tempFolder = temporaryFolder.resolve("test_blank_config")
+    Files.createDirectory(tempFolder)
+    val configPath = tempFolder.resolve("config.vsh.yaml")
+    // no "name:" anywhere, so it doesn't hit the same detection path as the comment-only case above
+    IO.write("   \n\n", configPath)
+
+    val ex = intercept[io.viash.exceptions.ConfigParserEmptyException] {
+      Config.read(configPath.toString)
+    }
+    assert(ex.getMessage() == "The Viash config file is empty.")
+  }
+
   test("Test default scope value") {
     val newConfigFilePath = configDeriver.derive(Nil, "default_scope")
     val newConfig = Config.read(newConfigFilePath)
