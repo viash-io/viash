@@ -46,6 +46,7 @@ import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
 import io.viash.helpers.data_structures.oneOrMoreToList
+import io.viash.exceptions.ConfigParserEmptyException
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -572,7 +573,10 @@ object Config extends Logging {
 
     // detect whether a script (with joined header) was passed or a joined yaml
     // using the extension
-    if ((extension == ".yml" || extension == ".yaml") && configStr.contains("name:")) {
+    // an empty or whitespace-only yaml file is also accepted here so that it can be caught
+    // downstream by the Json0 empty-document check and reported as ConfigParserEmptyException,
+    // instead of falling through to the generic "must be a yaml file" error below
+    if ((extension == ".yml" || extension == ".yaml") && (configStr.contains("name:") || configStr.trim.isEmpty)) {
       (configStr, None)
     } else if (Script.extensions.contains(extension)) {
       // detect scripting language from extension
@@ -635,6 +639,12 @@ object Config extends Logging {
     /* JSON 0: parsed from string */
     // parse yaml into Json
     val json0 = Convert.textToJson(replacedYamlText, uri.toString())
+
+    // circe-yaml resolves an empty/blank YAML document to `Json.False` rather than `Json.Null`.
+    // An empty component config has no sensible default, so fail clearly here
+    // instead of letting it fall through to a confusing decode error later on.
+    if (json0 == Json.False || json0 == Json.Null)
+      throw new ConfigParserEmptyException(uri.toString())
 
     /* JSON 1: after inheritance */
     // apply inheritance if need be

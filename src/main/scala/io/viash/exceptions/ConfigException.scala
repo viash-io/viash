@@ -34,6 +34,12 @@ case class ConfigYamlException(uri: String, e: Throwable) extends AbstractConfig
   val innerMessage: String = "invalid Yaml structure"
 }
 
+case class ConfigParserEmptyException(uri: String) extends AbstractConfigException {
+  val e: Throwable = null
+  val innerMessage: String = "empty config content"
+  override def getMessage(): String = "The Viash config file is empty."
+}
+
 case class ConfigParserSubTypeException(tpe: String, validTypes: List[String], json: String) extends Exception {
 
   private val validTypesStr = validTypes.dropRight(1).mkString("'", "', '", "'") + s", and '${validTypes.last}'"

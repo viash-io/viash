@@ -32,6 +32,8 @@ TODO add summary
 
 ## BUG FIXES
 
+* `Config parsing`: Fix an empty or comment-only `.vsh.yaml` config file causing a `NullPointerException` or an opaque decode error; this now raises a clear "config file is empty" error instead (PR #895).
+
 * `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
 
 * `Parameter passing`: Fix handling of special characters in argument values (PR #762, fixes #619, #705, #763, #821, #840).
@@ -60,4 +62,8 @@ TODO add summary
   (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
   robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
 
-* Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
+* `Regex`: Rewrite regexes with potentially incomplete matches so they no longer need to be marked `@unchecked` (PR #895).
+
+* `Circe`: Add a helper method for combined encoding & decoding of top-level sealed traits, reducing the chance of errors in this pattern (PR #895).
+
+* `NextflowRunner`: Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)

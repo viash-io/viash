@@ -20,6 +20,8 @@ package io.viash.config
 import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._
 import dependencies.GithubRepository
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object dependencies {
 
@@ -31,78 +33,63 @@ package object dependencies {
   implicit val encodeGithubRepository: Encoder.AsObject[GithubRepository] = deriveConfiguredEncoderStrict
   implicit val encodeViashhubRepository: Encoder.AsObject[ViashhubRepository] = deriveConfiguredEncoderStrict
   implicit val encodeLocalRepository: Encoder.AsObject[LocalRepository] = deriveConfiguredEncoderStrict
-  // Repositories _WithName are also of type Repository, so we must define an encoder for them as well
-  implicit def encodeRepository[A <: Repository]: Encoder[A] = Encoder.instance {
-    par =>
-      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
-      val objJson = par match {
-        case s: GitRepository => encodeGitRepository(s)
-        case s: GithubRepository => encodeGithubRepository(s)
-        case s: ViashhubRepository => encodeViashhubRepository(s)
-        case s: LocalRepository => encodeLocalRepository(s)
-        case s: GitRepositoryWithName => encodeGitRepositoryWithName(s)
-        case s: GithubRepositoryWithName => encodeGithubRepositoryWithName(s)
-        case s: ViashhubRepositoryWithName => encodeViashhubRepositoryWithName(s)
-        case s: LocalRepositoryWithName => encodeLocalRepositoryWithName(s)
-      }
-      objJson deepMerge typeJson
-  }
 
   implicit val encodeGitRepositoryWithName: Encoder.AsObject[GitRepositoryWithName] = deriveConfiguredEncoderStrict
   implicit val encodeGithubRepositoryWithName: Encoder.AsObject[GithubRepositoryWithName] = deriveConfiguredEncoderStrict
   implicit val encodeViashhubRepositoryWithName: Encoder.AsObject[ViashhubRepositoryWithName] = deriveConfiguredEncoderStrict
   implicit val encodeLocalRepositoryWithName: Encoder.AsObject[LocalRepositoryWithName] = deriveConfiguredEncoderStrict
-  implicit def encodeRepositoryWithName[A <: RepositoryWithName]: Encoder[A] = Encoder.instance {
-    par =>
-      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
-      val objJson = par match {
-        case s: GitRepositoryWithName => encodeGitRepositoryWithName(s)
-        case s: GithubRepositoryWithName => encodeGithubRepositoryWithName(s)
-        case s: ViashhubRepositoryWithName => encodeViashhubRepositoryWithName(s)
-        case s: LocalRepositoryWithName => encodeLocalRepositoryWithName(s)
-      }
-      objJson deepMerge typeJson
-  }
 
   implicit val decodeDependency: Decoder[Dependency] = deriveConfiguredDecoderFullChecks
   implicit val decodeGitRepository: Decoder[GitRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeGithubRepository: Decoder[GithubRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeViashhubRepository: Decoder[ViashhubRepository] = deriveConfiguredDecoderFullChecks
   implicit val decodeLocalRepository: Decoder[LocalRepository] = deriveConfiguredDecoderFullChecks
-  implicit def decodeRepository: Decoder[Repository] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Repository] =
-        cursor.downField("type").as[String] match {
-          case Right("git") => decodeGitRepository.widen
-          case Right("github") => decodeGithubRepository.widen
-          case Right("vsh") => decodeViashhubRepository.widen
-          case Right("local") => decodeLocalRepository.widen
-          case Right(typ) =>
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepository](typ, List("git", "github", "vsh", "local")).widen
-          case Left(exception) => throw exception
-        }
-
-      decoder(cursor)
-  }
 
   implicit val decodeGitRepositoryWithName: Decoder[GitRepositoryWithName] = deriveConfiguredDecoderFullChecks
   implicit val decodeGithubRepositoryWithName: Decoder[GithubRepositoryWithName] = deriveConfiguredDecoderFullChecks
   implicit val decodeViashhubRepositoryWithName: Decoder[ViashhubRepositoryWithName] = deriveConfiguredDecoderFullChecks
   implicit val decodeLocalRepositoryWithName: Decoder[LocalRepositoryWithName] = deriveConfiguredDecoderFullChecks
-  implicit def decodeRepositoryWithName: Decoder[RepositoryWithName] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[RepositoryWithName] =
-        cursor.downField("type").as[String] match {
-          case Right("git") => decodeGitRepositoryWithName.widen
-          case Right("github") => decodeGithubRepositoryWithName.widen
-          case Right("vsh") => decodeViashhubRepositoryWithName.widen
-          case Right("local") => decodeLocalRepositoryWithName.widen
-          case Right(typ) =>
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepositoryWithName](typ, List("git", "github", "vsh", "local")).widen
-          case Left(exception) => throw exception
-        }
 
-      decoder(cursor)
-  }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order.
+  //
+  // Repository's own 4 direct subtypes, used for decoding (decodeRepository never produces a
+  // _WithName instance) and as half of the encode branches (a _WithName instance is also a
+  // Repository at runtime, so encodeRepository must be able to handle it too).
+  private val repositoryOwnBranches: List[DeriveConfiguredSumType.Branch[Repository]] = List(
+    branch[Repository, GitRepository]("git"),
+    branch[Repository, GithubRepository]("github"),
+    branch[Repository, ViashhubRepository]("vsh"),
+    branch[Repository, LocalRepository]("local"),
+  )
+  private val repositoryWithNameAsRepositoryBranches: List[DeriveConfiguredSumType.Branch[Repository]] = List(
+    branch[Repository, GitRepositoryWithName]("git"),
+    branch[Repository, GithubRepositoryWithName]("github"),
+    branch[Repository, ViashhubRepositoryWithName]("vsh"),
+    branch[Repository, LocalRepositoryWithName]("local"),
+  )
 
+  implicit val encodeRepository: Encoder[Repository] =
+    DeriveConfiguredSumType.encoder(repositoryOwnBranches ++ repositoryWithNameAsRepositoryBranches)
+
+  implicit val decodeRepository: Decoder[Repository] = DeriveConfiguredSumType.decoder[Repository](
+    "type",
+    repositoryOwnBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepository](typ, validTypes).widen
+  )
+
+  private val repositoryWithNameBranches: List[DeriveConfiguredSumType.Branch[RepositoryWithName]] = List(
+    branch[RepositoryWithName, GitRepositoryWithName]("git"),
+    branch[RepositoryWithName, GithubRepositoryWithName]("github"),
+    branch[RepositoryWithName, ViashhubRepositoryWithName]("vsh"),
+    branch[RepositoryWithName, LocalRepositoryWithName]("local"),
+  )
+
+  implicit val encodeRepositoryWithName: Encoder[RepositoryWithName] = DeriveConfiguredSumType.encoder(repositoryWithNameBranches)
+
+  implicit val decodeRepositoryWithName: Decoder[RepositoryWithName] = DeriveConfiguredSumType.decoder[RepositoryWithName](
+    "type",
+    repositoryWithNameBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[LocalRepositoryWithName](typ, validTypes).widen
+  )
 }

@@ -17,8 +17,10 @@
 
 package io.viash.config
 
+import java.net.URLEncoder
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.regex.Pattern
 import io.circe.yaml.Printer
 
 import io.viash.config.resources.PlainFile
@@ -76,8 +78,11 @@ object ConfigMeta {
     val config = appliedConfig.config
 
     // get resources
+    // the filename is url-encoded so the placeholder is guaranteed to consist only of characters
+    // that the yaml printer never needs to escape (e.g. '"' or '\'), regardless of what the
+    // filename itself contains; this keeps the placeholder search below exact and unambiguous
     val placeholderMap = config.resources.filter(_.text.isDefined).map{ res =>
-      (res, "VIASH_PLACEHOLDER~" + res.filename + "~")
+      (res, "VIASH_PLACEHOLDER~" + URLEncoder.encode(res.filename, "UTF-8") + "~")
     }.toMap
 
     val executableName = appliedConfig.runner match {
@@ -117,8 +122,10 @@ object ConfigMeta {
     // replace text placeholders with nice multiline string
     val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
       case (configStr, (res, placeholder)) =>
-        val IndentRegex = ("( *)text: \"" + placeholder + "\"").r
-        val IndentRegex(indent) = IndentRegex.findFirstIn(configStr).getOrElse("") : @unchecked
+        val IndentRegex = ("( *)text: \"" + Pattern.quote(placeholder) + "\"").r
+        val indent = IndentRegex.findFirstMatchIn(configStr)
+          .map(_.group(1))
+          .getOrElse(throw new RuntimeException(s"Could not find placeholder for text field in generated yaml: $placeholder"))
         configStr.replace(
           "\"" + placeholder + "\"",
           "|\n" + indent + "  " + res.text.get.replace("\n", "\n  " + indent) + "\n"
