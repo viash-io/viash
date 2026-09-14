@@ -49,6 +49,8 @@ TODO add summary
 
 * `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
+* `Dependencies`: Clean up the temporary directories used to check out remote (git/github/vsh) dependency repositories; previously these were never removed, so repeated builds/tests would accumulate them under `/tmp` (PR #916).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
