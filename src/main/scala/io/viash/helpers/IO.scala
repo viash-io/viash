@@ -34,11 +34,59 @@ import scala.jdk.CollectionConverters._
 import java.nio.charset.MalformedInputException
 import io.viash.exceptions.{MalformedInputException => ViashMalformedInputException}
 import io.viash.helpers.Logging
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * IO helper object for handling various file and directory operations.
  */
 object IO extends Logging {
+
+  // Temporary directories created through makeTemp() that haven't been cleaned up yet.
+  // Acts as a safety net: a shutdown hook sweeps whatever is still tracked here when the
+  // JVM exits, so a temp dir is still removed even if the code that created it never
+  // explicitly cleans up (e.g. because of an exception or interruption).
+  private val tempDirsToClean: java.util.Set[Path] = ConcurrentHashMap.newKeySet[Path]()
+  private val shutdownHookRegistered = new AtomicBoolean(false)
+
+  private def registerShutdownHookOnce(): Unit = {
+    if (shutdownHookRegistered.compareAndSet(false, true)) {
+      Runtime.getRuntime.addShutdownHook(new Thread(() => {
+        tempDirsToClean.forEach { dir =>
+          try {
+            if (Files.exists(dir)) deleteRecursively(dir)
+          } catch {
+            case _: Throwable => // best-effort cleanup on shutdown, ignore failures
+          }
+        }
+      }))
+    }
+  }
+
+  /**
+   * Deletes the tracked temporary directory (created via makeTemp()) that is or contains `path`,
+   * provided its directory name starts with `dirNamePrefix`.
+   *
+   * Walks up from `path` until a tracked temp directory is found, so this also works when `path`
+   * points at a subdirectory of the original temp dir (e.g. a repository checkout narrowed down
+   * to a subfolder). The prefix check makes sure this only ever matches a temp dir created for
+   * this specific purpose, not some unrelated, still-in-use temp dir higher up the tree that
+   * `path` also happens to live under (e.g. a caller's own working directory). Does nothing if no
+   * matching tracked ancestor is found. Safe to call more than once for the same path.
+   *
+   * @param path the path to clean up the tracked temporary directory for
+   * @param dirNamePrefix only consider tracked ancestor directories whose name starts with this
+   */
+  def cleanupTempDirFor(path: Path, dirNamePrefix: String): Unit = {
+    var current = path.toAbsolutePath.normalize()
+    while (current != null) {
+      if (current.getFileName != null && current.getFileName.toString.startsWith(dirNamePrefix) && tempDirsToClean.contains(current)) {
+        if (Files.exists(current)) deleteRecursively(current) else tempDirsToClean.remove(current)
+        return
+      }
+      current = current.getParent
+    }
+  }
 
   /**
    * Returns the temporary directory path.
@@ -75,6 +123,8 @@ object IO extends Logging {
       }
     }
     Files.createDirectories(temp)
+    tempDirsToClean.add(temp)
+    registerShutdownHookOnce()
     temp
   }
 
@@ -94,6 +144,7 @@ object IO extends Logging {
         FileVisitResult.CONTINUE
       }
     })
+    tempDirsToClean.remove(dir)
   }
 
   def copyFolder(src: Path, dest: Path): Unit = {

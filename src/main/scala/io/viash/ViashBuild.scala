@@ -23,7 +23,7 @@ import io.viash.helpers.status
 import io.viash.helpers.status._
 
 import config._
-import helpers.{IO, Logging}
+import helpers.{IO, Logging, DependencyResolver}
 import io.viash.runners.Runner
 
 object ViashBuild extends Logging {
@@ -34,6 +34,10 @@ object ViashBuild extends Logging {
     push: Boolean = false
   ): status.Status = {
     val resources = appliedConfig.generateRunner(false)
+
+    // dependency repositories (if any) were checked out into temporary directories; now that the
+    // runner has been generated, they are no longer needed and can be cleaned up
+    DependencyResolver.cleanupWorkRepositories(appliedConfig.config)
 
     // create dir
     val dir = Paths.get(output)
