@@ -49,6 +49,8 @@ TODO add summary
 
 * `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
+* `viash run`: Fix `---debug` failing with "the input device is not a TTY" when using the Docker engine (PR #917). stdin, stdout and stderr are now inherited directly from the real terminal for this interactive session, matching the behaviour of running a built executable directly.
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
