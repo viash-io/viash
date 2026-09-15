@@ -53,10 +53,18 @@ object ViashRun extends Logging {
         args ++ 
         Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
 
-      // execute command, print everything to console
-      code = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-      // System.exit(code)
-      code 
+      if (args.contains("---debug")) {
+        // ---debug drops into an interactive `docker run -it bash` session (see
+        // ExecutableRunner). That needs stdin/stdout/stderr to all be the real
+        // terminal: relaying/buffering them line by line, as the regular case
+        // below does, breaks raw keystroke input and prompt/cursor redrawing.
+        code = new ProcessBuilder(cmd: _*).inheritIO().start().waitFor()
+      } else {
+        // execute command, print everything to console
+        code = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
+      }
+
+      code
     } finally {
       // remove tempdir if desired
       if (!keepFiles.getOrElse(code != 0)) {
