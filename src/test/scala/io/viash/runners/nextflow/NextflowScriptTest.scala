@@ -283,6 +283,29 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
 
+  test("Test script line starting with '|' is not mangled", NextflowTest) {
+    // regression test for https://github.com/viash-io/viash/issues/908
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/pipe_char_in_script/main.nf",
+      args = List(
+        "--id", "foo",
+        "--publish_dir", "output"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("output/foo.pipe_char_in_script.output.txt")
+    val src = Source.fromFile(outputPath.toFile())
+    try {
+      val outputContents = src.getLines().mkString("\n")
+      assert(outputContents.equals("exit code: 1"))
+    } finally {
+      src.close()
+    }
+  }
+
   test("Run multiple output channels check output", DockerTest, NextflowTest) {
     val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
       mainScript = "target/nextflow/multiple_emit_channels/main.nf",

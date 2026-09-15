@@ -243,7 +243,12 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
     .join("\n")
 
   // escape script
+  // every line needs to be prefixed with '|' before being spliced into the
+  // stripMargin() template below, otherwise stripMargin() will scan the
+  // script's own lines for a leading '|' (e.g. a line starting with "||")
+  // and mangle them.
   def escapedScript = rawScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
+    .split("\n").join("\n|")
 
   // publishdir assert
   def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 

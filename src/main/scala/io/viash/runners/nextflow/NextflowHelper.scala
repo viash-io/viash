@@ -71,16 +71,20 @@ object NextflowHelper {
     val escapedCode = Bash.escapeString(code, allowUnescape = true)
       .replace("\\", "\\\\")
       .replace("'''", "\\'\\'\\'")
+    // Every line needs to be prefixed with '|' before being spliced into the
+    // stripMargin template below, otherwise stripMargin will scan the script's
+    // own lines for a leading '|' (e.g. a line starting with "||") and mangle them.
+    val escapedCodeForTemplate = escapedCode.linesIterator.mkString("\n|")
 
     // IMPORTANT! difference between code below and BashWrapper:
     // script is stored as `.viash_script.${ext}`.
     val scriptPath = "$tempscript"
 
-    val executionCode = 
+    val executionCode =
       s"""set -e
         |tempscript=".viash_script${res.language.extensions.head}"
         |cat > "$scriptPath" << VIASHMAIN
-        |$escapedCode
+        |$escapedCodeForTemplate
         |VIASHMAIN
         |${res.command(scriptPath)}
         |""".stripMargin
@@ -96,6 +100,11 @@ object NextflowHelper {
 
     val autoJson = auto.asJson.dropEmptyRecursively
 
+    // Prefix every line of the printed json with '|' so that stripMargin doesn't
+    // mistake a line of the printed json for a margin marker (see generateScriptStr).
+    val dirJsonForTemplate = jsonPrinter.print(dirJson2).linesIterator.mkString("\n|")
+    val autoJsonForTemplate = jsonPrinter.print(autoJson).linesIterator.mkString("\n|")
+
     s"""[
       |  // key to be used to trace the process and determine output names
       |  key: null,
@@ -104,10 +113,10 @@ object NextflowHelper {
       |  args: [:],
       |
       |  // default directives
-      |  directives: readJsonBlob('''${jsonPrinter.print(dirJson2)}'''),
+      |  directives: readJsonBlob('''${dirJsonForTemplate}'''),
       |
       |  // auto settings
-      |  auto: readJsonBlob('''${jsonPrinter.print(autoJson)}'''),
+      |  auto: readJsonBlob('''${autoJsonForTemplate}'''),
       |
       |  // Filter the channel
       |  // Example: `{ tup -> tup[0] == "foo" }`
@@ -213,8 +222,12 @@ object NextflowHelper {
       return ""
     }
 
+    // Prefix every line (including lines embedded within a single depStr) with '|'
+    // so that stripMargin doesn't mistake one of them for a margin marker.
+    val depStrsForTemplate = depStrs.mkString("\n").linesIterator.mkString("\n|")
+
     s"""meta["root_dir"] = getRootDir()
-      |${depStrs.mkString("\n|")}
+      |$depStrsForTemplate
       |""".stripMargin
   }
 }
