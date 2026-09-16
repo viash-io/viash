@@ -248,7 +248,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   // script's own lines for a leading '|' (e.g. a line starting with "||")
   // and mangle them.
   def escapedScript = rawScript.replace('\\', '\\\\').replace('$', '\\$').replace('"""', '\\"\\"\\"')
-    .split("\n").join("\n|")
+    .replace("\n", "\n|")
 
   // publishdir assert
   def assertStr = (workflowArgs.auto.publish == true) || workflowArgs.auto.transcript ? 

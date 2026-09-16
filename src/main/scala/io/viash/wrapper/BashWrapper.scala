@@ -136,7 +136,11 @@ object BashWrapper {
 
   private def spaceCode(str: String): String = {
     if (str != "") {
-      "\n" + str + "\n"
+      // this string gets spliced into another stripMargin template (see generateBashScript),
+      // so every one of its lines (including the first) needs to be pipe-escaped again here,
+      // otherwise a line already starting with '|' (e.g. escapePipes' own output, or user
+      // script content starting with '|') gets mistaken for that outer margin marker.
+      "\n|" + escapePipes(str) + "\n"
     } else {
       str
     }
@@ -615,11 +619,11 @@ object BashWrapper {
 
       param match {
         case param if param.multiple && param.direction == Input =>
-          val checkStart = 
+          val checkStart =
             s"""if [ -n "$$${param.VIASH_PAR}" ]; then
                |  set -f
                |  for val in $${${param.VIASH_PAR}[@]}; do
-               |"""
+               |""".stripMargin
           val checkEnd =
             s"""  done
                |  set +f

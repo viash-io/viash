@@ -74,7 +74,7 @@ object NextflowHelper {
     // Every line needs to be prefixed with '|' before being spliced into the
     // stripMargin template below, otherwise stripMargin will scan the script's
     // own lines for a leading '|' (e.g. a line starting with "||") and mangle them.
-    val escapedCodeForTemplate = escapedCode.linesIterator.mkString("\n|")
+    val escapedCodeForTemplate = escapedCode.replace("\n", "\n|")
 
     // IMPORTANT! difference between code below and BashWrapper:
     // script is stored as `.viash_script.${ext}`.
@@ -102,8 +102,8 @@ object NextflowHelper {
 
     // Prefix every line of the printed json with '|' so that stripMargin doesn't
     // mistake a line of the printed json for a margin marker (see generateScriptStr).
-    val dirJsonForTemplate = jsonPrinter.print(dirJson2).linesIterator.mkString("\n|")
-    val autoJsonForTemplate = jsonPrinter.print(autoJson).linesIterator.mkString("\n|")
+    val dirJsonForTemplate = jsonPrinter.print(dirJson2).replace("\n", "\n|")
+    val autoJsonForTemplate = jsonPrinter.print(autoJson).replace("\n", "\n|")
 
     s"""[
       |  // key to be used to trace the process and determine output names
@@ -224,7 +224,7 @@ object NextflowHelper {
 
     // Prefix every line (including lines embedded within a single depStr) with '|'
     // so that stripMargin doesn't mistake one of them for a margin marker.
-    val depStrsForTemplate = depStrs.mkString("\n").linesIterator.mkString("\n|")
+    val depStrsForTemplate = depStrs.mkString("\n").replace("\n", "\n|")
 
     s"""meta["root_dir"] = getRootDir()
       |$depStrsForTemplate

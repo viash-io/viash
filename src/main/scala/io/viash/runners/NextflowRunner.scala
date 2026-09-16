@@ -228,7 +228,7 @@ final case class NextflowRunner(
       case _ =>
         s"""// inner workflow hook
           |def innerWorkflowFactory(args) {
-          |  def rawScript = ${NextflowHelper.generateScriptStr(config).split("\n").mkString("\n|")}
+          |  def rawScript = ${NextflowHelper.generateScriptStr(config).replace("\n", "\n|")}
           |
           |  return vdsl3WorkflowFactory(args, meta, rawScript)
           |}
@@ -248,7 +248,7 @@ final case class NextflowRunner(
       |// create meta object
       |meta = [
       |  "resources_dir": moduleDir.toRealPath().normalize(),
-      |  "config": ${NextflowHelper.generateConfigStr(config).split("\n").mkString("\n|")}
+      |  "config": ${NextflowHelper.generateConfigStr(config).replace("\n", "\n|")}
       |]
       |
       |// resolve dependencies dependencies (if any)
@@ -258,7 +258,7 @@ final case class NextflowRunner(
       |${innerWorkflowFactory.split("\n").mkString("\n|")}
       |
       |// defaults
-      |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug).split("\n").mkString("\n|")}
+      |meta["defaults"] = ${NextflowHelper.generateDefaultWorkflowArgs(config, directivesToJson, auto, debug).replace("\n", "\n|")}
       |
       |// initialise default workflow
       |meta["workflow"] = workflowFactory([key: meta.config.name], meta.defaults, meta)
