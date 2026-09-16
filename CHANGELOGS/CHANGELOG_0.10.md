@@ -49,6 +49,9 @@ TODO add summary
 
 * `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
+* `Nextflow` runner: Fix a flaky, false-positive "could not be joined with source channel" error in `safeJoin()` (fixes #605).
+  The check compared the target channel's ids against the source channel's ids while both were still being processed concurrently, so a source id that hadn't been observed yet could be mistaken for a genuine mismatch. The check now compares the fully collected id lists once both channels have completed.
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
