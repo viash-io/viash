@@ -100,11 +100,6 @@ object NextflowHelper {
 
     val autoJson = auto.asJson.dropEmptyRecursively
 
-    // Prefix every line of the printed json with '|' so that stripMargin doesn't
-    // mistake a line of the printed json for a margin marker (see generateScriptStr).
-    val dirJsonForTemplate = jsonPrinter.print(dirJson2).replace("\n", "\n|")
-    val autoJsonForTemplate = jsonPrinter.print(autoJson).replace("\n", "\n|")
-
     s"""[
       |  // key to be used to trace the process and determine output names
       |  key: null,
@@ -113,10 +108,10 @@ object NextflowHelper {
       |  args: [:],
       |
       |  // default directives
-      |  directives: readJsonBlob('''${dirJsonForTemplate}'''),
+      |  directives: readJsonBlob('''${jsonPrinter.print(dirJson2)}'''),
       |
       |  // auto settings
-      |  auto: readJsonBlob('''${autoJsonForTemplate}'''),
+      |  auto: readJsonBlob('''${jsonPrinter.print(autoJson)}'''),
       |
       |  // Filter the channel
       |  // Example: `{ tup -> tup[0] == "foo" }`
