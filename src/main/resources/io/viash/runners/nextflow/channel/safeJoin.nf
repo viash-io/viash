@@ -8,6 +8,46 @@
  * an error is thrown.
  */
 
+// TEMPORARY: reverted to the old, racy implementation (see below for the
+// proposed fix, commented out) to reproduce the flaky "could not be joined
+// with source channel" error (https://github.com/viash-io/viash/issues/605)
+// with the streamlined, repeated NextflowScriptTest CI runs.
+def safeJoin(targetChannel, sourceChannel, key) {
+  def sourceIDs = new IDChecker()
+
+  def sourceCheck = sourceChannel
+    | map { tup ->
+      sourceIDs.observe(tup[0])
+      tup
+    }
+  def targetCheck = targetChannel
+    | map { tup ->
+      def id = tup[0]
+
+      if (!sourceIDs.contains(id)) {
+        error (
+          "Error in module '${key}' when merging output with original state.\n" +
+          "  Reason: output with id '${id}' could not be joined with source channel.\n" +
+          "    If the IDs in the output channel differ from the input channel,\n" +
+          "    please set `tup[1]._meta.join_id to the original ID.\n" +
+          "  Original IDs in input channel: ['${sourceIDs.getItems().join("', '")}'].\n" +
+          "  Unexpected ID in the output channel: '${id}'.\n" +
+          "  Example input event: [\"id\", [input: file(...)]],\n" +
+          "  Example output event: [\"newid\", [output: file(...), _meta: [join_id: \"id\"]]]"
+        )
+      }
+      // TODO: add link to our documentation on how to fix this
+
+      tup
+    }
+
+  sourceCheck.cross(targetChannel)
+    | map{ left, right ->
+      right + left.drop(1)
+    }
+}
+
+/* NEW (proposed fix, temporarily disabled -- see comment above):
 def safeJoin(targetChannel, sourceChannel, key) {
   // Validate that every id emitted by the target channel is also present in
   // the source channel. This can only be checked reliably once both channels
@@ -48,3 +88,4 @@ def safeJoin(targetChannel, sourceChannel, key) {
   sourceChannel.cross(targetChannel)
     | map{ left, right -> right + left.drop(1) }
 }
+*/
