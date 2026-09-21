@@ -17,7 +17,10 @@ jobs:
       matrix:
         config:
           - { name: 'ubuntu_latest', os: ubuntu-latest }
-          - { name: 'macos_latest', os: macos-latest }
+          # TEMPORARY: macOS runners disabled -- they don't test anything right now
+          # (no Docker, so the Nextflow suites below are skipped there anyway) but
+          # still pay for the full setup. Re-enable before merging.
+          # - { name: 'macos_latest', os: macos-latest }
         java:
           - { ver: '11', run_nextflow: true, run_coverage: false, nxf_ver: "22.04.5" }
           - { ver: '17', run_nextflow: true, run_coverage: true, nxf_ver: latest }
@@ -96,13 +99,23 @@ jobs:
       run: |
         # TEMPORARY: only run the Nextflow runner suites that exercise safeJoin()'s
         # join path, to speed up CI while iterating on the safeJoin() race condition
-        # fix. Revert this step to the full suite before merging.
-        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          # macOS on github actions does not have Docker, so these suites can't run there
-          echo "Skipping tests on macOS (temporary CI speed-up, no Docker available)"
-        else
-          sbt 'testOnly io.viash.runners.nextflow.NextflowScriptTest io.viash.runners.nextflow.WorkflowHelperTest io.viash.runners.nextflow.Vdsl3ModuleTest io.viash.runners.nextflow.Vdsl3StandaloneTest io.viash.runners.nextflow.functions.NextflowHelperFunctionTest'
-        fi
+        # fix. Revert this step to the full suite (single run) before merging.
+        #
+        # The other suites (WorkflowHelperTest, Vdsl3ModuleTest, Vdsl3StandaloneTest,
+        # NextflowHelperFunctionTest) are single/few-item, deterministic runs -- they
+        # don't stress the race condition, so they only need to run once for
+        # regression coverage. NextflowScriptTest is the one with the actual flaky
+        # concurrency test, so repeat just that suite a few times in this same job
+        # (setup already paid for) to stress-test for flakiness without manually
+        # re-running the whole workflow.
+        REPEAT=5
+        OTHER_TESTS='testOnly io.viash.runners.nextflow.WorkflowHelperTest io.viash.runners.nextflow.Vdsl3ModuleTest io.viash.runners.nextflow.Vdsl3StandaloneTest io.viash.runners.nextflow.functions.NextflowHelperFunctionTest'
+        CONCURRENCY_TEST='testOnly io.viash.runners.nextflow.NextflowScriptTest'
+        ARGS=("$OTHER_TESTS")
+        for i in $(seq 1 "$REPEAT"); do
+          ARGS+=("$CONCURRENCY_TEST")
+        done
+        sbt "${ARGS[@]}"
 
     - name: Upload coverage on success
       run: bash <(curl -s https://codecov.io/bash)
