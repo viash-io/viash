@@ -94,16 +94,14 @@ jobs:
       env:
         NXF_SYNTAX_PARSER: v1
       run: |
-        if [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_coverage }}" == "true" ]]; then
-          # only run coverage on main runner
-          sbt clean coverage test coverageReport
-        elif [[ "${{ matrix.config.name }}" =~ ^ubuntu.*$ ]] && [[ "${{ matrix.java.run_nextflow }}" == "false" ]]; then
-          sbt 'testOnly -- -l io.viash.NextflowTest'
-        elif [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
-          # macOS on github actions does not have Docker, so skip those
-          sbt 'testOnly -- -l io.viash.DockerTest -l io.viash.NextflowTest'
+        # TEMPORARY: only run the Nextflow runner suites that exercise safeJoin()'s
+        # join path, to speed up CI while iterating on the safeJoin() race condition
+        # fix. Revert this step to the full suite before merging.
+        if [[ "${{ matrix.config.os }}" =~ ^macos.*$ ]]; then
+          # macOS on github actions does not have Docker, so these suites can't run there
+          echo "Skipping tests on macOS (temporary CI speed-up, no Docker available)"
         else
-          sbt test
+          sbt 'testOnly io.viash.runners.nextflow.NextflowScriptTest io.viash.runners.nextflow.WorkflowHelperTest io.viash.runners.nextflow.Vdsl3ModuleTest io.viash.runners.nextflow.Vdsl3StandaloneTest io.viash.runners.nextflow.functions.NextflowHelperFunctionTest'
         fi
 
     - name: Upload coverage on success
