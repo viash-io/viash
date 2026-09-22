@@ -49,6 +49,10 @@ TODO add summary
 
 * `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
+* `Nextflow` runner: Fix a bug where a script line starting with `|` (e.g. `|| echo_exit_code="$?"`) was mangled or dropped from the generated `rawScript`, because it was mistaken for a Scala (or, at Nextflow runtime, Groovy) `stripMargin` delimiter (PR #915).
+
+* `BashWrapper` (native, executable and Docker runners): Fix the same `|`-mangling bug (e.g. `|| echo_exit_code="$?"`) in the generated wrapper script, and fix a bash syntax error that could occur when checking a `multiple: true` argument that also has a `min`/`max`/type constraint (PR #915).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).
