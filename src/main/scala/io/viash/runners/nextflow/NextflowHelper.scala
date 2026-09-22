@@ -71,16 +71,20 @@ object NextflowHelper {
     val escapedCode = Bash.escapeString(code, allowUnescape = true)
       .replace("\\", "\\\\")
       .replace("'''", "\\'\\'\\'")
+    // Every line needs to be prefixed with '|' before being spliced into the
+    // stripMargin template below, otherwise stripMargin will scan the script's
+    // own lines for a leading '|' (e.g. a line starting with "||") and mangle them.
+    val escapedCodeForTemplate = escapedCode.replace("\n", "\n|")
 
     // IMPORTANT! difference between code below and BashWrapper:
     // script is stored as `.viash_script.${ext}`.
     val scriptPath = "$tempscript"
 
-    val executionCode = 
+    val executionCode =
       s"""set -e
         |tempscript=".viash_script${res.language.extensions.head}"
         |cat > "$scriptPath" << VIASHMAIN
-        |$escapedCode
+        |$escapedCodeForTemplate
         |VIASHMAIN
         |${res.command(scriptPath)}
         |""".stripMargin
@@ -213,8 +217,12 @@ object NextflowHelper {
       return ""
     }
 
+    // Prefix every line (including lines embedded within a single depStr) with '|'
+    // so that stripMargin doesn't mistake one of them for a margin marker.
+    val depStrsForTemplate = depStrs.mkString("\n").replace("\n", "\n|")
+
     s"""meta["root_dir"] = getRootDir()
-      |${depStrs.mkString("\n|")}
+      |$depStrsForTemplate
       |""".stripMargin
   }
 }

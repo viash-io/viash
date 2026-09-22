@@ -285,6 +285,21 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
   }
 
+  test("Check that a 'multiple: true' argument with min/max checks does not cause a bash syntax error") {
+    // regression test: the generated bash check for a 'multiple: true' argument that
+    // also has a min/max (or type) check used to be malformed (a bash syntax error),
+    // because part of that check's template never had its own margin resolved and was
+    // silently relying on stripMargin being applied only once to the whole wrapper script.
+    // whole_number_min_max_multiple has min: -3, max: 5, multiple: true.
+    val withinRange = Exec.runCatch(Seq(executable.toString, "--whole_number_min_max_multiple", "-3;0;5"))
+    assert(withinRange.exitValue == 0, s"expected exit code 0, got ${withinRange.exitValue}\n${withinRange.output}")
+    assert(!withinRange.output.contains("syntax error"), withinRange.output)
+
+    val outOfRange = Exec.runCatch(Seq(executable.toString, "--whole_number_min_max_multiple", "-3;10;5"))
+    assert(outOfRange.exitValue == 1, s"expected exit code 1, got ${outOfRange.exitValue}\n${outOfRange.output}")
+    assert(!outOfRange.output.contains("syntax error"), outOfRange.output)
+  }
+
   test("Check whether double values with min and/or max specified are checked correctly") {
     // min -3.2
     // max 5.7
