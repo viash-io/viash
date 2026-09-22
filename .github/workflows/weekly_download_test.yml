@@ -12,7 +12,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # macos-latest is excluded: dl.viash.io consistently times out (TCP connect,
+        # not DNS/TLS) from GitHub's macOS runners on every weekly run, while
+        # ubuntu-latest succeeds every time. This matches GitHub macOS/Windows
+        # runners sharing Azure IP ranges that get reputation-blocked by
+        # Combell, the hosting provider for dl.viash.io.
+        os: [ubuntu-latest]
 
     steps:
     - name: Test viash download and installation
