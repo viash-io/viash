@@ -31,6 +31,7 @@ import io.viash.config.Config._
 import io.viash.ViashNamespace
 import io.viash.config.resources.NextflowScript
 import io.viash.exceptions.MissingDependencyException
+import io.viash.exceptions.MalformedInputException
 import io.viash.helpers.circe.Convert
 import io.viash.config.ScopeEnum
 
@@ -248,6 +249,7 @@ object DependencyResolver extends Logging {
       info
     }
     catch {
+      case e: MalformedInputException => throw e
       case _: Throwable => Map.empty
     }
   }
@@ -260,6 +262,7 @@ object DependencyResolver extends Logging {
       val jsonVec = json.hcursor.downField("build_info").downField("dependencies").focus.flatMap(_.asArray).get
       jsonVec.flatMap(_.hcursor.as[String].toOption).toList
     } catch {
+      case e: MalformedInputException => throw e
       case _: Throwable => Nil
     }
   }

@@ -1,0 +1,23 @@
+name: write_secret_to_file
+arguments:
+  - name: "--output"
+    type: file
+    required: true
+    direction: output
+    example: output.txt
+resources:
+  - type: bash_script
+    use_jq: true
+    path: script.sh
+engines:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+    setup:
+      - type: apk
+        packages:
+          - jq
+runners:
+  - type: nextflow
+    directives:
+      secret: ["MY_SUPER_SECRET_SECRET"]

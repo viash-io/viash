@@ -20,6 +20,8 @@ package io.viash
 import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._
 // for .widen
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object engines {
   import io.viash.helpers.circe._
@@ -31,27 +33,18 @@ package object engines {
   implicit val encodeNativeEngine: Encoder.AsObject[NativeEngine] = deriveConfiguredEncoder
   implicit val decodeNativeEngine: Decoder[NativeEngine] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodeEngine[A <: Engine]: Encoder[A] = Encoder.instance {
-    engine =>
-      val typeJson = Json.obj("type" -> Json.fromString(engine.`type`))
-      val objJson = engine match {
-        case s: DockerEngine => encodeDockerEngine(s)
-        case s: NativeEngine => encodeNativeEngine(s)
-      }
-      objJson deepMerge typeJson
-  }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order
+  private val engineBranches: List[DeriveConfiguredSumType.Branch[Engine]] = List(
+    branch[Engine, DockerEngine]("docker"),
+    branch[Engine, NativeEngine]("native"),
+  )
 
-  implicit def decodeEngine: Decoder[Engine] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Engine] =
-        cursor.downField("type").as[String] match {
-          case Right("docker") => decodeDockerEngine.widen
-          case Right("native") => decodeNativeEngine.widen
-          case Right(typ) => 
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativeEngine](typ, List("docker", "native")).widen
-          case Left(exception) => throw exception
-        }
+  implicit val encodeEngine: Encoder[Engine] = DeriveConfiguredSumType.encoder(engineBranches)
 
-      decoder(cursor)
-  }
+  implicit val decodeEngine: Decoder[Engine] = DeriveConfiguredSumType.decoder[Engine](
+    "type",
+    engineBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[NativeEngine](typ, validTypes).widen
+  )
 }

@@ -21,6 +21,8 @@ import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._ // for .widen
 import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder
 import io.viash.exceptions.ConfigParserSubTypeException
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object arguments {
 
@@ -69,22 +71,6 @@ package object arguments {
   implicit val encodeBooleanArgumentF: Encoder.AsObject[BooleanFalseArgument] = deriveConfiguredEncoderStrict[BooleanFalseArgument]
   implicit val encodeFileArgument: Encoder.AsObject[FileArgument] = deriveConfiguredEncoderStrict[FileArgument]
 
-  implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = Encoder.instance {
-    par =>
-      val typeJson = Json.obj("type" -> Json.fromString(par.`type`))
-      val objJson = par match {
-        case s: StringArgument => encodeStringArgument(s)
-        case s: IntegerArgument => encodeIntegerArgument(s)
-        case s: LongArgument => encodeLongArgument(s)
-        case s: DoubleArgument => encodeDoubleArgument(s)
-        case s: BooleanArgument => encodeBooleanArgumentR(s)
-        case s: BooleanTrueArgument => encodeBooleanArgumentT(s)
-        case s: BooleanFalseArgument => encodeBooleanArgumentF(s)
-        case s: FileArgument => encodeFileArgument(s)
-      }
-      objJson deepMerge typeJson
-  }
-
   implicit val decodeStringArgument: Decoder[StringArgument] = deriveConfiguredDecoderFullChecks
   implicit val decodeIntegerArgument: Decoder[IntegerArgument] = deriveConfiguredDecoderFullChecks
   implicit val decodeLongArgument: Decoder[LongArgument] = deriveConfiguredDecoderFullChecks
@@ -94,22 +80,28 @@ package object arguments {
   implicit val decodeBooleanArgumentF: Decoder[BooleanFalseArgument] = deriveConfiguredDecoderFullChecks
   implicit val decodeFileArgument: Decoder[FileArgument] = deriveConfiguredDecoderFullChecks
 
-  implicit def decodeDataArgument: Decoder[Argument[_]] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Argument[_]] =
-        cursor.downField("type").as[String] match {
-          case Right("string") => decodeStringArgument.widen
-          case Right("integer") => decodeIntegerArgument.widen
-          case Right("long") => decodeLongArgument.widen
-          case Right("double") => decodeDoubleArgument.widen
-          case Right("boolean") => decodeBooleanArgumentR.widen
-          case Right("boolean_true") => decodeBooleanArgumentT.widen
-          case Right("boolean_false") => decodeBooleanArgumentF.widen
-          case Right("file") => decodeFileArgument.widen
-          case Right(typ) => invalidSubTypeDecoder[StringArgument](typ, List("string", "integer", "long", "double", "boolean", "boolean_true", "boolean_false", "file")).widen
-          case Left(exception) => throw exception
-        }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order
+  private val argumentBranches: List[DeriveConfiguredSumType.Branch[Argument[_]]] = List(
+    branch[Argument[_], StringArgument]("string"),
+    branch[Argument[_], IntegerArgument]("integer"),
+    branch[Argument[_], LongArgument]("long"),
+    branch[Argument[_], DoubleArgument]("double"),
+    branch[Argument[_], BooleanArgument]("boolean"),
+    branch[Argument[_], BooleanTrueArgument]("boolean_true"),
+    branch[Argument[_], BooleanFalseArgument]("boolean_false"),
+    branch[Argument[_], FileArgument]("file"),
+  )
 
-      decoder(cursor)
-  }
+  private val argumentEncoder: Encoder.AsObject[Argument[_]] = DeriveConfiguredSumType.encoder(argumentBranches)
+  // Argument is parameterized (Argument[String], Argument[Boolean], ...), so callers need an
+  // Encoder for the concrete parameterized type; a fixed Encoder[Argument[_]] doesn't satisfy that
+  // via implicit search the way it would for a non-parameterized hierarchy like Resource.
+  implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = argumentEncoder.asInstanceOf[Encoder[A]]
+
+  implicit val decodeDataArgument: Decoder[Argument[_]] = DeriveConfiguredSumType.decoder[Argument[_]](
+    "type",
+    argumentBranches,
+    whenInvalid = (typ, validTypes) => invalidSubTypeDecoder[StringArgument](typ, validTypes).widen
+  )
 }

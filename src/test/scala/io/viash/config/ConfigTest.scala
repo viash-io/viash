@@ -136,6 +136,50 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(configs.filter(_.status == Some(status.ParseError)).length == 2, "Expect 2 failed component")
   }
 
+  test("Can find and read multiple sources with an empty config amongst them") {
+    val tempFolder = temporaryFolder.resolve("test3")
+    Files.createDirectory(tempFolder)
+    IO.copyFolder(nsPath, tempFolder.toString())
+
+    // an empty (or comment-only) config should not stop the rest of the namespace from being read
+    Files.createDirectories(tempFolder.resolve("src/ns_empty"))
+    IO.write("# name: ns_empty\n", tempFolder.resolve("src/ns_empty/config.vsh.yaml"))
+
+    val configs = Config.readConfigs(tempFolder.toString())
+
+    assert(configs.length == 8)
+    assert(configs.filter(_.status == None).length == 5)
+    assert(configs.filter(_.status == Some(status.Disabled)).length == 1, "Expect 1 disabled component")
+    assert(configs.filter(_.status == Some(status.ParseError)).length == 2, "Expect 2 failed components: the pre-existing one and the empty one")
+  }
+
+  test("Reading a comment-only config file throws a clean, dedicated error") {
+    val tempFolder = temporaryFolder.resolve("test_empty_config")
+    Files.createDirectory(tempFolder)
+    val configPath = tempFolder.resolve("config.vsh.yaml")
+    // contains "name:" (in a comment) so it passes the yaml/script detection in readYAML,
+    // but resolves to an empty yaml document (circe-yaml parses this as Json.False)
+    IO.write("# name: this_is_just_a_comment\n", configPath)
+
+    val ex = intercept[io.viash.exceptions.ConfigParserEmptyException] {
+      Config.read(configPath.toString)
+    }
+    assert(ex.getMessage() == "The Viash config file is empty.")
+  }
+
+  test("Reading a blank config file throws a clean, dedicated error") {
+    val tempFolder = temporaryFolder.resolve("test_blank_config")
+    Files.createDirectory(tempFolder)
+    val configPath = tempFolder.resolve("config.vsh.yaml")
+    // no "name:" anywhere, so it doesn't hit the same detection path as the comment-only case above
+    IO.write("   \n\n", configPath)
+
+    val ex = intercept[io.viash.exceptions.ConfigParserEmptyException] {
+      Config.read(configPath.toString)
+    }
+    assert(ex.getMessage() == "The Viash config file is empty.")
+  }
+
   test("Test default scope value") {
     val newConfigFilePath = configDeriver.derive(Nil, "default_scope")
     val newConfig = Config.read(newConfigFilePath)
@@ -188,5 +232,6 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
 
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
+    IO.deleteRecursively(temporaryConfigFolder)
   }
 }

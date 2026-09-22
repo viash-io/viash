@@ -19,12 +19,11 @@ object NextflowTestHelper {
   ): Unit = {
     val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
 
-    val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
+    val path = output.split("\n").collectFirst { case DebugRegex(p) => p }
 
-    assert(lines.isDefined)
-    val DebugRegex(path) = lines.get : @unchecked
+    assert(path.isDefined)
 
-    val src = Source.fromFile(path)
+    val src = Source.fromFile(path.get)
     try {
       val step3Out = src.getLines().mkString
       assert(step3Out.matches(fileContentMatcher))
@@ -144,6 +143,7 @@ object NextflowTestHelper {
       "nextflow" :: 
         { if (quiet) List("-q") else Nil } ::: 
         "run" :: "." ::
+        "-ansi-log" :: "false" ::
         "-main-script" :: mainScript ::
         { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
         { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::

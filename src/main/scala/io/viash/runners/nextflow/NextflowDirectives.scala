@@ -311,6 +311,23 @@ case class NextflowDirectives(
   queue: OneOrMore[String] = Nil,
   
   @description(
+    """The `secret` directive allows you to use a Nextflow secret in a process. Secrets are
+      |injected into the process as environment variables and can be referenced in scripts
+      |as `$SECRET_NAME`.
+      |
+      |Secrets must be configured beforehand using the `nextflow secrets set` CLI command.
+      |
+      |Note: this directive is not supported by cloud-native executors (e.g. AWS Batch, Google Batch)
+      |without Seqera Platform. Available from Nextflow 22.10.
+      |
+      |See [`secret`](https://nextflow.io/docs/latest/reference/process.html#secret).
+      |""")
+  @example(""""MY_ACCESS_KEY"""", "yaml")
+  @example("""["MY_ACCESS_KEY", "MY_SECRET_KEY"]""", "yaml")
+  @default("Empty")
+  secret: OneOrMore[String] = Nil,
+
+  @description(
     """The `scratch` directive allows you to execute the process in a temporary folder that is local to the execution node.
       |
       |See [`scratch`](https://www.nextflow.io/docs/latest/process.html#scratch).

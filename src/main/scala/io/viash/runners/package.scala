@@ -19,6 +19,8 @@ package io.viash
 
 import io.circe.{Decoder, Encoder, Json}
 import cats.syntax.functor._ // for .widen
+import io.viash.helpers.circe.DeriveConfiguredSumType
+import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
 package object runners {
   import io.viash.helpers.circe._
@@ -34,27 +36,18 @@ package object runners {
   implicit val encodeNextflowRunner: Encoder.AsObject[NextflowRunner] = deriveConfiguredEncoder
   implicit val decodeNextflowRunner: Decoder[NextflowRunner] = deriveConfiguredDecoderFullChecks
 
-  implicit def encodeRunner[A <: Runner]: Encoder[A] = Encoder.instance {
-    runner =>
-      val typeJson = Json.obj("type" -> Json.fromString(runner.`type`))
-      val objJson = runner match {
-        case s: ExecutableRunner => encodeExecutableRunner(s)
-        case s: NextflowRunner => encodeNextflowRunner(s)
-      }
-      objJson deepMerge typeJson
-  }
+  // must come after the individual encode*/decode* vals above: each branch() call resolves them
+  // implicitly, and package object vals initialize in textual order
+  private val runnerBranches: List[DeriveConfiguredSumType.Branch[Runner]] = List(
+    branch[Runner, ExecutableRunner]("executable"),
+    branch[Runner, NextflowRunner]("nextflow"),
+  )
 
-  implicit def decodeRunner: Decoder[Runner] = Decoder.instance {
-    cursor =>
-      val decoder: Decoder[Runner] =
-        cursor.downField("type").as[String] match {
-          case Right("executable") => decodeExecutableRunner.widen
-          case Right("nextflow") => decodeNextflowRunner.widen
-          case Right(typ) => 
-            DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ExecutableRunner](typ, List("executable", "nextflow")).widen
-          case Left(exception) => throw exception
-        }
+  implicit val encodeRunner: Encoder[Runner] = DeriveConfiguredSumType.encoder(runnerBranches)
 
-      decoder(cursor)
-  }
+  implicit val decodeRunner: Decoder[Runner] = DeriveConfiguredSumType.decoder[Runner](
+    "type",
+    runnerBranches,
+    whenInvalid = (typ, validTypes) => DeriveConfiguredDecoderWithValidationCheck.invalidSubTypeDecoder[ExecutableRunner](typ, validTypes).widen
+  )
 }

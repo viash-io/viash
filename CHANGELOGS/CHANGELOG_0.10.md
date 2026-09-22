@@ -4,6 +4,9 @@ TODO add summary
 
 ## NEW FEATURES
 
+* `Nextflow` runner: Add support for the `secret` directive (PR #886).
+  This allows Nextflow secrets to be injected into a process as environment variables, e.g. `secret "MY_SECRET"`.
+
 * `Nextflow` runner: specifying a non-existent argument as a hashmap key for `fromState` and `toState` now raises an error (PR #793).
 
 * `config run`: Add option to run a component using a package bundle downloaded from ViashHub (PR #816).
@@ -29,12 +32,22 @@ TODO add summary
 
 ## BUG FIXES
 
+* `Config parsing`: Fix an empty or comment-only `.vsh.yaml` config file causing a `NullPointerException` or an opaque decode error; this now raises a clear "config file is empty" error instead (PR #895).
+
 * `NextflowRunner`: Automatically convert integers to doubles when argument type is `double` (port of PR #824, PR #825).
 
 * `Parameter passing`: Fix handling of special characters in argument values (PR #762, fixes #619, #705, #763, #821, #840).
   * Backticks in argument values no longer cause command substitution
   * Backslash-quote sequences (`\'`) no longer break Python syntax
   * Dollar signs, newlines, and other special characters are properly preserved
+
+* `Dependencies`: Provide a clear error message when a dependency's config fails to parse instead of an opaque `NoSuchElementException` (PR #896).
+  This can happen when running Viash with Java 17 and a non-UTF-8 default file encoding (e.g. `-Dfile.encoding=ascii`).
+
+* `Config build`: Strip credentials from the git remote URL before storing it in `.build_info.git_remote`, even when the
+  username contains characters outside `\w` (e.g. `x-access-token`) (PR #897).
+
+* `testBenches`: set `-ansi-log false` when running Nextflow in order to test against all captured sequential output (PR #911).
 
 ## MINOR FIXES
 
@@ -48,3 +61,9 @@ TODO add summary
   Instead of injecting argument values directly into script code, values are now stored in a JSON file
   (`params.json`) and parsed at runtime using language-specific JSON parsers. This approach is more
   robust, easier to debug, and handles special characters (backticks, quotes, newlines) correctly.
+
+* `Regex`: Rewrite regexes with potentially incomplete matches so they no longer need to be marked `@unchecked` (PR #895).
+
+* `Circe`: Add a helper method for combined encoding & decoding of top-level sealed traits, reducing the chance of errors in this pattern (PR #895).
+
+* `NextflowRunner`: Removed internal `CustomTraceObserver` class and `collectTraces` method for nextflow runner (PR #909)
