@@ -2,19 +2,19 @@ name := "viash"
 
 version := "0.10.0-dev"
 
-scalaVersion := "3.3.4"
+scalaVersion := "3.3.8"
 
 libraryDependencies ++= Seq(
-  "org.scalactic" %% "scalactic" % "3.2.15" % "test",
-  "org.scalatest" %% "scalatest" % "3.2.15" % "test",
-  "org.rogach" %% "scallop" % "5.0.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1",
-  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
-  "dev.optics" %% "monocle-core"  % "3.1.0",
-  "dev.optics" %% "monocle-macro" % "3.1.0"
+  "org.scalactic" %% "scalactic" % "3.2.20" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.20" % "test",
+  "org.rogach" %% "scallop" % "5.3.0",
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0",
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0",
+  "dev.optics" %% "monocle-core"  % "3.3.0",
+  "dev.optics" %% "monocle-macro" % "3.3.0"
 )
 
-val circeVersion = "0.14.7"
+val circeVersion = "0.14.16"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
@@ -26,8 +26,8 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 libraryDependencies ++= Seq(
-  "io.circe" %% "circe-optics" % "0.15.0",
-  "io.circe" %% "circe-yaml" % "0.15.2",
+  "io.circe" %% "circe-optics" % "0.15.1",
+  "io.circe" %% "circe-yaml" % "0.16.1",
 )
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-explain")
