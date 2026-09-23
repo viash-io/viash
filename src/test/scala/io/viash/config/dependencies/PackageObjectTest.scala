@@ -5,7 +5,7 @@ import io.viash.config.dependencies.{GithubPackage, GitPackage, LocalPackage, Vi
 import io.viash.helpers.IO
 import io.viash.helpers.SysEnv
 
-class PackageTest extends AnyFunSuite {
+class PackageObjectTest extends AnyFunSuite {
   test("Package.unapply: handles git+https syntax") {
     val pkg = Package.unapply("git+https://github.com/viash-io/viash@v1.0.0")
     assert(pkg.isDefined)

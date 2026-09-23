@@ -73,7 +73,7 @@ case class Dependency(
   alias: Option[String] = None,
   
   @description(
-    """Specifies the @[package](repository) location where the dependency component can be found.
+    """Specifies the @[package](package) location where the dependency component can be found.
       |This must either be a full definition of the package or the name of a package referenced as it is defined under packages.
       |Additionally, the full definition can be specified as a single string where all parameters such as package type, url, branch or tag are specified.
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.

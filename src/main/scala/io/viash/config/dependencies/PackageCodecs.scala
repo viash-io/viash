@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Note: this is a regular object (not a `package object`) even though the file is named
-// `package.scala` for consistency with sibling packages. A `package object dependencies`
-// would compile to a class literally named `package$`/`package`, which on case-insensitive
-// filesystems (e.g. macOS, used in CI) collides with the `Package`/`Package$` class files
-// generated for the `Package` class and its companion object defined in this same package.
+// Note: this holds the encoders/decoders for this package as a plain named object, not a
+// `package object dependencies` (the usual style for sibling packages, see e.g.
+// io.viash.config.package.scala). A `package object dependencies` would compile to a class
+// literally named `package$`/`package`, which on case-insensitive filesystems (e.g. macOS,
+// used in CI) collides with the `Package`/`Package$` class files generated for the `Package`
+// class and its companion object defined in this same package.
 package io.viash.config.dependencies
 
 import io.circe.{ACursor, Decoder, Encoder, Json}

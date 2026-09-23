@@ -45,7 +45,7 @@ trait AbstractGitPackage extends Package with Logging {
   def getCacheIdentifier(): Option[String]
   def fullCachePath: Option[Path] = {
     val cacheIdentifier = getCacheIdentifier()
-    cacheIdentifier.map(cacheIdentifier => Paths.get(SysEnv.viashHome).resolve("repositories").resolve(cacheIdentifier))
+    cacheIdentifier.map(cacheIdentifier => Paths.get(SysEnv.viashHome).resolve("packages").resolve(cacheIdentifier))
   }
 
   def findInCache(): Option[AbstractGitPackage] = {

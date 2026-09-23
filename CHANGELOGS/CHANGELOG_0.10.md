@@ -21,6 +21,10 @@ TODO add summary
 
 ## BREAKING CHANGES
 
+* `Dependencies`: Rename the `repository`/`repositories` nomenclature to `package`/`packages` (PR #920).
+  The old `repository`/`repositories` keys are deprecated but remain supported for backwards compatibility and will be removed in a future release.
+  The local cache of checked-out git dependencies also moved from `~/.viash/repositories` to `~/.viash/packages`; existing caches under the old path are no longer used and can be deleted.
+
 * `Nextflow` runner: remove deprecated `map`, `mapId`, `mapData`, `mapPassthrough` and `renameKeys` arguments (PR #792).
 
 * `Nextflow` runner: remove helper functions: `setWorkflowArguments`, `getWorkflowArguments`, `strictMap`, `passthroughMap`, `passthroughFlatMap`,  `passthroughFilter`, `channelFromParams`, `runComponents` (PRs #792, #811).

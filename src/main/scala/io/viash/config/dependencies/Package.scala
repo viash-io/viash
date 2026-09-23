@@ -24,10 +24,10 @@ import java.nio.file.{Path, Paths, Files}
 @description(
   """Specifies a package where dependency components can be found.
     |
-    | - @[local](repo_local): This package (default).
-    | - @[git](repo_git): A remote git repository.
-    | - @[github](repo_github): A remote GitHub repository.
-    | - @[vsh](repo_vsh): A Viash Hub package.
+    | - @[local](package_local): This package (default).
+    | - @[git](package_git): A remote git repository.
+    | - @[github](package_github): A remote GitHub repository.
+    | - @[vsh](package_vsh): A Viash Hub package.
     |""")
 @exampleWithDescription(
   """packages:
