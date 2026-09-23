@@ -35,6 +35,6 @@ object AppliedConfigLenses {
   val configVersionLens = configLens andThen ConfigLenses.versionLens
   val configRequirementsLens = configLens andThen ConfigLenses.requirementsLens
   val configDependenciesLens = configLens andThen ConfigLenses.dependenciesLens
-  val configRepositoriesLens = configLens andThen ConfigLenses.repositoriesLens
+  val configPackagesLens = configLens andThen ConfigLenses.packagesLens
   val configResourcesLens = configLens andThen ConfigLenses.resourcesLens
 }

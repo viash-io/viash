@@ -26,7 +26,7 @@ import io.viash.helpers.IO
 import io.viash.helpers.circe._
 import io.circe.Json
 import java.net.URI
-import io.viash.config.dependencies.RepositoryWithName
+import io.viash.config.dependencies.PackageWithName
 import io.viash.config.{Author, Links, References}
 
 @description("A Viash package configuration file. It's name should be `_viash.yaml`.")
@@ -85,9 +85,9 @@ case class PackageConfig(
   @since("Viash 0.9.0")
   info: Json = Json.Null,
 
-  @description("Common repository definitions for component dependencies.")
+  @description("Common package definitions for component dependencies.")
   @example(
-    """repositories:
+    """packages:
       |  - name: openpipelines-bio
       |    type: github
       |    uri: openpipelines-bio/modules
@@ -96,7 +96,7 @@ case class PackageConfig(
       "yaml")
   @default("Empty")
   @since("Viash 0.9.0")
-  repositories: List[RepositoryWithName] = Nil,
+  packages: List[PackageWithName] = Nil,
 
   @description("Which version of Viash to use.")
   @example("viash_versions: 0.6.4", "yaml")
@@ -188,7 +188,12 @@ case class PackageConfig(
   @default("Empty")
   @since("Viash 0.9.0")
   links: Links = Links(),
-)
+) {
+  @description("Deprecated. Use 'packages' instead.")
+  @deprecated("Use 'packages' instead.", "0.10.0", "0.11.0")
+  @default("Empty")
+  private val repositories: List[PackageWithName] = Nil
+}
 
 object PackageConfig {
 

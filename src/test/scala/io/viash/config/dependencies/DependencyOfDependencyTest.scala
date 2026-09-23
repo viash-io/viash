@@ -82,7 +82,7 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       dependencies = List(
         Dependency(
           name = "comp1",
-          repository = Right(LocalRepository(path = Some("/../pack1/")))
+          `package` = Right(LocalPackage(path = Some("/../pack1/")))
         )
       ),
       resources = textBashScript("$dep_comp1\necho 'Hello from comp2'"),
@@ -120,7 +120,7 @@ class DependencyOfDependencyTest extends AnyFunSuite with BeforeAndAfterAll {
       dependencies = List(
         Dependency(
           name = "comp2",
-          repository = Right(LocalRepository(path = Some("/../pack2/")))
+          `package` = Right(LocalPackage(path = Some("/../pack2/")))
         )
       ),
       resources = textBashScript("$dep_comp2\necho 'Hello from comp3'"),

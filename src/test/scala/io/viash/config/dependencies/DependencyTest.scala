@@ -7,14 +7,17 @@ import io.viash.config.{Config, ConfigMeta}
 import io.viash.config.resources.BashScript
 import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.helpers.circe._
+import io.viash.helpers.circe.Convert
 
 import java.nio.file.{Files, Path, Paths}
 import io.viash.TestHelper
-import io.viash.config.dependencies.{LocalRepository, ViashhubRepositoryWithName, Dependency}
+import io.viash.config.dependencies.{LocalPackage, LocalPackageWithName, ViashhubPackageWithName, Dependency}
+import io.viash.config.dependencies.PackageCodecs.decodeDependency
+import io.viash.config.decodeConfig
 
 class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
-  
+
   private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
 
   // Create a subfolder and place a _viash.yaml file in it
@@ -35,30 +38,30 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   // Short wrapper for creating a bash script containing some text and using it as a single resource
-  def textBashScript(text: String): List[BashScript] = 
+  def textBashScript(text: String): List[BashScript] =
     List(BashScript(text = Some(text), dest = Some("./script.sh"), use_jq = Some(true)))
-  
-  test("Create a remote dependency with repository defined as sugar syntax") {
-    val dep = Dependency("dep1", repository = Left("vsh://hendrik/dependency_test@main_build"))
+
+  test("Create a remote dependency with package defined as sugar syntax") {
+    val dep = Dependency("dep1", `package` = Left("vsh://hendrik/dependency_test@main_build"))
     assert(dep.name == "dep1")
-    assert(dep.repository.isLeft)
+    assert(dep.`package`.isLeft)
   }
 
-  test("Create a remote dependency with repository defined as a full definition") {
-    val dep = Dependency("dep1", repository = Right(LocalRepository()))
+  test("Create a remote dependency with package defined as a full definition") {
+    val dep = Dependency("dep1", `package` = Right(LocalPackage()))
     assert(dep.name == "dep1")
-    assert(dep.repository.isRight)
+    assert(dep.`package`.isRight)
   }
 
-  test("Create a remote dependency with repository defined as a full definition with name") {
+  test("Create a remote dependency with package defined as a full definition with name") {
     assertThrows[AssertionError] {
-      Dependency("dep1", repository = Right(LocalRepositoryWithName(name = "my_repo")))
+      Dependency("dep1", `package` = Right(LocalPackageWithName(name = "my_repo")))
     }
   }
 
   test("Use a local dependency") {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test")
-    
+
     // write test files
     val conf1 = Config(
       name = "dep1",
@@ -100,9 +103,9 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
-  test("Use a local repository with an absolute path") {
+  test("Use a local package with an absolute path") {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
-    
+
     // write test files
     val conf1 = Config(
       name = "dep1",
@@ -111,20 +114,20 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val conf2 = Config(
       name = "dep2",
       resources = textBashScript("$dep_dep1\necho Hello from dep2"),
-      dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("/dependencies")))))
+      dependencies = List(Dependency("dep1", `package` = Right(LocalPackage(path = Some("/dependencies")))))
     )
 
     writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), conf1)
     writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
 
-    // build our local repository
+    // build our local package
     val build1 = TestHelper.testMain(
         workingDir = Some(testFolder.resolve("dependencies")),
         "ns", "build",
         "-s", testFolder.resolve("dependencies/src").toString(),
         "-t", testFolder.resolve("dependencies/target").toString()
       )
-    
+
     assert(build1.stderr.strip == "All 1 configs built successfully", "check dependency build was successful")
 
     // build
@@ -155,9 +158,9 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
-  test("Use a local repository with a relative path") {
+  test("Use a local package with a relative path") {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test_relative_path")
-    
+
     // write test files
     val conf1 = Config(
       name = "dep1",
@@ -166,20 +169,20 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     val conf2 = Config(
       name = "dep2",
       resources = textBashScript("$dep_dep1\necho Hello from dep2"),
-      dependencies = List(Dependency("dep1", repository = Right(LocalRepository(path = Some("../../dependencies")))))
+      dependencies = List(Dependency("dep1", `package` = Right(LocalPackage(path = Some("../../dependencies")))))
     )
 
     writeTestConfig(testFolder.resolve("dependencies/src/dep1/config.vsh.yaml"), conf1)
     writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
 
-    // build our local repository
+    // build our local package
     val build1 = TestHelper.testMain(
         workingDir = Some(testFolder.resolve("dependencies")),
         "ns", "build",
         "-s", testFolder.resolve("dependencies/src").toString(),
         "-t", testFolder.resolve("dependencies/target").toString()
       )
-    
+
     assert(build1.stderr.strip == "All 1 configs built successfully", "check dependency build was successful")
 
     // build
@@ -212,12 +215,12 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Use a remote dependency") {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test")
-    
+
     // write test files
     val conf = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
-      dependencies = List(Dependency("viash_hub/dep", repository = Left("vsh://hendrik/dependency_test@main_build")))
+      dependencies = List(Dependency("viash_hub/dep", `package` = Left("vsh://hendrik/dependency_test@main_build")))
     )
 
     writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), conf)
@@ -249,15 +252,15 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
-  test("Use a remote dependency, defined in .repositories") {
-    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_repositories")
-    
+  test("Use a remote dependency, defined in .packages") {
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_packages")
+
     // write test files
     val conf = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
-      repositories = List(ViashhubRepositoryWithName("viash_hub", "vsh", "hendrik/dependency_test", Some("main_build"))),
-      dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
+      packages = List(ViashhubPackageWithName("viash_hub", "vsh", "hendrik/dependency_test", Some("main_build"))),
+      dependencies = List(Dependency("viash_hub/dep", `package` = Left("viash_hub")))
     )
 
     writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), conf)
@@ -291,19 +294,19 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Use a remote dependency defined in the package config") {
     val packageConfig =
-      """repositories:
+      """packages:
         |  - name: viash_hub
         |    type: vsh
         |    repo: hendrik/dependency_test
         |    tag: main_build
         |""".stripMargin
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test_package_config", Some(packageConfig))
-    
+
     // write test files
     val config = Config(
       name = "dep3",
       resources = textBashScript("$dep_viash_hub_dep\necho \"Hello from dep3\""),
-      dependencies = List(Dependency("viash_hub/dep", repository = Left("viash_hub")))
+      dependencies = List(Dependency("viash_hub/dep", `package` = Left("viash_hub")))
     )
 
     writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), config)
@@ -338,12 +341,12 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
   test("Use a remote dependency with nested dependencies") {
     val testFolder = createViashSubFolder(temporaryFolder, "nested_remote_test")
-    
+
     // write test files
     val conf = Config(
       name = "dep4",
       resources = textBashScript("$dep_viash_hub_test_tree\necho \"Hello from dep4\""),
-      dependencies = List(Dependency("viash_hub_test/tree", repository = Left("vsh://hendrik/dependency_test2@main_build")))
+      dependencies = List(Dependency("viash_hub_test/tree", `package` = Left("vsh://hendrik/dependency_test2@main_build")))
     )
 
     writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), conf)
@@ -373,6 +376,82 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
     assert(out.output == "This is tree.\nThis is bar 1.\nHello from dep4\n")
     assert(out.exitValue == 0)
+  }
+
+  // -- Backwards compatibility tests for the repository/repositories -> package/packages rename (issue #847) --
+
+  test("Backwards compatibility: dependency with old 'repository' key decodes the same as 'package'") {
+    val oldYaml =
+      """name: dep1
+        |repository: "github://openpipelines-bio/modules@0.3.0"
+        |""".stripMargin
+    val newYaml =
+      """name: dep1
+        |package: "github://openpipelines-bio/modules@0.3.0"
+        |""".stripMargin
+
+    val oldDep = Convert.jsonToClass[Dependency](Convert.textToJson(oldYaml, ""), "")
+    val newDep = Convert.jsonToClass[Dependency](Convert.textToJson(newYaml, ""), "")
+
+    assert(oldDep.`package` == newDep.`package`)
+    assert(oldDep.`package` == Left("github://openpipelines-bio/modules@0.3.0"))
+  }
+
+  test("Backwards compatibility: dependency with both 'package' and 'repository' keys: 'package' wins") {
+    val yaml =
+      """name: dep1
+        |package: "github://openpipelines-bio/modules@0.3.0"
+        |repository: "vsh://some/other@1.0.0"
+        |""".stripMargin
+
+    val dep = Convert.jsonToClass[Dependency](Convert.textToJson(yaml, ""), "")
+
+    assert(dep.`package` == Left("github://openpipelines-bio/modules@0.3.0"))
+  }
+
+  test("Backwards compatibility: component config with old 'repositories' key decodes the same as 'packages'") {
+    val oldYaml =
+      """name: comp1
+        |repositories:
+        |  - name: openpipelines-bio
+        |    type: github
+        |    repo: openpipelines-bio/modules
+        |    tag: 0.3.0
+        |""".stripMargin
+    val newYaml =
+      """name: comp1
+        |packages:
+        |  - name: openpipelines-bio
+        |    type: github
+        |    repo: openpipelines-bio/modules
+        |    tag: 0.3.0
+        |""".stripMargin
+
+    val oldConf = Convert.jsonToClass[Config](Convert.textToJson(oldYaml, ""), "")
+    val newConf = Convert.jsonToClass[Config](Convert.textToJson(newYaml, ""), "")
+
+    assert(oldConf.packages == newConf.packages)
+    assert(oldConf.packages.map(_.name) == List("openpipelines-bio"))
+  }
+
+  test("Backwards compatibility: component config with both 'packages' and 'repositories' keys: entries are merged, new first") {
+    val yaml =
+      """name: comp1
+        |packages:
+        |  - name: new-entry
+        |    type: github
+        |    repo: openpipelines-bio/modules
+        |    tag: 0.3.0
+        |repositories:
+        |  - name: old-entry
+        |    type: vsh
+        |    repo: biobox
+        |    tag: 0.1.0
+        |""".stripMargin
+
+    val conf = Convert.jsonToClass[Config](Convert.textToJson(yaml, ""), "")
+
+    assert(conf.packages.map(_.name) == List("new-entry", "old-entry"))
   }
 
   override def afterAll(): Unit = {

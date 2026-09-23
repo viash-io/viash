@@ -18,13 +18,13 @@
 package io.viash.lenses
 
 import monocle.PLens
-import io.viash.config.dependencies.Repository
-import io.viash.config.dependencies.RepositoryWithName
+import io.viash.config.dependencies.Package
+import io.viash.config.dependencies.PackageWithName
 
-object RepositoryLens {
-  // val nameLens = PLens[RepositoryWithName, RepositoryWithName, String, String](r => r.name)(s => r => r.copyRepo(name = s))
-  val typeLens = PLens[Repository, Repository, String, String](r => r.`type`)(s => r => r.copyRepo(`type` = s))
-  val tagLens = PLens[Repository, Repository, Option[String], Option[String]](r => r.tag)(s => r => r.copyRepo(tag = s))
-  val pathLens = PLens[Repository, Repository, Option[String], Option[String]](r => r.path)(s => r => r.copyRepo(path = s))
-  val localPathLens = PLens[Repository, Repository, String, String](r => r.localPath)(s => r => r.copyRepo(localPath = s))
+object PackageLens {
+  // val nameLens = PLens[PackageWithName, PackageWithName, String, String](r => r.name)(s => r => r.copyPackage(name = s))
+  val typeLens = PLens[Package, Package, String, String](r => r.`type`)(s => r => r.copyPackage(`type` = s))
+  val tagLens = PLens[Package, Package, Option[String], Option[String]](r => r.tag)(s => r => r.copyPackage(tag = s))
+  val pathLens = PLens[Package, Package, Option[String], Option[String]](r => r.path)(s => r => r.copyPackage(path = s))
+  val localPathLens = PLens[Package, Package, String, String](r => r.localPath)(s => r => r.copyPackage(localPath = s))
 }

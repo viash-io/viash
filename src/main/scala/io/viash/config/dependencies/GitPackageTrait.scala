@@ -17,13 +17,14 @@
 
 package io.viash.config.dependencies
 
-trait CopyableRepo[A <: CopyableRepo[A]] {
-  self: A =>
-  def copyRepo(
-   `type`: String,
-    tag: Option[String],
-    path: Option[String],
-    localPath: String
-  ): A
-}
+import io.viash.schemas._
 
+trait GitPackageTrait extends AbstractGitPackage {
+
+  def getCheckoutUri(): String = uri
+  def getCacheIdentifier(): Option[String] = None
+
+  // Strip the protocol and user credentials
+  val storePath = uri.replaceFirst("^.+://", "").replaceFirst(".+@", "")
+  
+}

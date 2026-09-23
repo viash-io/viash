@@ -32,29 +32,29 @@ import io.viash.config.ScopeEnum
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |    repository: 
+    |    package:
     |      type: github
     |      repo: openpipelines-bio/modules
     |      tag: 0.3.0
     |""",
   "yaml",
-  "Definition of dependency with a fully defined repository"
+  "Definition of dependency with a fully defined package"
 )
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |    repository: "github://openpipelines-bio/modules@0.3.0"
+    |    package: "github://openpipelines-bio/modules@0.3.0"
     |""",
   "yaml",
-  "Definition of a dependency with a repository using sugar syntax."
+  "Definition of a dependency with a package using sugar syntax."
 )
 @exampleWithDescription(
   """dependencies:
     |  - name: qc/multiqc
-    |    repository: "openpipelines-bio"
+    |    package: "openpipelines-bio"
     |""",
   "yaml",
-  "Definition of a dependency with a repository defined as 'openpipelines-bio' under `.repositories`."
+  "Definition of a dependency with a package defined as 'openpipelines-bio' under `.packages`."
 )
 @exampleWithDescription(
   """dependencies:
@@ -73,13 +73,13 @@ case class Dependency(
   alias: Option[String] = None,
   
   @description(
-    """Specifies the @[repository](repository) location where the dependency component can be found.
-      |This must either be a full definition of the repository or the name of a repository referenced as it is defined under repositories.
-      |Additionally, the full definition can be specified as a single string where all parameters such as repository type, url, branch or tag are specified.
+    """Specifies the @[package](repository) location where the dependency component can be found.
+      |This must either be a full definition of the package or the name of a package referenced as it is defined under packages.
+      |Additionally, the full definition can be specified as a single string where all parameters such as package type, url, branch or tag are specified.
       |Omitting the value sets the dependency as a local dependency, ie. the dependency is available in the same namespace as the component.
       |""")
   @default("Empty")
-  repository: Either[String, Repository] = Right(LocalRepository()),
+  `package`: Either[String, Package] = Right(LocalPackage()),
 
   // internal stuff
   @internalFunctionality
@@ -97,26 +97,31 @@ case class Dependency(
   @internalFunctionality
   internalDependencyTargetScope: ScopeEnum = ScopeEnum.Public
 ) {
+  @description("Deprecated. Use 'package' instead.")
+  @deprecated("Use 'package' instead.", "0.10.0", "0.11.0")
+  @default("Empty")
+  private val repository: Either[String, Package] = Right(LocalPackage())
+
   if (alias.isDefined) {
     // check functionality name
     require(alias.get.matches("^[A-Za-z][A-Za-z0-9_]*$"), message = f"alias '${alias.get}' must begin with a letter and consist only of alphanumeric characters or underscores.")
   }
 
-  if (repository.isRight) {
-    val r = repository.toOption.get
-    assert(!r.isInstanceOf[RepositoryWithName], "Repository should not be a RepositoryWithName")
+  if (`package`.isRight) {
+    val r = `package`.toOption.get
+    assert(!r.isInstanceOf[PackageWithName], "Package should not be a PackageWithName")
   }
 
-  // Shorthand for getting the actual repository from 'repository'.
+  // Shorthand for getting the actual package from 'package'.
   // The lefthand string notation is converted to the righthand object during dependency resolution.
   // So after that step we must always use the righthand object. This makes that much easier.
-  def workRepository: Option[Repository] = repository.toOption
+  def workPackage: Option[Package] = `package`.toOption
 
   // Name in BashWrapper - see Bash.viashVarName for naming convention
   def VIASH_DEP: String = io.viash.helpers.Bash.viashVarName("dep", alias.getOrElse(name))
   // Name to be used in scripts
   def scriptName: String = alias.getOrElse(name).replace("/", "_")
-  // Part of the folder structure where dependencies should be written to, contains the repository & dependency name
+  // Part of the folder structure where dependencies should be written to, contains the package & dependency name
   def subOutputPath = foundConfigPath.flatMap(fcp => getRelativePath(Paths.get(fcp).getParent()))
   // Method to get a relative sub path for this dependency or a local dependency of this dependency
   def getRelativePath(fullPath: Path): Option[String] = {
@@ -126,16 +131,16 @@ case class Dependency(
       Some(ViashNamespace.targetOutputPath("", "executable", internalDependencyTargetScope, None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
-      val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workRepository.get.localPath))
+      val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workPackage.get.localPath))
       if (relativePath.isEmpty)
         throw new MissingBuildYamlException(fullPath, this)
-      relativePath.flatMap(rp => workRepository.map(r => Paths.get(r.subOutputPath).resolve(rp).toString()))
+      relativePath.flatMap(rp => workPackage.map(r => Paths.get(r.subOutputPath).resolve(rp).toString()))
     }
   }
 
   // Is this a dependency that will be built when `viash ns build` is run?
-  def isLocalDependency: Boolean = workRepository.map{
-    case r: LocalRepositoryTrait => (r.path == None || r.path == Some(".")) && r.tag == None
+  def isLocalDependency: Boolean = workPackage.map{
+    case r: LocalPackageTrait => (r.path == None || r.path == Some(".")) && r.tag == None
     case _ => false
   }.getOrElse(false)
 }
@@ -149,9 +154,9 @@ object Dependency {
     *
     * @param dependencyPath Path of the dependency as they are found in .config.vsh.yaml, relative to the original build location
     * @param output Output / target path as root for where the build artifacts should be located
-    * @param repoPath Path of the repository where the dependency is found
+    * @param repoPath Path of the package where the dependency is found
     * @param mainDependency Top level dependency for which optionally dependencies of dependencies are being resolved. Used to relativize paths
-    * @return Tuple with source and destination paths, relativized to current repository locations, ready to be copied
+    * @return Tuple with source and destination paths, relativized to current package locations, ready to be copied
     */
   def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency): (Path, Path) = {
     import scala.jdk.CollectionConverters._

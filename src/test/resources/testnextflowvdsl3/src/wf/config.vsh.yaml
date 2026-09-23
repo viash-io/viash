@@ -29,10 +29,10 @@ resources:
 dependencies:
   - name: step1 # local is implicit
   - name: step2
-    repository: local
+    package: local
   - name: step3
-    repository: mylocal
-repositories:
+    package: mylocal
+packages:
   - name: mylocal
     type: local
 engines:

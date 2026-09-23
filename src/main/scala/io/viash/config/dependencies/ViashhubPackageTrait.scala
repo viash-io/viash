@@ -20,9 +20,9 @@ package io.viash.config.dependencies
 import io.viash.schemas._
 import io.viash.helpers.Git
 
-trait ViashhubRepositoryTrait extends AbstractGitRepository {
+trait ViashhubPackageTrait extends AbstractGitPackage {
 
-  @description("The name of the Viash-Hub repository.")
+  @description("The name of the Viash-Hub package.")
   @example("repo: openpipelines-bio/openpipeline", "yaml")
   val repo: String
 

@@ -20,7 +20,7 @@ package io.viash.config.dependencies
 import io.viash.schemas._
 import io.viash.helpers.Git
 
-trait GithubRepositoryTrait extends AbstractGitRepository {
+trait GithubPackageTrait extends AbstractGitPackage {
 
   @description("The name of the GitHub repository.")
   @example("repo: viash-io/viash", "yaml")

@@ -21,12 +21,17 @@ import io.circe.{Decoder, Encoder}
 
 package object packageConfig {
   import io.viash.helpers.circe._
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
+  import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.deriveConfiguredDecoderWithValidationCheck
 
   import io.viash.config.{decodeAuthor, encodeAuthor}
   import io.viash.config.{decodeLinks, encodeLinks}
   import io.viash.config.{decodeReferences, encodeReferences}
-  import io.viash.config.dependencies.{decodeRepositoryWithName, encodeRepositoryWithName}
+  import io.viash.config.dependencies.PackageCodecs.{decodePackageWithName, encodePackageWithName}
+  import io.viash.config.dependencies.PackageCodecs.renameRepositoriesToPackages
 
   implicit val encodePackageConfig: Encoder.AsObject[PackageConfig] = deriveConfiguredEncoderStrict
-  implicit val decodePackageConfig: Decoder[PackageConfig] = deriveConfiguredDecoderFullChecks
+  implicit val decodePackageConfig: Decoder[PackageConfig] = deriveConfiguredDecoderWithValidationCheck[PackageConfig]
+    .prepare(renameRepositoriesToPackages)
+    .prepare(checkDeprecation[PackageConfig](_))
 }

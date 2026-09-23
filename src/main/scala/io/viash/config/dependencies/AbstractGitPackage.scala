@@ -24,21 +24,21 @@ import io.viash.exceptions.CheckoutException
 import io.viash.helpers.SysEnv
 import java.nio.file.Path
 
-trait AbstractGitRepository extends Repository with Logging {
+trait AbstractGitPackage extends Package with Logging {
   val uri: String
   val storePath: String
 
   @inline
   protected def getLoggers(fn: String) = Seq[String => Unit] { (str: String) => debug(s"$fn: $str") }
 
-  def copyRepo(
+  def copyPackage(
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): AbstractGitRepository 
+  ): AbstractGitPackage 
   
-  // Get the repository part of where dependencies should be located in the target/dependencies folder
+  // Get the package part of where dependencies should be located in the target/dependencies folder
   def subOutputPath: String = Paths.get(`type`, storePath, tag.getOrElse("")).toString()
 
   def getCheckoutUri(): String
@@ -48,19 +48,19 @@ trait AbstractGitRepository extends Repository with Logging {
     cacheIdentifier.map(cacheIdentifier => Paths.get(SysEnv.viashHome).resolve("repositories").resolve(cacheIdentifier))
   }
 
-  def findInCache(): Option[AbstractGitRepository] = {
+  def findInCache(): Option[AbstractGitPackage] = {
     val cachePath = fullCachePath
     cachePath match {
       case Some(path) if path.toFile.isDirectory() =>
         debug(s"Found in cache: $path")
-        Some(copyRepo(localPath = path.toString))
+        Some(copyPackage(localPath = path.toString))
       case _ => None
     }
   }
 
   // compare the remote hash with the local hash
   def checkCacheStillValid(): Boolean = {
-    if (AbstractGitRepository.isValidatedCache(localPath))
+    if (AbstractGitPackage.isValidatedCache(localPath))
       return true
     val uri = getCheckoutUri()
     val remoteHash = Git.getRemoteHash(uri, tag)
@@ -68,12 +68,12 @@ trait AbstractGitRepository extends Repository with Logging {
     debug(s"remoteHash: $remoteHash localHash: $localHash")
     val res = remoteHash == localHash && remoteHash.isDefined
     if (res)
-      AbstractGitRepository.markValidatedCache(localPath)
+      AbstractGitPackage.markValidatedCache(localPath)
     res
   }
 
   // Clone of single branch with depth 1 but without checking out files
-  def checkoutSparse(): AbstractGitRepository = {
+  def checkoutSparse(): AbstractGitPackage = {
     val temporaryFolder = IO.makeTemp("viash_hub_repo")
     val uri = getCheckoutUri()
 
@@ -83,20 +83,20 @@ trait AbstractGitRepository extends Repository with Logging {
     if (out.exitValue != 0)
       throw new CheckoutException(this)
 
-    copyRepo(localPath = temporaryFolder.toString)
+    copyPackage(localPath = temporaryFolder.toString)
   }
 
   // Get cached repo if it exists and is still valid, otherwise checkout a new one
   // If a new one is checked out, copy it to the cache
   // If a cached repo is used, copy it to a new temporary folder
-  def getSparseRepoInTemp(): AbstractGitRepository = {
+  def getSparseRepoInTemp(): AbstractGitPackage = {
     info(s"Fetching repo for $uri")
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
         debug(s"Using cached repo from ${repo.localPath}")
         val newTemp = IO.makeTemp("viash_hub_repo")
         IO.copyFolder(repo.localPath, newTemp.toString)
-        repo.copyRepo(localPath = newTemp.toString)
+        repo.copyPackage(localPath = newTemp.toString)
       case _ =>
         debug(s"Cache either not present or outdated; checkout repository")
         val repo = checkoutSparse()
@@ -108,7 +108,7 @@ trait AbstractGitRepository extends Repository with Logging {
               IO.deleteRecursively(cachePath)
             cachePathFile.mkdirs()
             IO.copyFolder(repo.localPath, cachePath.toString)
-            AbstractGitRepository.markValidatedCache(cachePath.toString)
+            AbstractGitPackage.markValidatedCache(cachePath.toString)
           case None => 
         }
         repo
@@ -116,7 +116,7 @@ trait AbstractGitRepository extends Repository with Logging {
   }
 
   // Checkout of files from already cloned repository. Limit file checkout to the path that was specified
-  def checkout(): AbstractGitRepository = {
+  def checkout(): AbstractGitPackage = {
     val localPathFile = Paths.get(localPath).toFile
     val checkoutName = tag match {
       case Some(name) if Git.hasBranch(name, localPathFile) => s"origin/$name"
@@ -130,14 +130,14 @@ trait AbstractGitRepository extends Repository with Logging {
       warn(s"checkout out: ${out.command} ${out.exitValue} ${out.output}")
 
     if (path.isDefined)
-      copyRepo(localPath = Paths.get(localPath, path.get).toString)
+      copyPackage(localPath = Paths.get(localPath, path.get).toString)
     else
       // no changes to be made
       this
   }
 }
 
-object AbstractGitRepository extends Logging {
+object AbstractGitPackage extends Logging {
   private val validatedCaches = scala.collection.mutable.ListBuffer[String]()
   private def markValidatedCache(cacheIdentifier: String): Unit = {
     debug("Marking cache as validated: " + cacheIdentifier)

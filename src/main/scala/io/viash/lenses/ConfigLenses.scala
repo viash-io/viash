@@ -22,7 +22,7 @@ import monocle.Lens
 import monocle.macros.GenLens
 
 import LinksLenses._
-import RepositoryLens._
+import PackageLens._
 
 object ConfigLenses {
   val enginesLens = GenLens[Config](_.engines)
@@ -34,7 +34,7 @@ object ConfigLenses {
   val resourcesLens = GenLens[Config](_.resources)
   val testResourcesLens = GenLens[Config](_.test_resources)
   val dependenciesLens = GenLens[Config](_.dependencies)
-  val repositoriesLens = GenLens[Config](_.repositories)
+  val packagesLens = GenLens[Config](_.packages)
   val keywordsLens = GenLens[Config](_.keywords)
   val licenseLens = GenLens[Config](_.license)
   val linksLens = GenLens[Config](_.links)
