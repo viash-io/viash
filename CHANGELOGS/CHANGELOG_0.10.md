@@ -51,6 +51,12 @@ TODO add summary
 
 * `Dependencies`: Clean up the temporary directories used to check out remote (git/github/vsh) dependency repositories; previously these were never removed, so repeated builds/tests would accumulate them under `/tmp` (PR #916).
 
+* `viash run`: Fix `---debug` failing with "the input device is not a TTY" when using the Docker engine (PR #917). stdin, stdout and stderr are now inherited directly from the real terminal for this interactive session, matching the behaviour of running a built executable directly.
+
+* `Nextflow` runner: Fix a bug where a script line starting with `|` (e.g. `|| echo_exit_code="$?"`) was mangled or dropped from the generated `rawScript`, because it was mistaken for a Scala (or, at Nextflow runtime, Groovy) `stripMargin` delimiter (PR #915).
+
+* `BashWrapper` (native, executable and Docker runners): Fix the same `|`-mangling bug (e.g. `|| echo_exit_code="$?"`) in the generated wrapper script, and fix a bash syntax error that could occur when checking a `multiple: true` argument that also has a `min`/`max`/type constraint (PR #915).
+
 ## MINOR FIXES
 
 * `Executable`: Add more info to the --help (PR #802).

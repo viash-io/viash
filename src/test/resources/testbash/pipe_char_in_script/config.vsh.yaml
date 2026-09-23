@@ -1,0 +1,6 @@
+name: pipe_char_in_script
+resources:
+  - type: bash_script
+    path: script.sh
+runners:
+  - type: executable
