@@ -74,7 +74,7 @@ trait AbstractGitRepository extends Repository with Logging {
 
   // Clone of single branch with depth 1 but without checking out files
   def checkoutSparse(): AbstractGitRepository = {
-    val temporaryFolder = IO.makeTemp(AbstractGitRepository.tempDirPrefix)
+    val temporaryFolder = IO.makeTemp(AbstractGitRepository.tempDirPrefix, autoClean = true)
     val uri = getCheckoutUri()
 
     debug(s"temporaryFolder: $temporaryFolder uri: $uri")
@@ -94,7 +94,7 @@ trait AbstractGitRepository extends Repository with Logging {
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
         debug(s"Using cached repo from ${repo.localPath}")
-        val newTemp = IO.makeTemp(AbstractGitRepository.tempDirPrefix)
+        val newTemp = IO.makeTemp(AbstractGitRepository.tempDirPrefix, autoClean = true)
         IO.copyFolder(repo.localPath, newTemp.toString)
         repo.copyRepo(localPath = newTemp.toString)
       case _ =>

@@ -103,9 +103,14 @@ object IO extends Logging {
    * @param name the name of the temporary directory
    * @param parentTempPath the optional parent directory for the temporary directory
    * @param addRandomized enable randomization of the temporary directory name
+   * @param autoClean track this directory for the shutdown-hook safety net (see `tempDirsToClean`).
+   *                  Only pass `true` for directories that should always be removed once the
+   *                  process using them exits, regardless of any `--keep`/retain-on-failure
+   *                  option a caller might otherwise honor; those callers manage their own
+   *                  directory's lifetime and must not have it swept out from under them.
    * @return the temporary directory path
    */
-  def makeTemp(name: String, parentTempPath: Option[Path] = None, addRandomized: Boolean = true): Path = {
+  def makeTemp(name: String, parentTempPath: Option[Path] = None, addRandomized: Boolean = true, autoClean: Boolean = false): Path = {
     val workTempDir = parentTempPath.getOrElse(this.tempDir)
     if (!Files.exists(workTempDir)) Files.createDirectories(workTempDir)
     val temp = addRandomized match {
@@ -123,8 +128,10 @@ object IO extends Logging {
       }
     }
     Files.createDirectories(temp)
-    tempDirsToClean.add(temp)
-    registerShutdownHookOnce()
+    if (autoClean) {
+      tempDirsToClean.add(temp)
+      registerShutdownHookOnce()
+    }
     temp
   }
 
