@@ -77,7 +77,10 @@ object ViashTest extends Logging {
     val dir = IO.makeTemp(
       name = deterministicWorkingDirectory.getOrElse(s"viash_test_${configNameLens.get(appliedConfig)}_"),
       parentTempPath = parentTempPath,
-      addRandomized = deterministicWorkingDirectory.isEmpty
+      addRandomized = deterministicWorkingDirectory.isEmpty,
+      // only let the shutdown hook sweep this dir if the caller explicitly asked not to keep it;
+      // otherwise it might be retained on error (see below) or by explicit request, and must survive
+      autoClean = keepFiles.contains(false)
     )
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
@@ -103,6 +106,12 @@ object ViashTest extends Logging {
       memory = memory,
       dryRun = dryRun
     )
+
+    // dependency repositories (if any) were checked out into temporary directories; now that the
+    // tests (and the runners generated for them) have run, they are no longer needed and can be
+    // cleaned up
+    DependencyResolver.cleanupWorkRepositories(modifiedAppliedConfig.config)
+
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length
 

@@ -36,7 +36,12 @@ object ViashRun extends Logging {
     memory: Option[String]
   ): Int = {
     val resources = appliedConfig.generateRunner(false)
-    val dir = IO.makeTemp("viash_" + appliedConfig.config.name)
+    val dir = IO.makeTemp(
+      "viash_" + appliedConfig.config.name,
+      // only let the shutdown hook sweep this dir if the caller explicitly asked not to keep it;
+      // otherwise it might be retained on error (see below) or by explicit request, and must survive
+      autoClean = keepFiles.contains(false)
+    )
 
     // execute command, print everything to console
     var code = -1

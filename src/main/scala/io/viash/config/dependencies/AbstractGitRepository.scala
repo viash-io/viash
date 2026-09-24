@@ -74,7 +74,7 @@ trait AbstractGitRepository extends Repository with Logging {
 
   // Clone of single branch with depth 1 but without checking out files
   def checkoutSparse(): AbstractGitRepository = {
-    val temporaryFolder = IO.makeTemp("viash_hub_repo")
+    val temporaryFolder = IO.makeTemp(AbstractGitRepository.tempDirPrefix, autoClean = true)
     val uri = getCheckoutUri()
 
     debug(s"temporaryFolder: $temporaryFolder uri: $uri")
@@ -94,7 +94,7 @@ trait AbstractGitRepository extends Repository with Logging {
     findInCache() match {
       case Some(repo) if repo.checkCacheStillValid() => 
         debug(s"Using cached repo from ${repo.localPath}")
-        val newTemp = IO.makeTemp("viash_hub_repo")
+        val newTemp = IO.makeTemp(AbstractGitRepository.tempDirPrefix, autoClean = true)
         IO.copyFolder(repo.localPath, newTemp.toString)
         repo.copyRepo(localPath = newTemp.toString)
       case _ =>
@@ -138,6 +138,10 @@ trait AbstractGitRepository extends Repository with Logging {
 }
 
 object AbstractGitRepository extends Logging {
+  // Prefix used for the temporary directories a repository is checked out into.
+  // Also used by DependencyResolver to identify which temp dirs are safe to clean up.
+  val tempDirPrefix = "viash_hub_repo"
+
   private val validatedCaches = scala.collection.mutable.ListBuffer[String]()
   private def markValidatedCache(cacheIdentifier: String): Unit = {
     debug("Marking cache as validated: " + cacheIdentifier)

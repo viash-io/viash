@@ -79,6 +79,34 @@ class IOTest extends AnyFunSuite with BeforeAndAfter {
     IO.deleteRecursively(tempDir)
   }
 
+  test("makeTemp without autoClean is not tracked for cleanupTempDirFor") {
+    val temp = IO.makeTemp("viash_hub_repo_test", parentTempPath = Some(tempDir))
+    IO.cleanupTempDirFor(temp, "viash_hub_repo_test")
+    assert(Files.exists(temp), "a temp dir created without autoClean (the default) should not be removed by cleanupTempDirFor or the shutdown hook")
+    IO.deleteRecursively(temp)
+  }
+
+  test("makeTemp with autoClean is tracked and removed by cleanupTempDirFor") {
+    val temp = IO.makeTemp("viash_hub_repo_test", parentTempPath = Some(tempDir), autoClean = true)
+    IO.cleanupTempDirFor(temp, "viash_hub_repo_test")
+    assert(!Files.exists(temp))
+  }
+
+  test("cleanupTempDirFor ignores a tracked ancestor whose name doesn't match the given prefix") {
+    val temp = IO.makeTemp("viash_hub_repo_test", parentTempPath = Some(tempDir), autoClean = true)
+    IO.cleanupTempDirFor(temp, "some_other_prefix")
+    assert(Files.exists(temp), "cleanupTempDirFor should not remove a tracked dir whose name doesn't start with the given prefix")
+    IO.deleteRecursively(temp)
+  }
+
+  test("cleanupTempDirFor finds the tracked ancestor from a nested subdirectory") {
+    val temp = IO.makeTemp("viash_hub_repo_test", parentTempPath = Some(tempDir), autoClean = true)
+    val nested = temp.resolve("sub/dir")
+    Files.createDirectories(nested)
+    IO.cleanupTempDirFor(nested, "viash_hub_repo_test")
+    assert(!Files.exists(temp))
+  }
+
   test("uri with path") {
     val uri = IO.uri("test.txt")
     assert(uri.isInstanceOf[URI])
