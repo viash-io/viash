@@ -485,7 +485,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(oldConf.packages.map(_.name) == List("openpipelines-bio"))
   }
 
-  test("Backwards compatibility: component config with both 'packages' and 'repositories' keys: entries are merged, new first") {
+  test("Backwards compatibility: component config with both 'packages' and 'repositories' keys: 'packages' wins, no merge") {
     val yaml =
       """name: comp1
         |packages:
@@ -502,7 +502,11 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
     val conf = Convert.jsonToClass[Config](Convert.textToJson(yaml, ""), "")
 
-    assert(conf.packages.map(_.name) == List("new-entry", "old-entry"))
+    // 'packages' wins outright: no merge, so 'old-entry' from the deprecated 'repositories'
+    // key does not silently resurface (and two differently-tagged entries sharing a name,
+    // e.g. a half-finished migration that copied but didn't delete the old block, can't
+    // produce a "duplicate package name" crash further down the pipeline).
+    assert(conf.packages.map(_.name) == List("new-entry"))
   }
 
   test("Backwards compatibility: package config (_viash.yaml) with old 'repositories' key decodes the same as 'packages'") {
@@ -528,7 +532,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(oldPkg.packages.map(_.name) == List("openpipelines-bio"))
   }
 
-  test("Backwards compatibility: package config (_viash.yaml) with both 'packages' and 'repositories' keys: entries are merged, new first") {
+  test("Backwards compatibility: package config (_viash.yaml) with both 'packages' and 'repositories' keys: 'packages' wins, no merge") {
     val yaml =
       """|packages:
         |  - name: new-entry
@@ -544,7 +548,7 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
 
     val pkg = Convert.jsonToClass[PackageConfig](Convert.textToJson(yaml, ""), "")
 
-    assert(pkg.packages.map(_.name) == List("new-entry", "old-entry"))
+    assert(pkg.packages.map(_.name) == List("new-entry"))
   }
 
   test("Backwards compatibility: using the old 'repositories' key prints a deprecation warning") {
@@ -583,6 +587,127 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     }
 
     assert(errStream.toString.contains("Warning: .repository is deprecated"))
+  }
+
+  test("Backwards compatibility: specifying both 'packages' and 'repositories' prints a dedicated warning") {
+    val yaml =
+      """name: comp1
+        |packages:
+        |  - name: new-entry
+        |    type: github
+        |    repo: openpipelines-bio/modules
+        |    tag: 0.3.0
+        |repositories:
+        |  - name: old-entry
+        |    type: vsh
+        |    repo: biobox
+        |    tag: 0.1.0
+        |""".stripMargin
+
+    val outStream = new java.io.ByteArrayOutputStream()
+    val errStream = new java.io.ByteArrayOutputStream()
+    Console.withOut(outStream) {
+      Console.withErr(errStream) {
+        Convert.jsonToClass[Config](Convert.textToJson(yaml, ""), "")
+      }
+    }
+
+    assert(errStream.toString.contains("Warning: both 'packages' and 'repositories' are specified; 'packages' takes precedence and 'repositories' is ignored."))
+  }
+
+  test("Backwards compatibility: specifying both 'package' and 'repository' prints a dedicated warning") {
+    val yaml =
+      """name: dep1
+        |package: "github://openpipelines-bio/modules@0.3.0"
+        |repository: "vsh://some/other@1.0.0"
+        |""".stripMargin
+
+    val outStream = new java.io.ByteArrayOutputStream()
+    val errStream = new java.io.ByteArrayOutputStream()
+    Console.withOut(outStream) {
+      Console.withErr(errStream) {
+        Convert.jsonToClass[Dependency](Convert.textToJson(yaml, ""), "")
+      }
+    }
+
+    assert(errStream.toString.contains("Warning: both 'package' and 'repository' are specified; 'package' takes precedence and 'repository' is ignored."))
+  }
+
+  test("Backwards compatibility: a malformed old 'repositories' key is still rejected, not silently dropped") {
+    val yaml =
+      """name: comp1
+        |repositories:
+        |  not_a_list: true
+        |""".stripMargin
+
+    // no 'packages' key present: the malformed 'repositories' value is moved over as-is and
+    // must still be rejected by the strict decoder, exactly as it would have been before the rename
+    assertThrows[io.viash.exceptions.ConfigParserException] {
+      Convert.jsonToClass[Config](Convert.textToJson(yaml, ""), "")
+    }
+  }
+
+  test("Backwards compatibility: a malformed old 'repositories' key is discarded (not merged) when 'packages' is also present") {
+    val yaml =
+      """name: comp1
+        |packages:
+        |  - name: new-entry
+        |    type: github
+        |    repo: openpipelines-bio/modules
+        |    tag: 0.3.0
+        |repositories:
+        |  not_a_list: true
+        |""".stripMargin
+
+    // 'packages' wins outright, so the malformed 'repositories' value never needs to be
+    // inspected or parsed -- it's simply dropped, same as any other well-formed old value would be
+    val conf = Convert.jsonToClass[Config](Convert.textToJson(yaml, ""), "")
+    assert(conf.packages.map(_.name) == List("new-entry"))
+  }
+
+  test("Backwards compatibility: a remote dependency referencing a named package defined under the old 'repositories' key, end-to-end") {
+    val testFolder = createViashSubFolder(temporaryFolder, "remote_test_old_syntax_named")
+
+    val yaml =
+      """name: dep3
+        |resources:
+        |  - type: bash_script
+        |    dest: ./script.sh
+        |    use_jq: true
+        |    text: |
+        |      $dep_viash_hub_dep
+        |      echo "Hello from dep3"
+        |repositories:
+        |  - name: viash_hub
+        |    type: vsh
+        |    repo: hendrik/dependency_test
+        |    tag: main_build
+        |dependencies:
+        |  - name: viash_hub/dep
+        |    repository: "viash_hub"
+        |""".stripMargin
+    val configPath = testFolder.resolve("src/dep3/config.vsh.yaml")
+    configPath.getParent().toFile().mkdirs()
+    Files.write(configPath, yaml.getBytes())
+
+    // build
+    val testOutput = TestHelper.testMain(
+        "ns", "build",
+        "-s", testFolder.resolve("src").toString(),
+        "-t", testFolder.resolve("target").toString()
+      )
+
+    assert(testOutput.stderr.strip.contains("All 1 configs built successfully"), "check build was successful")
+    assert(testOutput.stderr.contains("Warning: .repositories is deprecated"), "check the deprecation warning was shown")
+
+    // check output when running
+    val outputPath = testFolder.resolve("target/executable/dep3/dep3")
+    val out = Exec.runCatch(
+      Seq(outputPath.toString)
+    )
+
+    assert(out.output == "This is a component in the viash_hub repository.\nHello from dep3\n")
+    assert(out.exitValue == 0)
   }
 
   override def afterAll(): Unit = {

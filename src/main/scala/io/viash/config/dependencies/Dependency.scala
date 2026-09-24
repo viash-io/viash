@@ -100,7 +100,7 @@ case class Dependency(
   @description("Deprecated. Use 'package' instead.")
   @deprecated("Use 'package' instead.", "0.10.0", "0.11.0")
   @default("Empty")
-  private val repository: Either[String, Package] = Right(LocalPackage())
+  private val repository: Either[String, Package] = Left("")
 
   if (alias.isDefined) {
     // check functionality name
@@ -154,20 +154,20 @@ object Dependency {
     *
     * @param dependencyPath Path of the dependency as they are found in .config.vsh.yaml, relative to the original build location
     * @param output Output / target path as root for where the build artifacts should be located
-    * @param repoPath Path of the package where the dependency is found
+    * @param packagePath Path of the package where the dependency is found
     * @param mainDependency Top level dependency for which optionally dependencies of dependencies are being resolved. Used to relativize paths
     * @return Tuple with source and destination paths, relativized to current package locations, ready to be copied
     */
-  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, repoPath: Path, mainDependency: Dependency): (Path, Path) = {
+  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, packagePath: Path, mainDependency: Dependency): (Path, Path) = {
     import scala.jdk.CollectionConverters._
 
-    val sourcePath = repoPath.resolve(dependencyPath)
+    val sourcePath = packagePath.resolve(dependencyPath)
     // Split the path into chunks so we can manipulate them more easily
     val pathParts = Paths.get(dependencyPath).iterator().asScala.toList.map(p => p.toString())
 
     val destinationPath = if (pathParts.contains("dependencies")) {
       // Drop the other "target" folder from the found path. This can be multiple folders too
-      val relativePath = Dependency.getRelativePath(sourcePath, repoPath)
+      val relativePath = Dependency.getRelativePath(sourcePath, packagePath)
         .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
       output.resolve(relativePath)
     } else {
@@ -180,23 +180,23 @@ object Dependency {
   }
 
   // From a built dependency's writtenPath, strip the target folder. Uses `.build.yaml` as reference.
-  def getRelativePath(sourcePath: Path, repoPath: Path): Option[Path] = {
-    val pathRoot = findBuildYamlFile(sourcePath, repoPath).map(_.getParent)
+  def getRelativePath(sourcePath: Path, packagePath: Path): Option[Path] = {
+    val pathRoot = findBuildYamlFile(sourcePath, packagePath).map(_.getParent)
     pathRoot.map(pr => pr.relativize(sourcePath.toRealPath()))
   }
 
-  // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `repoPath`.
-  def findBuildYamlFile(pathPossiblySymlink: Path, repoPath: Path): Option[Path] = {
+  // Traverse the folder upwards until a `.build.yaml` is found but do not traverse beyond `packagePath`.
+  def findBuildYamlFile(pathPossiblySymlink: Path, packagePath: Path): Option[Path] = {
     val path = pathPossiblySymlink.toRealPath()
     val child = path.resolve(".build.yaml")
     if (Files.isDirectory(path) && Files.exists(child)) {
       Some(child)
     } else {
       val parent = path.getParent()
-      if ((parent == null) || (parent == repoPath)) {
+      if ((parent == null) || (parent == packagePath)) {
         None
       } else {
-        findBuildYamlFile(path.getParent(), repoPath)
+        findBuildYamlFile(path.getParent(), packagePath)
       }
     }
   }

@@ -121,9 +121,9 @@ object Package extends Logging {
     }
   }
 
-  def get(repo: Package, configDir: Path, packageRootDir: Option[Path]): Package = {
+  def get(pkg: Package, configDir: Path, packageRootDir: Option[Path]): Package = {
 
-    repo match {
+    pkg match {
       case r: AbstractGitPackage => {
         val r2 = r.getSparseRepoInTemp()
         val r3 = r2.checkout()

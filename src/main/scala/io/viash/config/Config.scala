@@ -272,7 +272,7 @@ case class Config(
       |  - name: qc/multiqc
       |    package:
       |      type: github
-      |      uri: openpipelines-bio/modules
+      |      repo: openpipelines-bio/modules
       |      tag: 0.3.0
       |""",
     "yaml",
@@ -280,7 +280,7 @@ case class Config(
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
-      |    package: "github://openpipelines-bio/modules:0.3.0"
+      |    package: "github://openpipelines-bio/modules@0.3.0"
       |""",
     "yaml",
     "Full specification of a package using sugar syntax")
@@ -301,7 +301,7 @@ case class Config(
     """packages:
       |  - name: openpipelines-bio
       |    type: github
-      |    uri: openpipelines-bio/modules
+      |    repo: openpipelines-bio/modules
       |    tag: 0.3.0
       |""",
       "yaml")
@@ -684,7 +684,7 @@ object Config extends Logging {
 
     /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
-    val conf1 = 
+    val conf1 =
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
         val js = encodeConfig(conf0)

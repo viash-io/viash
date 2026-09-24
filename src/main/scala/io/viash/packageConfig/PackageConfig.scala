@@ -90,7 +90,7 @@ case class PackageConfig(
     """packages:
       |  - name: openpipelines-bio
       |    type: github
-      |    uri: openpipelines-bio/modules
+      |    repo: openpipelines-bio/modules
       |    tag: 0.3.0
       |""",
       "yaml")

@@ -23,12 +23,13 @@
 // class and its companion object defined in this same package.
 package io.viash.config.dependencies
 
-import io.circe.{ACursor, Decoder, Encoder, Json}
+import io.circe.{ACursor, Decoder, Encoder}
 import cats.syntax.functor._
+import io.viash.helpers.Logging
 import io.viash.helpers.circe.DeriveConfiguredSumType
 import io.viash.helpers.circe.DeriveConfiguredSumType.branch
 
-object PackageCodecs {
+object PackageCodecs extends Logging {
 
   import io.viash.helpers.circe._
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithDeprecationCheck.checkDeprecation
@@ -37,31 +38,33 @@ object PackageCodecs {
   // has an (internal) field of type ScopeEnum.
   import io.viash.config.{encodeScopeEnum, decodeScopeEnum}
 
-  // Backwards compatibility: 'repositories' was renamed to 'packages' (issue #847).
-  // If both keys are present, values are merged: existing 'packages' entries first, then legacy 'repositories' entries appended.
-  def renameRepositoriesToPackages(cursor: ACursor): ACursor = {
+  // Backwards compatibility: rename a legacy JSON key to its replacement (issue #847).
+  // If the new key is absent, the old key's value is moved over as-is (no re-validation here --
+  // if it's malformed, the regular strict decoder will reject it, same as it always has).
+  // If both keys are present, the new key wins outright and the old key's value is dropped: no
+  // merge, no silent duplication. This also means we never need to inspect the old value's shape,
+  // so a malformed old value can't be swallowed by a defensive `getOrElse` -- it's either used
+  // untouched (new key absent) or discarded untouched (new key present).
+  // A dedicated warning is emitted when both keys are present, since the regular deprecation
+  // warning alone ('X is deprecated, use Y instead') doesn't make it clear that X is actually
+  // being ignored rather than merged or otherwise taken into account.
+  private def renameKey(cursor: ACursor, oldKey: String, newKey: String): ACursor = {
     cursor.withFocus(_.mapObject { jo =>
-      (jo.apply("packages"), jo.apply("repositories")) match {
+      (jo.apply(newKey), jo.apply(oldKey)) match {
         case (_, None) => jo
-        case (None, Some(old)) => jo.remove("repositories").add("packages", old)
-        case (Some(neu), Some(old)) =>
-          val merged = Json.fromValues(neu.asArray.getOrElse(Vector.empty) ++ old.asArray.getOrElse(Vector.empty))
-          jo.remove("repositories").add("packages", merged)
+        case (None, Some(old)) => jo.remove(oldKey).add(newKey, old)
+        case (Some(_), Some(_)) =>
+          warn(s"Warning: both '$newKey' and '$oldKey' are specified; '$newKey' takes precedence and '$oldKey' is ignored.")
+          jo.remove(oldKey)
       }
     })
   }
 
-  // Backwards compatibility: the per-dependency 'repository' field was renamed to 'package' (issue #847).
-  // If both are present, the new 'package' field wins and 'repository' is dropped.
-  def renameRepositoryToPackageField(cursor: ACursor): ACursor = {
-    cursor.withFocus(_.mapObject { jo =>
-      (jo.apply("package"), jo.apply("repository")) match {
-        case (_, None) => jo
-        case (None, Some(old)) => jo.remove("repository").add("package", old)
-        case (Some(_), Some(_)) => jo.remove("repository")
-      }
-    })
-  }
+  // 'repositories' was renamed to 'packages' (issue #847).
+  def renameRepositoriesToPackages(cursor: ACursor): ACursor = renameKey(cursor, "repositories", "packages")
+
+  // the per-dependency 'repository' field was renamed to 'package' (issue #847).
+  def renameRepositoryToPackageField(cursor: ACursor): ACursor = renameKey(cursor, "repository", "package")
 
   // encoders and decoders for Argument
   implicit val encodeDependency: Encoder.AsObject[Dependency] = deriveConfiguredEncoderStrict
