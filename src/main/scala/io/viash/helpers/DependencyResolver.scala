@@ -21,7 +21,7 @@ import java.nio.file.{ Path, Paths }
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
 import io.viash.lenses.PackageLens._
-import io.viash.config.dependencies.{Dependency, Package, GithubPackage}
+import io.viash.config.dependencies.{Dependency, Package, GithubPackage, AbstractGitPackage}
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -300,6 +300,19 @@ object DependencyResolver extends Logging {
 
       // Check for more dependencies
       recurseBuiltDependencies(output, repoPath, destPath.toString(), dependency, depth + 1)
+    }
+  }
+
+  // Delete the temporary working directories (see AbstractGitPackage) that were used to check
+  // out this config's remote dependencies. Should only be called once the config's dependencies
+  // are fully resolved and no longer need to be read from disk, e.g. once the wrapper scripts
+  // referencing them (which still rely on dependency package paths, see subOutputPath) have
+  // been generated.
+  def cleanupWorkPackages(config: Config): Unit = {
+    dependenciesLens.get(config).foreach{ dep =>
+      dep.workPackage.foreach{ pkg =>
+        IO.cleanupTempDirFor(Paths.get(pkg.localPath), AbstractGitPackage.tempDirPrefix)
+      }
     }
   }
 

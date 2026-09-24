@@ -168,7 +168,10 @@ object ViashNamespace extends Logging {
     val parentTempPath = IO.makeTemp(
       name = deterministicWorkingDirectory.getOrElse("viash_ns_test"),
       parentTempPath = None,
-      addRandomized = deterministicWorkingDirectory.isEmpty
+      addRandomized = deterministicWorkingDirectory.isEmpty,
+      // only let the shutdown hook sweep this dir if the caller explicitly asked not to keep it;
+      // otherwise it might be retained on error (or by explicit request) by the per-component tests, and must survive
+      autoClean = keepFiles.contains(false)
     )
     if (keepFiles.getOrElse(true)) {
       info(s"The working directory for the namespace tests is ${parentTempPath.toString()}")
