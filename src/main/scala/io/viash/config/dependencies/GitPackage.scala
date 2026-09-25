@@ -18,40 +18,47 @@
 package io.viash.config.dependencies
 
 import io.viash.schemas._
+import io.viash.helpers.IO
+import io.viash.helpers.Exec
+import java.io.File
 import java.nio.file.Paths
 
-@description(
-  """Defines a locally present and available repository.
-    |This can be used to define components from the same code base as the current component.
-    |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
-    |"""
-)
-@exampleWithDescription(
-  """name: my_local_code
-    |type: local
-    |path: /additional_code/src
+@description("A Git-based package where remote dependency components can be found.")
+@example(
+  """type: git
+    |uri: git+https://github.com/openpipelines-bio/openpipeline.git
+    |tag: 0.8.0
     |""",
-  "yaml",
-  "Refer to a local code repository under `additional_code/src` referenced to the Viash Package Config file."
+  "yaml"
 )
-@subclass("localwithname")
-case class LocalRepositoryWithName (
-  name: String,
-  `type`: String = "local",
-  tag: Option[String] = None,
+@example(
+  """type: git
+    |uri: git+https://gitlab.com/viash-io/viash.git
+    |tag: 0.7.1
+    |path: src/test/resources/testns
+    |""",
+  "yaml"
+  )
+@subclass("git")
+case class GitPackage(
+  @description("Defines the package as a Git repository.")
+  `type`: String = "git",
+
+  @description("The URI of the Git repository.")
+  @example("uri: \"git+https://github.com/openpipelines-bio/openpipeline.git\"", "yaml")
+  uri: String,
+  tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends RepositoryWithName with LocalRepositoryTrait {
-
-  def copyRepo(
-    `type`: String,
+) extends GitPackageTrait {
+  
+  def copyPackage(
+   `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): LocalRepositoryWithName = {
-    copy("", `type`, tag, path, localPath)
+  ): GitPackage = {
+    copy(`type`, uri, tag, path, localPath)
   }
-
-  def withoutName = LocalRepository(`type`, tag, path, localPath)
 
 }

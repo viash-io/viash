@@ -20,8 +20,8 @@ package io.viash.helpers
 import java.nio.file.{ Path, Paths }
 import io.viash.config.Config
 import io.viash.lenses.ConfigLenses._
-import io.viash.lenses.RepositoryLens._
-import io.viash.config.dependencies.{Dependency, Repository, GithubRepository, AbstractGitRepository}
+import io.viash.lenses.PackageLens._
+import io.viash.config.dependencies.{Dependency, Package, GithubPackage, AbstractGitPackage}
 import java.nio.file.Files
 import java.io.IOException
 import java.io.UncheckedIOException
@@ -48,58 +48,58 @@ object DependencyResolver extends Logging {
     */
   def modifyConfig(config: Config, runnerId: Option[String], packageRootDir: Option[Path], namespaceConfigs: List[Config] = Nil): Config = {
 
-    // Check all fun.repositories have valid names
-    val repositories = config.repositories
-    require(repositories.isEmpty || repositories.groupBy(r => r.name).map{ case(k, l) => l.length }.max == 1, "Repository names should be unique")
-    require(repositories.filter(r => r.name.isEmpty()).length == 0, "Repository names can't be empty")
+    // Check all fun.packages have valid names
+    val packages = config.packages
+    require(packages.isEmpty || packages.groupBy(r => r.name).map{ case(k, l) => l.length }.max == 1, "Package names should be unique")
+    require(packages.filter(r => r.name.isEmpty()).length == 0, "Package names can't be empty")
 
 
-    // Convert all fun.dependency.repository with sugar syntax to full repositories
+    // Convert all fun.dependency.package with sugar syntax to full packages
     val config1 = dependenciesLens.modify(_.map(d =>
-      d.repository match {
-        case Left(Repository(repo)) => d.copy(repository = Right(repo))
+      d.`package` match {
+        case Left(Package(pkg)) => d.copy(`package` = Right(pkg))
         case _ => d
       }
     ))(config)
 
-    // Check all remaining fun.dependency.repository names (Left) refering to fun.repositories can be matched
-    val dependencyRepoNames = dependenciesLens.get(config1).flatMap(_.repository.left.toOption)
-    val definedRepoNames = repositoriesLens.get(config1).map(_.name)
-    dependencyRepoNames.foreach(name =>
-      require(definedRepoNames.contains(name), s"Named dependency repositories should exist in the list of repositories. '$name' not found.")
+    // Check all remaining fun.dependency.package names (Left) refering to fun.packages can be matched
+    val dependencyPackageNames = dependenciesLens.get(config1).flatMap(_.`package`.left.toOption)
+    val definedPackageNames = packagesLens.get(config1).map(_.name)
+    dependencyPackageNames.foreach(name =>
+      require(definedPackageNames.contains(name), s"Named dependency packages should exist in the list of packages. '$name' not found.")
     )
 
-    // Match repositories defined in dependencies by name to the list of repositories, fill in repository in dependency
+    // Match packages defined in dependencies by name to the list of packages, fill in package in dependency
     val config2 = dependenciesLens.modify(_
-      .map(d => 
-        d.repository match {
-          case Left(name) => d.copy(repository = Right(repositoriesLens.get(config1).find(r => r.name == name).get.withoutName))
+      .map(d =>
+        d.`package` match {
+          case Left(name) => d.copy(`package` = Right(packagesLens.get(config1).find(r => r.name == name).get.withoutName))
           case _ => d
         }
       )
       )(config1)
 
-    // get caches and store in repository classes
+    // get caches and store in package classes
     val config3 = dependenciesLens.modify(_
       .map{d =>
-        val repo = d.repository.toOption.get
+        val pkg = d.`package`.toOption.get
         val configDir = Paths.get(config2.build_info.get.config).getParent()
-        val localRepoPath = Repository.get(repo, configDir, packageRootDir)
-        d.copy(repository = Right(localRepoPath))
+        val localPackagePath = Package.get(pkg, configDir, packageRootDir)
+        d.copy(`package` = Right(localPackagePath))
       }
       )(config2)
 
-    // find the referenced config in the locally cached repository
+    // find the referenced config in the locally cached package
     val config4 = dependenciesLens.modify(_
       .map{dep =>
-        val repo = dep.workRepository.get
+        val pkg = dep.workPackage.get
 
         val config =
           if (dep.isLocalDependency) {
-            val t = findLocalConfig(repo.localPath.toString(), namespaceConfigs, dep.name, runnerId)
+            val t = findLocalConfig(pkg.localPath.toString(), namespaceConfigs, dep.name, runnerId)
             t.map(t => (t._1, t._2, Some(t._3)))
           } else {
-            val t = findRemoteConfig(repo.localPath.toString(), dep.name, runnerId)
+            val t = findRemoteConfig(pkg.localPath.toString(), dep.name, runnerId)
             t.map(t => (t._1, t._2, Option.empty[Config]))
           }
 
@@ -142,7 +142,7 @@ object DependencyResolver extends Logging {
         IO.copyFolder(dependencyRepoPath, dependencyOutputPath)
         // Copy dependencies of dependencies, all the way down
         // Parse new location of the copied dependency. That way that path can be used to determine the new location of namespace dependencies
-        recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workRepository.get.localPath), dependencyOutputPath.toString(), dep)
+        recurseBuiltDependencies(Paths.get(output), Paths.get(dep.workPackage.get.localPath), dependencyOutputPath.toString(), dep)
         // Store location of the copied files
         dep.copy(writtenPath = Some(dependencyOutputPath.toString()))
       }
@@ -150,7 +150,7 @@ object DependencyResolver extends Logging {
     }))(config)
   }
 
-  // Find configs from the local repository. These still need to be built so we have to deduce the information we want.
+  // Find configs from the local package. These still need to be built so we have to deduce the information we want.
   def findLocalConfig(targetDir: String, namespaceConfigs: List[Config], name: String, runnerId: Option[String]): Option[(String, Map[String, String], Config)] = {
 
     val config = namespaceConfigs.filter{ c => 
@@ -303,15 +303,15 @@ object DependencyResolver extends Logging {
     }
   }
 
-  // Delete the temporary working directories (see AbstractGitRepository) that were used to check
+  // Delete the temporary working directories (see AbstractGitPackage) that were used to check
   // out this config's remote dependencies. Should only be called once the config's dependencies
   // are fully resolved and no longer need to be read from disk, e.g. once the wrapper scripts
-  // referencing them (which still rely on dependency repository paths, see subOutputPath) have
+  // referencing them (which still rely on dependency package paths, see subOutputPath) have
   // been generated.
-  def cleanupWorkRepositories(config: Config): Unit = {
+  def cleanupWorkPackages(config: Config): Unit = {
     dependenciesLens.get(config).foreach{ dep =>
-      dep.workRepository.foreach{ repo =>
-        IO.cleanupTempDirFor(Paths.get(repo.localPath), AbstractGitRepository.tempDirPrefix)
+      dep.workPackage.foreach{ pkg =>
+        IO.cleanupTempDirFor(Paths.get(pkg.localPath), AbstractGitPackage.tempDirPrefix)
       }
     }
   }

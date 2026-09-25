@@ -37,18 +37,21 @@ package object config {
   import io.viash.helpers.circe.DeriveConfiguredDecoderWithValidationCheck.deriveConfiguredDecoderWithValidationCheck
 
   import io.viash.config.resources.{decodeResource, encodeResource}
-  import io.viash.config.dependencies.{decodeDependency, encodeDependency}
-  import io.viash.config.dependencies.{decodeRepositoryWithName, encodeRepositoryWithName}
+  import io.viash.config.dependencies.PackageCodecs.{decodeDependency, encodeDependency}
+  import io.viash.config.dependencies.PackageCodecs.{decodePackageWithName, encodePackageWithName}
+  import io.viash.config.dependencies.PackageCodecs.renameRepositoriesToPackages
   import io.viash.runners.{decodeRunner, encodeRunner}
   import io.viash.engines.{decodeEngine, encodeEngine}
   import io.viash.packageConfig.{decodePackageConfig, encodePackageConfig}
 
   // encoders and decoders for Config
   implicit val encodeConfig: Encoder.AsObject[Config] = deriveConfiguredEncoderStrict[Config]
-  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config].prepare{
-    checkDeprecation[Config](_)
-  }
-  .prepare {
+  implicit val decodeConfig: Decoder[Config] = deriveConfiguredDecoderWithValidationCheck[Config]
+    .prepare(renameRepositoriesToPackages)
+    .prepare{
+      checkDeprecation[Config](_)
+    }
+    .prepare {
     // merge arguments and argument_groups into argument_groups
     _.withFocus{ json =>
       json.asObject match {

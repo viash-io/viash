@@ -107,10 +107,10 @@ object ViashTest extends Logging {
       dryRun = dryRun
     )
 
-    // dependency repositories (if any) were checked out into temporary directories; now that the
+    // dependency packages (if any) were checked out into temporary directories; now that the
     // tests (and the runners generated for them) have run, they are no longer needed and can be
     // cleaned up
-    DependencyResolver.cleanupWorkRepositories(modifiedAppliedConfig.config)
+    DependencyResolver.cleanupWorkPackages(modifiedAppliedConfig.config)
 
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length

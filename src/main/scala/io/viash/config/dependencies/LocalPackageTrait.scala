@@ -19,7 +19,7 @@ package io.viash.config.dependencies
 import io.viash.schemas._
 import java.nio.file.Paths
 
-trait LocalRepositoryTrait extends Repository {
+trait LocalPackageTrait extends Package {
 
   def subOutputPath: String = Paths.get(`type`, tag.getOrElse("")).toString();
 }

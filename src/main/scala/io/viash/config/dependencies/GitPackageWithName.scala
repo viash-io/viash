@@ -23,25 +23,29 @@ import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
 
-@description("A Git repository where remote dependency components can be found.")
+@description("A Git-based package where remote dependency components can be found.")
 @example(
-  """type: git
+  """name: openpipeline
+    |type: git
     |uri: git+https://github.com/openpipelines-bio/openpipeline.git
     |tag: 0.8.0
     |""",
   "yaml"
 )
 @example(
-  """type: git
+  """name: viash-testns
+    |type: git
     |uri: git+https://gitlab.com/viash-io/viash.git
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""",
   "yaml"
   )
-@subclass("git")
-case class GitRepository(
-  @description("Defines the repository as a Git repository.")
+@subclass("gitwithname")
+case class GitPackageWithName(
+  name: String,
+
+  @description("Defines the package as a Git repository.")
   `type`: String = "git",
 
   @description("The URI of the Git repository.")
@@ -50,15 +54,17 @@ case class GitRepository(
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends GitRepositoryTrait {
+) extends PackageWithName with GitPackageTrait {
   
-  def copyRepo(
+  def copyPackage(
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): GitRepository = {
-    copy(`type`, uri, tag, path, localPath)
+  ): GitPackageWithName = {
+    copy("", `type`, uri, tag, path, localPath)
   }
+
+  def withoutName = GitPackage(`type`, uri, tag, path, localPath)
 
 }

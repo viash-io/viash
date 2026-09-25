@@ -35,9 +35,9 @@ object ViashBuild extends Logging {
   ): status.Status = {
     val resources = appliedConfig.generateRunner(false)
 
-    // dependency repositories (if any) were checked out into temporary directories; now that the
+    // dependency packages (if any) were checked out into temporary directories; now that the
     // runner has been generated, they are no longer needed and can be cleaned up
-    DependencyResolver.cleanupWorkRepositories(appliedConfig.config)
+    DependencyResolver.cleanupWorkPackages(appliedConfig.config)
 
     // create dir
     val dir = Paths.get(output)

@@ -19,14 +19,14 @@ package io.viash.config.dependencies
 
 import io.viash.schemas._
 
-@description("Specifies a repository where dependency components can be found.")
-@subclass("LocalRepositoryWithName")
-@subclass("GitRepositoryWithName")
-@subclass("GithubRepositoryWithName")
-@subclass("ViashhubRepositoryWithName")
-abstract class RepositoryWithName extends Repository {
-  @description("The identifier used to refer to this repository from dependencies.")
+@description("Specifies a package where dependency components can be found.")
+@subclass("LocalPackageWithName")
+@subclass("GitPackageWithName")
+@subclass("GithubPackageWithName")
+@subclass("ViashhubPackageWithName")
+abstract class PackageWithName extends Package {
+  @description("The identifier used to refer to this package from dependencies.")
   val name: String
 
-  def withoutName: Repository
+  def withoutName: Package
 }

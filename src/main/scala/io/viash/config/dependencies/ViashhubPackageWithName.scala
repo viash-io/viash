@@ -23,10 +23,18 @@ import io.viash.helpers.Exec
 import java.io.File
 import java.nio.file.Paths
 
-@description("A GitHub repository where remote dependency components can be found.")
+@description("A Viash-Hub package where remote dependency components can be found.")
+@example(
+  """name: biobox
+    |type: vsh
+    |repo: biobox
+    |tag: 0.1.0
+    |""",
+  "yaml"
+)
 @example(
   """name: openpipeline
-    |type: github
+    |type: vsh
     |repo: openpipelines-bio/openpipeline
     |tag: 0.8.0
     |""",
@@ -34,35 +42,36 @@ import java.nio.file.Paths
 )
 @example(
   """name: viash-testns
-    |type: github
-    |repo: viash-io/viash
+    |type: vsh
+    |repo: openpipelines-bio/openpipeline
     |tag: 0.7.1
     |path: src/test/resources/testns
     |""",
   "yaml"
   )
-@subclass("githubwithname")
-case class GithubRepositoryWithName(
+@subclass("viashhubwithname")
+case class ViashhubPackageWithName(
   name: String,
 
-  @description("Defines the repository as a GitHub repository.")
-  `type`: String = "github",
+  @description("Defines the package as a Viash-Hub package.")
+  `type`: String = "vsh",
 
   repo: String,
   tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends RepositoryWithName with GithubRepositoryTrait {
+) extends PackageWithName with ViashhubPackageTrait {
   
-  def copyRepo(
+  def copyPackage(
+    // name: String,
    `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): GithubRepositoryWithName = {
+  ): ViashhubPackageWithName = {
     copy("", `type`, this.repo, tag, path, localPath)
   }
 
-  def withoutName = GithubRepository(`type`, repo, tag, path, localPath)
+  def withoutName = ViashhubPackage(`type`, repo, tag, path, localPath)
 
 }

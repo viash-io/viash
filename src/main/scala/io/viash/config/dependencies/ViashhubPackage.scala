@@ -18,37 +18,55 @@
 package io.viash.config.dependencies
 
 import io.viash.schemas._
+import io.viash.helpers.IO
+import io.viash.helpers.Exec
+import java.io.File
 import java.nio.file.Paths
 
-@description(
-  """Defines a locally present and available repository.
-    |This can be used to define components from the same code base as the current component.
-    |Alternatively, this can be used to refer to a code repository present on the local hard-drive instead of fetchable remotely, for example during development.
-    |"""
-)
-@exampleWithDescription(
-  """type: local
-    |path: /additional_code/src
+@description("A Viash-Hub package where remote dependency components can be found.")
+@example(
+  """type: vsh
+    |repo: biobox
+    |tag: 0.1.0
     |""",
-  "yaml",
-  "Refer to a local code repository under `additional_code/src` referenced to the Viash Package Config file."
+  "yaml"
 )
-@subclass("local")
-case class LocalRepository(
-  @description("Defines the repository as a locally present and available repository.")
-  `type`: String = "local",
-  tag: Option[String] = None,
+@example(
+  """type: vsh
+    |repo: openpipelines-bio/openpipeline
+    |tag: 0.8.0
+    |""",
+  "yaml"
+)
+@example(
+  """type: vsh
+    |repo: openpipelines-bio/openpipeline
+    |tag: 0.7.1
+    |path: src/test/resources/testns
+    |""",
+  "yaml"
+  )
+@subclass("viashhub")
+case class ViashhubPackage(
+  // name: String,
+
+  @description("Defines the package as a Viash-Hub package.")
+  `type`: String = "vsh",
+
+  repo: String,
+  tag: Option[String],
   path: Option[String] = None,
   localPath: String = ""
-) extends LocalRepositoryTrait {
-
-  def copyRepo(
-    `type`: String,
+) extends ViashhubPackageTrait {
+  
+  def copyPackage(
+    // name: String,
+   `type`: String,
     tag: Option[String],
     path: Option[String],
     localPath: String
-  ): LocalRepository = {
-    copy(`type`, tag, path, localPath)
+  ): ViashhubPackage = {
+    copy(`type`, this.repo, tag, path, localPath)
   }
 
 }

@@ -22,15 +22,15 @@ import io.viash.schemas._
 import java.nio.file.{Path, Paths, Files}
 
 @description(
-  """Specifies a repository where dependency components can be found.
+  """Specifies a package where dependency components can be found.
     |
-    | - @[local](repo_local): This package (default).
-    | - @[git](repo_git): A remote git repository.
-    | - @[github](repo_github): A remote GitHub repository.
-    | - @[vsh](repo_vsh): A Viash Hub package.
+    | - @[local](package_local): This package (default).
+    | - @[git](package_git): A remote git repository.
+    | - @[github](package_github): A remote GitHub repository.
+    | - @[vsh](package_vsh): A Viash Hub package.
     |""")
 @exampleWithDescription(
-  """repositories:
+  """packages:
     |  - name: biobox
     |    type: vsh
     |    tag: 0.3.0
@@ -38,96 +38,96 @@ import java.nio.file.{Path, Paths, Files}
     "yaml",
     "Definition of a Viash Hub package.")
 @exampleWithDescription(
-  """repositories:
+  """packages:
     |  - name: openpipelines-bio
     |    type: github
     |    repo: openpipelines-bio/modules
     |    tag: 0.3.0
     |""",
     "yaml",
-    "Definition of a repository in the component config or package config.")
+    "Definition of a package in the component config or package config.")
 @exampleWithDescription(
   """dependencies:
     |  - name: arriba
-    |    repository: vsh://biobox@0.3.0
+    |    package: vsh://biobox@0.3.0
     |  - name: qc/multiqc
-    |    repository: 
+    |    package:
     |      type: github
     |      repo: openpipelines-bio/modules
     |      tag: 0.3.0
     |""",
     "yaml",
-    "Definition of dependency with a fully defined repository")
-@subclass("LocalRepository")
-@subclass("GitRepository")
-@subclass("GithubRepository")
-@subclass("ViashhubRepository")
-abstract class Repository extends CopyableRepo[Repository] {
-  @description("Defines the repository type. This determines how the repository will be fetched and handled.")
+    "Definition of dependency with a fully defined package")
+@subclass("LocalPackage")
+@subclass("GitPackage")
+@subclass("GithubPackage")
+@subclass("ViashhubPackage")
+abstract class Package extends CopyablePackage[Package] {
+  @description("Defines the package type. This determines how the package will be fetched and handled.")
   val `type`: String
 
   @description("Defines which version of the dependency component to use. Typically this can be a specific tag, branch or commit hash.")
   val tag: Option[String]
 
-  @description("Defines a subfolder of the repository to use as base to look for the dependency components.")
+  @description("Defines a subfolder of the package to use as base to look for the dependency components.")
   val path: Option[String]
 
   @internalFunctionality
-  @description("Local path to the repository files.")
+  @description("Local path to the package files.")
   val localPath: String
 
-  def copyRepo(
+  def copyPackage(
     `type`: String = this.`type`,
     tag: Option[String] = this.tag,
     path: Option[String] = this.path,
     localPath: String = this.localPath
-  ): Repository
+  ): Package
 
   def subOutputPath: String
 }
 
-object Repository extends Logging {
+object Package extends Logging {
   private val sugarSyntaxRegex = raw"([a-zA-Z_0-9\+]+)://([\w/\-\.:]+)(@[A-Za-z0-9][\w\-\./]*)?".r
   private def getGitTag(tag: String): Option[String] = tag match {
     case null => None
     case s => Some(s.stripPrefix("@"))
   }
 
-  def unapply(str: String): Option[Repository] = {
+  def unapply(str: String): Option[Package] = {
     str match {
       case sugarSyntaxRegex("git+https", uri, tag) =>
-        Some(GitRepository(
+        Some(GitPackage(
           uri = "https://" + uri,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("github", repo, tag) =>
-        Some(GithubRepository(
+        Some(GithubPackage(
           repo = repo,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("vsh", repo, tag) =>
-        Some(ViashhubRepository(
+        Some(ViashhubPackage(
           repo = repo,
           tag = getGitTag(tag)
         ))
       case sugarSyntaxRegex("local", path, tag) =>
-        Some(LocalRepository(
+        Some(LocalPackage(
           path = Some(path),
           tag = getGitTag(tag)
         ))
       case "local" =>
-        Some(LocalRepository())
+        Some(LocalPackage())
       case _ => None
     }
   }
 
-  def get(repo: Repository, configDir: Path, packageRootDir: Option[Path]): Repository = {
+  def get(pkg: Package, configDir: Path, packageRootDir: Option[Path]): Package = {
 
-    repo match {
-      case r: AbstractGitRepository => {
+    pkg match {
+      case r: AbstractGitPackage => {
         val r2 = r.getSparseRepoInTemp()
         val r3 = r2.checkout()
-        // Stopgap solution to be able to use built repositories which were not built with dependency aware Viash version.
+        // Stopgap solution to be able to use built packages which were not built with dependency aware Viash version.
         // TODO remove this section once it's deemed no longer necessary
         if (Paths.get(r3.localPath, "target").toFile().exists() && !Paths.get(r3.localPath, "target", ".build.yaml").toFile().exists()) {
           warn(s"Creating temporary 'target/.build.yaml' file for ${r3.`type`} as this file seems to be missing.")
@@ -135,7 +135,7 @@ object Repository extends Logging {
         }
         r3
       }
-      case r: LocalRepositoryTrait if r.path.isDefined => {
+      case r: LocalPackageTrait if r.path.isDefined => {
         val localPath = r.path.get match {
           case s if s.startsWith("/") => 
             // resolve path relative to the package root
@@ -144,7 +144,7 @@ object Repository extends Logging {
             // resolve path relative to the config file
             configDir.resolve(s).toString()
         }
-        r.copyRepo(localPath = localPath)
+        r.copyPackage(localPath = localPath)
       }
       case r => r
     }

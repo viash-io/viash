@@ -270,43 +270,43 @@ case class Config(
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
-      |    repository: 
+      |    package:
       |      type: github
-      |      uri: openpipelines-bio/modules
+      |      repo: openpipelines-bio/modules
       |      tag: 0.3.0
       |""",
     "yaml",
-    "Full specification of a repository")
+    "Full specification of a package")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
-      |    repository: "github://openpipelines-bio/modules:0.3.0"
+      |    package: "github://openpipelines-bio/modules@0.3.0"
       |""",
     "yaml",
-    "Full specification of a repository using sugar syntax")
+    "Full specification of a package using sugar syntax")
   @exampleWithDescription(
     """dependencies:
       |  - name: qc/multiqc
-      |    repository: "openpipelines-bio"
+      |    package: "openpipelines-bio"
       |""",
     "yaml",
-    "Reference to a repository fully specified under 'repositories'")
+    "Reference to a package fully specified under 'packages'")
   @default("Empty")
   dependencies: List[Dependency] = Nil,
 
   @description(
-    """(Pre-)defines repositories that can be used as repository in dependencies.
-      |Allows reusing repository definitions in case it is used in multiple dependencies.""")
+    """(Pre-)defines packages that can be used as package in dependencies.
+      |Allows reusing package definitions in case it is used in multiple dependencies.""")
   @example(
-    """repositories:
+    """packages:
       |  - name: openpipelines-bio
       |    type: github
-      |    uri: openpipelines-bio/modules
+      |    repo: openpipelines-bio/modules
       |    tag: 0.3.0
       |""",
       "yaml")
   @default("Empty")
-  repositories: List[RepositoryWithName] = Nil,
+  packages: List[PackageWithName] = Nil,
 
   @description("The keywords of the components.")
   @example("keywords: [ bioinformatics, genomics ]", "yaml")
@@ -383,6 +383,11 @@ case class Config(
   @undocumented
   package_config: Option[PackageConfig] = None,
 ) {
+  @description("Deprecated. Use 'packages' instead.")
+  @deprecated("Use 'packages' instead.", "0.10.0", "0.11.0")
+  @default("Empty")
+  private val repositories: List[PackageWithName] = Nil
+
   @description(
     """A list of @[arguments](argument) for this component. For each argument, a type and a name must be specified. Depending on the type of argument, different properties can be set. See these reference pages per type for more information:  
       |
@@ -662,7 +667,7 @@ object Config extends Logging {
     // apply values from package config if need be
     val conf0 = {
       val vpVersion = viashPackage.flatMap(_.version)
-      val vpRepositories = viashPackage.map(_.repositories).getOrElse(Nil)
+      val vpPackages = viashPackage.map(_.packages).getOrElse(Nil)
       val vpLicense = viashPackage.flatMap(_.license)
       val vpRepository = viashPackage.flatMap(_.links.repository)
       val vpDockerRegistry = viashPackage.flatMap(_.links.docker_registry)
@@ -670,7 +675,7 @@ object Config extends Logging {
       val lenses =
         versionLens.modify(_ orElse vpVersion) andThen
         licenseLens.modify(_ orElse vpLicense) andThen
-        repositoriesLens.modify(vpRepositories ::: _) andThen
+        packagesLens.modify(vpPackages ::: _) andThen
         linksRepositoryLens.modify(_ orElse vpRepository) andThen
         linksDockerRegistryLens.modify(_ orElse vpDockerRegistry)
         
@@ -679,7 +684,7 @@ object Config extends Logging {
 
     /* CONFIG 1: apply post-parse config mods */
     // apply config mods only if need be
-    val conf1 = 
+    val conf1 =
       if (confMods.postparseCommands.nonEmpty) {
         // turn config back into json
         val js = encodeConfig(conf0)

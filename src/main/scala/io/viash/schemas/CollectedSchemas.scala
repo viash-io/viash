@@ -125,16 +125,16 @@ object CollectedSchemas {
       getMembers[NextflowConfig](),
 
       getMembers[Dependency](),
-      getMembers[Repository](),
-      getMembers[LocalRepository](),
-      getMembers[GitRepository](),
-      getMembers[GithubRepository](),
-      getMembers[ViashhubRepository](),
-      getMembers[RepositoryWithName](),
-      getMembers[LocalRepositoryWithName](),
-      getMembers[GitRepositoryWithName](),
-      getMembers[GithubRepositoryWithName](),
-      getMembers[ViashhubRepositoryWithName](),
+      getMembers[Package](),
+      getMembers[LocalPackage](),
+      getMembers[GitPackage](),
+      getMembers[GithubPackage](),
+      getMembers[ViashhubPackage](),
+      getMembers[PackageWithName](),
+      getMembers[LocalPackageWithName](),
+      getMembers[GitPackageWithName](),
+      getMembers[GithubPackageWithName](),
+      getMembers[ViashhubPackageWithName](),
     )
   }
 
