@@ -62,10 +62,10 @@ TODO add summary
 
 * `BashWrapper` (native, executable and Docker runners): Fix the same `|`-mangling bug (e.g. `|| echo_exit_code="$?"`) in the generated wrapper script, and fix a bash syntax error that could occur when checking a `multiple: true` argument that also has a `min`/`max`/type constraint (PR #915).
 
-* `BashWrapper`: Fix defaults of `multiple: true` arguments being stored as a single joined string instead of an array (PR #XXX).
+* `BashWrapper`: Fix defaults of `multiple: true` arguments being stored as a single joined string instead of an array (PR #922).
   Defaults are now handled the same way as values passed on the command line: e.g. `default: [1, 2, 3]` on an `integer` argument passes type validation, and a script receives `default: [a, b]` as `['a', 'b']` instead of `['a;b']`.
 
-* `Config mods`: Fix whole numbers outside of the integer range (e.g. `.default := [934812383453]`) crashing the config mod parser with a `NumberFormatException` (PR #XXX).
+* `Config mods`: Fix whole numbers outside of the integer range (e.g. `.default := [934812383453]`) crashing the config mod parser with a `NumberFormatException` (PR #922).
 
 ## MINOR FIXES
 
