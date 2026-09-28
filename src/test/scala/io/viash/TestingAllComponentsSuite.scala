@@ -34,7 +34,7 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
   val multipleDefaults = Map(
     "boolean" -> "[false, true]",
     "integer" -> "[7, 8]",
-    "long" -> "[934812383453, 283748192734]",
+    "long" -> "[934812383453, -283748192734]",
     "double" -> "[7.5, 8.25]",
     "file" -> """["ghi.txt", "jkl.txt"]""",
   )
@@ -60,6 +60,16 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
             "-c", s""".test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
           )
         }
+      }
+
+      test(s"Testing $name engine native, multiple integer with use_jq false", NativeTest) {
+        TestHelper.testMain(
+          "test", "--engine", "native", "--runner", "executable", config,
+          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "--multiple_default" || .name == "multiple_pos"].type := "integer"""",
+          "-c", multipleDefaultMod("integer"),
+          "-c", """.resources[.type == "bash_script"].use_jq := false""",
+          "-c", s""".test_resources[.type == "bash_script"].path := "../multi-integer.sh""""
+        )
       }
     }
 

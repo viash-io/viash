@@ -443,20 +443,27 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
+    // or, for arguments with multiple: true, an array
+    //   VIASH_PAR_FOO=("value1" "value2")
     val defaultsStrList = params.flatMap { param =>
       // if boolean argument has a flagvalue, add the inverse of it as a default value
       val default = param match {
-        case p if p.required => None
-        case bo: BooleanArgumentBase if bo.flagValue.isDefined => bo.flagValue.map(!_)
-        case p if p.default.nonEmpty => Some(p.default.map(_.toString).mkString(p.multiple_sep.toString))
-        case p if p.default.isEmpty => None
+        case p if p.required => Nil
+        case bo: BooleanArgumentBase if bo.flagValue.isDefined => bo.flagValue.map(!_).toList
+        case p => p.default.toList
       }
 
-      default.map(default => {
+      def escape(value: Any) =
+        "\"" + Bash.escapeString(value.toString, quote = true, newline = true, allowUnescape = true) + "\""
+
+      Option.when(default.nonEmpty) {
+        val value =
+          if (param.multiple) default.map(escape).mkString("(", " ", ")")
+          else escape(default.head)
         s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
-           |  ${param.VIASH_PAR}="${Bash.escapeString(default.toString, quote = true, newline = true, allowUnescape = true)}"
+           |  ${param.VIASH_PAR}=$value
            |fi""".stripMargin
-      })
+      }
     }
     val defaultsStrs =
       if (defaultsStrList.isEmpty) {
