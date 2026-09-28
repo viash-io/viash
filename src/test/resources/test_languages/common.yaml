@@ -61,6 +61,10 @@ argument_groups:
       - name: "--multiple"
         type: string
         multiple: true
+      - name: "--multiple_default"
+        type: string
+        multiple: true
+        default: [x, y]
       - name: "multiple_pos"
         type: string
         multiple: true

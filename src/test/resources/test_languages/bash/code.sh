@@ -62,6 +62,7 @@ output "head of resource1: |$RESOURCE|"
 _old_IFS="$IFS"
 IFS=';'
 output "multiple: |${par_multiple[*]}|"
+output "multiple_default: |${par_multiple_default[*]}|"
 output "multiple_pos: |${par_multiple_pos[*]}|"
 IFS="$_old_IFS"
 

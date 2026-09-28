@@ -30,6 +30,18 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
     "double",
   )
 
+  // default values for '--multiple_default' matching each type
+  val multipleDefaults = Map(
+    "boolean" -> "[false, true]",
+    "integer" -> "[7, 8]",
+    "long" -> "[934812383453, 283748192734]",
+    "double" -> "[7.5, 8.25]",
+    "file" -> """["ghi.txt", "jkl.txt"]""",
+  )
+
+  def multipleDefaultMod(multiType: String) =
+    s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple_default"].default := ${multipleDefaults(multiType)}"""
+
   for ((name, file) <- tests) {
     val config = getTestResource(s"/test_languages/$name/$file")
 
@@ -43,7 +55,8 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
         test(s"Testing $name engine native, multiple $multiType", NativeTest) {
           TestHelper.testMain(
             "test", "--engine", "native", "--runner", "executable", config,
-            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiType"""",
+            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "--multiple_default" || .name == "multiple_pos"].type := "$multiType"""",
+            "-c", multipleDefaultMod(multiType),
             "-c", s""".test_resources[.type == "bash_script"].path := "../multi-$multiType.sh""""
           )
         }
@@ -59,7 +72,8 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
         test(s"Testing $name engine docker, multiple $multiple", DockerTest) {
           TestHelper.testMain(
             "test", "--engine", "docker", "--runner", "executable", config,
-            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "$multiple"""",
+            "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "--multiple_default" || .name == "multiple_pos"].type := "$multiple"""",
+            "-c", multipleDefaultMod(multiple),
             "-c", s""".test_resources[.type == "bash_script"].path := "../multi-$multiple.sh""""
           )
         }
@@ -68,8 +82,9 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
       test(s"Testing $name engine docker, multiple file", DockerTest) {
         TestHelper.testMain(
           "test", "--engine", "docker", "--runner", "executable", config,
-          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].type := "file"""",
-          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "multiple_pos"].must_exist := false""",
+          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "--multiple_default" || .name == "multiple_pos"].type := "file"""",
+          "-c", s"""<preparse>.argument_groups[.name == "Arguments"].arguments[.name == "--multiple" || .name == "--multiple_default" || .name == "multiple_pos"].must_exist := false""",
+          "-c", multipleDefaultMod("file"),
           "-c", s""".test_resources[.type == "bash_script"].path := "../multi-file.sh""""
         )
       }
@@ -154,6 +169,12 @@ class TestingAllComponentsSuite extends AnyFunSuite with ParallelTestExecution {
           assert(multiple.length == 2, "multiple should have 2 elements")
           assert(multiple(0).asString.contains("a"), "first element should be 'a'")
           assert(multiple(1).asString.contains("b"), "second element should be 'b'")
+
+          // Verify array parameter filled in from its default
+          val multipleDefault = par("multiple_default").get.asArray.get
+          assert(multipleDefault.length == 2, s"multiple_default should have 2 elements, got $multipleDefault")
+          assert(multipleDefault(0).asString.contains("x"), "first element should be 'x'")
+          assert(multipleDefault(1).asString.contains("y"), "second element should be 'y'")
           
           // Verify meta section
           val meta = jsonObj("meta").get.asObject.get

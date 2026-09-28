@@ -36,6 +36,7 @@ echo ">>> Checking whether output is correct"
   a b c d \
   --output ./output.txt --log ./log.txt \
   --multiple one --multiple=two \
+  --multiple_default three --multiple_default=four \
   e f \
   --long_number 112589990684262400
 
@@ -53,6 +54,7 @@ check_output 'log: |.*/log.txt|' output.txt
 check_output 'optional: |foo|' output.txt
 check_output 'optional_with_default: |bar|' output.txt
 check_output 'multiple: |one;two|' output.txt
+check_output 'multiple_default: |three;four|' output.txt
 check_output 'multiple_pos: |a;b;c;d;e;f|' output.txt
 check_output 'meta_name: |test_languages_.*|' output.txt
 check_output 'meta_resources_dir: |..*|' output.txt
@@ -99,6 +101,7 @@ check_output 'log: ||' output2.txt
 check_output 'optional: ||' output2.txt
 check_output 'optional_with_default: |The default value.|' output2.txt
 check_output 'multiple: ||' output2.txt
+check_output 'multiple_default: |x;y|' output2.txt
 check_output 'multiple_pos: ||' output2.txt
 
 check_output 'meta_name: |test_languages_.*|' output2.txt
