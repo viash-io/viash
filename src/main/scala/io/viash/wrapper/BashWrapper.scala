@@ -443,7 +443,7 @@ object BashWrapper {
     // if [ -z "$VIASH_PAR_FOO" ]; then
     //   VIASH_PAR_FOO="defaultvalue"
     // fi
-    // or, for arguments with multiple: true, an array
+    // or, for input arguments with multiple: true, an array
     //   VIASH_PAR_FOO=("value1" "value2")
     val defaultsStrList = params.flatMap { param =>
       // if boolean argument has a flagvalue, add the inverse of it as a default value
@@ -458,8 +458,8 @@ object BashWrapper {
 
       Option.when(default.nonEmpty) {
         val value =
-          if (param.multiple) default.map(escape).mkString("(", " ", ")")
-          else escape(default.head)
+          if (param.multiple && param.direction == Input) default.map(escape).mkString("(", " ", ")")
+          else escape(default.mkString(param.multiple_sep))
         s"""if [ -z $${${param.VIASH_PAR}+x} ]; then
            |  ${param.VIASH_PAR}=$value
            |fi""".stripMargin
