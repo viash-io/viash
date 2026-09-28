@@ -67,7 +67,7 @@ TODO add summary
 
 * `Config mods`: Fix whole numbers outside of the integer range (e.g. `.default := [934812383453]`) crashing the config mod parser with a `NumberFormatException` (PR #922).
 
-## MINOR FIXES
+## MINOR CHANGES
 
 * `Executable`: Add more info to the --help (PR #802).
 
