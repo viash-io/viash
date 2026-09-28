@@ -126,23 +126,23 @@ case class DoubleArgument(
   @undocumented
   direction: Direction = Input,
 
-  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
+  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo='1;2;3'` or by providing the same argument multiple times `--foo 1 --foo 2`. Note that `;` needs to be quoted in Bash. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
   @example(
     """- name: --my_double
       |  type: double
       |  multiple: true
       |""",
       "yaml")
-  @exampleWithDescription("my_component --my_double=5.8:22.6:200.4", "bash", "Here's an example of how to use this:")
+  @exampleWithDescription("my_component --my_double=\"5.8;22.6;200.4\"", "bash", "Here's an example of how to use this:")
   @default("False")
   multiple: Boolean = false,
 
-  @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
+  @description("The delimiter character for providing [`multiple`](#multiple) values. `;` by default.")
   @example(
     """- name: --my_double
       |  type: double
       |  multiple: true
-      |  multiple_sep: ";"
+      |  multiple_sep: ","
       |""",
       "yaml")
   @exampleWithDescription("my_component --my_double=5.8,22.6,200.4", "bash", "Here's an example of how to use this:")

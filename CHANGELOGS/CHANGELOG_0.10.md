@@ -68,6 +68,8 @@ TODO add summary
 
 * `ANC`: Improve error handling and reduce log spamming (PR #890).
 
+* `Arguments`: Fix inconsistent `multiple_sep` documentation and examples, clarify that output file arguments with `multiple: true` require a pattern containing the wildcard character `*`, and improve the related error message (PR #xxx).
+
 ## INTERNAL CHANGES
 
 * `Parameter passing`: Switch from code injection to JSON-based parameter passing (PR #762).

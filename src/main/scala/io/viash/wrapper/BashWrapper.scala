@@ -537,7 +537,7 @@ object BashWrapper {
     // construct type checks
     def typeMinMaxCheck[T](param: Argument[T], regex: String, min: Option[T] = None, max: Option[T] = None) = {
       val typeWithArticle = param match {
-        case _: FileArgument if param.multiple && param.direction == Output => "a path containing a wildcard, e.g. 'output_*.txt'"
+        case _: FileArgument if param.multiple && param.direction == Output => "a path containing the wildcard character '*', e.g. 'output_*.txt'. Because the number of output files is not known beforehand, a list of file names is not accepted, the component creates files matching this pattern instead"
         case _: IntegerArgument => "an " + param.`type`
         case _ => "a " + param.`type`
       }
