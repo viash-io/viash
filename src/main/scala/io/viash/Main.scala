@@ -158,7 +158,7 @@ object Main extends Logging {
     Process(
       Array(path.toString) ++ args,
       cwd = workingDir.map(_.toFile),
-      extraEnv = List("VIASH_VERSION" -> "-"): _*
+      extraEnv = List("VIASH_VERSION" -> "-")*
     ).!(ProcessLogger(s => infoOut(s), s => info(s)))
   }
 

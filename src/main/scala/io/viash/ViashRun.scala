@@ -63,7 +63,7 @@ object ViashRun extends Logging {
         // ExecutableRunner). That needs stdin/stdout/stderr to all be the real
         // terminal: relaying/buffering them line by line, as the regular case
         // below does, breaks raw keystroke input and prompt/cursor redrawing.
-        code = new ProcessBuilder(cmd: _*).inheritIO().start().waitFor()
+        code = new ProcessBuilder(cmd*).inheritIO().start().waitFor()
       } else {
         // execute command, print everything to console
         code = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))

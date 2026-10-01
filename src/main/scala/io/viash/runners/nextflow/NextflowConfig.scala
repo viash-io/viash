@@ -84,7 +84,7 @@ case class NextflowConfig(
       } ++
     NextflowConfig.logarithmicIterator
       .takeWhile(_ <= 1000)
-      .map(i => (s"cpu$i", s"cpus = $i")) : _*
+      .map(i => (s"cpu$i", s"cpus = $i"))*
   ),
 
   @description(

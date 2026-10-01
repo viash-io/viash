@@ -7,10 +7,11 @@ import org.scalatest.BeforeAndAfter
 
 import java.nio.file.{Files, Path}
 import scala.io.Source
+import scala.compiletime.uninitialized
 
 class MainExportSuite extends AnyFunSuite with BeforeAndAfter {
   Logger.UseColorOverride.value = Some(false)
-  var tempFile: Path = _
+  var tempFile: Path = uninitialized
 
   before {
     tempFile = Files.createTempFile("viash_export", ".txt")

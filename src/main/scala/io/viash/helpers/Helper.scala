@@ -64,7 +64,7 @@ object Helper {
   }
 
   // NOTE! changes to this function should also be ported to WorkflowHelper.nf::generateArgumentHelp
-  def generateArgumentHelp(param: Argument[_]) = {
+  def generateArgumentHelp(param: Argument[?]) = {
     val names = param.alternatives ::: List(param.name)
 
     val unnamedProps = List(

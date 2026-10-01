@@ -257,7 +257,7 @@ object IO extends Logging {
       // when the file can't be downloaded (vs. using e.g. `#>`)
       try {
         val out = new BufferedOutputStream(new FileOutputStream(path.toFile))
-        val bytes = Source.fromURL(uri.toString)(Codec.ISO8859).map(_.toByte).toArray
+        val bytes = Source.fromURL(uri.toString)(using Codec.ISO8859).map(_.toByte).toArray
         out.write(bytes)
         out.close()
       }

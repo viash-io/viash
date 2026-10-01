@@ -51,7 +51,7 @@ package object circe {
 
   implicit def decodeOneOrMore[A](implicit da: Decoder[A], dl: Decoder[List[A]]): Decoder[OneOrMore[A]] = {
     val l: Decoder[OneOrMore[A]] = da.map(OneOrMore(_))
-    val r: Decoder[OneOrMore[A]] = dl.map(OneOrMore(_: _*))
+    val r: Decoder[OneOrMore[A]] = dl.map(OneOrMore(_*))
     l or r
   }
 
@@ -86,7 +86,7 @@ package object circe {
   // auto convert a JMap to Json
   def JMap(fields: (String, Json)*): Json = {
     Json.fromJsonObject(
-      JsonObject(fields: _*)
+      JsonObject(fields*)
     )
   }
 

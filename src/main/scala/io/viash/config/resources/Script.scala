@@ -26,15 +26,15 @@ import io.viash.languages.{Bash, Python, R, JavaScript, Nextflow, Scala, CSharp}
 trait Script extends Resource {
   val language: Language
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     language.generateInjectionMods(argsMetaAndDeps, config)
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     language.generateConfigInjectMods(argsMetaAndDeps, config)
   }
 
-  def readWithInjection(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): String = {
+  def readWithInjection(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): String = {
     val code = read
     val lines = code.split("\n")
     val startIndex = lines.indexWhere(_.contains("VIASH START"))
@@ -89,7 +89,7 @@ trait Script extends Resource {
     li.mkString("\n")
   }
 
-  def readWithConfigInject(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): String = {
+  def readWithConfigInject(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): String = {
     val code = read
     val lines = code.split("\n")
     val startIndex = lines.indexWhere(_.contains("VIASH START"))
