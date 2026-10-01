@@ -118,23 +118,23 @@ case class StringArgument(
   @undocumented
   direction: Direction = Input,
 
-  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo=1:2:3` or by providing the same argument multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
+  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo='1;2;3'` or by providing the same argument multiple times `--foo 1 --foo 2`. Note that `;` needs to be quoted in Bash-like shells. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
   @example(
     """- name: --my_string
       |  type: string
       |  multiple: true
       |""",
       "yaml")
-  @exampleWithDescription("my_component --my_string=Marc:Susan:Paul", "bash", "Here's an example of how to use this:")
+  @exampleWithDescription("my_component --my_string=\"Marc;Susan;Paul\"", "bash", "Here's an example of how to use this:")
   @default("False")
   multiple: Boolean = false,
 
-  @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
+  @description("The delimiter character for providing [`multiple`](#multiple) values. `;` by default.")
   @example(
     """- name: --my_string
       |  type: string
       |  multiple: true
-      |  multiple_sep: ";"
+      |  multiple_sep: ","
       |""",
       "yaml")
   @exampleWithDescription("my_component --my_string=Marc,Susan,Paul", "bash", "Here's an example of how to use this:")

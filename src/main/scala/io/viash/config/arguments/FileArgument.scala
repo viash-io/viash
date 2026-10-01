@@ -143,14 +143,20 @@ case class FileArgument(
     """Allow for multiple values (`false` by default).
       |
       |For input arguments, this will be treated as a list of values. For example, values
-      |can be passed using the delimiter `--foo=1:2:3` or by providing the same argument 
-      |multiple times `--foo 1 --foo 2`. You can use a custom delimiter by using the 
-      |[`multiple_sep`](#multiple_sep) property.
+      |can be passed using the delimiter `--foo='a.txt;b.txt;c.txt'` or by providing the same
+      |argument multiple times `--foo a.txt --foo b.txt`. Note that `;` needs to be quoted in Bash-like shells.
+      |You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property.
       |
-      |For output file arguments, the passed value needs to contain a wildcard. For example,
-      |`--foo 'foo_*.txt'` will be treated as a list of files that match the pattern. Note that in Bash,
-      | the wildcard will need to be in quotes (`"foo_*.txt"` or `'foo_*.txt'`) or else Bash will
-      | automatically attempt to expand the expression.
+      |For output file arguments, the passed value is not a list of file names but a single pattern
+      |which must contain the wildcard character `*`, e.g. `--foo 'foo_*.txt'`. Only `*` is treated
+      |as a wildcard; other glob characters such as `?` or `[...]` are not. Because the number of
+      |output files is not known beforehand, a list of explicit file names (e.g. `--foo 'a.txt;b.txt'`)
+      |is not accepted. The pattern is passed to the script as is, and the script is responsible
+      |for creating files matching the pattern, typically by replacing the `*`
+      |(e.g. `foo_1.txt`, `foo_2.txt`). When running the component as a Nextflow module, the `*`
+      |in the published file names is replaced by the index of each file. Note that in Bash-like shells, the
+      |pattern needs to be quoted (`"foo_*.txt"` or `'foo_*.txt'`), or else the shell will attempt
+      |to expand it.
       |
       |Other output arguments (e.g. integer, double, ...) are not supported yet.
       |""")
@@ -160,16 +166,24 @@ case class FileArgument(
       |  multiple: true
       |""",
       "yaml")
-  @exampleWithDescription("my_component --my_files=firstFile.csv:anotherFile.csv:yetAnother.csv", "bash", "Here's an example of how to use this:")
+  @exampleWithDescription("my_component --my_files='firstFile.csv;anotherFile.csv;yetAnother.csv'", "bash", "Here's an example of how to use this:")
+  @example(
+    """- name: --my_output_files
+      |  type: file
+      |  direction: output
+      |  multiple: true
+      |""",
+      "yaml")
+  @exampleWithDescription("my_component --my_output_files='output_*.csv'", "bash", "For an output argument, provide a pattern containing `*`:")
   @default("False")
   multiple: Boolean = false,
 
-  @description("The delimiter character for providing [`multiple`](#multiple) values. `:` by default.")
+  @description("The delimiter character for providing [`multiple`](#multiple) values. `;` by default.")
   @example(
     """- name: --my_files
       |  type: file
       |  multiple: true
-      |  multiple_sep: ";"
+      |  multiple_sep: ","
       |""",
       "yaml")
   @exampleWithDescription("my_component --my_files=firstFile.csv,anotherFile.csv,yetAnother.csv", "bash", "Here's an example of how to use this:")
