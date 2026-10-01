@@ -21,7 +21,7 @@ TODO add summary
 
 ## BREAKING CHANGES
 
-* `Viash`: Bump Scala to 3.9.0, which raises the minimum Java version required to run the Viash jar from Java 11 to Java 17 (PR #XXX).
+* `Viash`: Bump Scala to 3.9.0, which raises the minimum Java version required to run the Viash jar from Java 11 to Java 17 (PR #925).
   The native binary is not affected.
 
 * `Dependencies`: Rename the `repository`/`repositories` nomenclature to `package`/`packages` (PR #920).
