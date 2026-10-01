@@ -118,7 +118,7 @@ case class StringArgument(
   @undocumented
   direction: Direction = Input,
 
-  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo='1;2;3'` or by providing the same argument multiple times `--foo 1 --foo 2`. Note that `;` needs to be quoted in Bash. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
+  @description("Treat the argument value as an array. Arrays can be passed using the delimiter `--foo='1;2;3'` or by providing the same argument multiple times `--foo 1 --foo 2`. Note that `;` needs to be quoted in Bash-like shells. You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property. `false` by default.")
   @example(
     """- name: --my_string
       |  type: string

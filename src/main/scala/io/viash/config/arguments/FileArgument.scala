@@ -144,7 +144,7 @@ case class FileArgument(
       |
       |For input arguments, this will be treated as a list of values. For example, values
       |can be passed using the delimiter `--foo='a.txt;b.txt;c.txt'` or by providing the same
-      |argument multiple times `--foo a.txt --foo b.txt`. Note that `;` needs to be quoted in Bash.
+      |argument multiple times `--foo a.txt --foo b.txt`. Note that `;` needs to be quoted in Bash-like shells.
       |You can use a custom delimiter by using the [`multiple_sep`](#multiple_sep) property.
       |
       |For output file arguments, the passed value is not a list of file names but a single pattern
@@ -154,8 +154,8 @@ case class FileArgument(
       |is not accepted. The pattern is passed to the script as is, and the script is responsible
       |for creating files matching the pattern, typically by replacing the `*`
       |(e.g. `foo_1.txt`, `foo_2.txt`). When running the component as a Nextflow module, the `*`
-      |in the published file names is replaced by the index of each file. Note that in Bash, the
-      |pattern needs to be quoted (`"foo_*.txt"` or `'foo_*.txt'`), or else Bash will attempt
+      |in the published file names is replaced by the index of each file. Note that in Bash-like shells, the
+      |pattern needs to be quoted (`"foo_*.txt"` or `'foo_*.txt'`), or else the shell will attempt
       |to expand it.
       |
       |Other output arguments (e.g. integer, double, ...) are not supported yet.
