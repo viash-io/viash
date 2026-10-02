@@ -21,5 +21,6 @@ grep -q 'whole_number: |10|' output.txt
 grep -q 'long_number: |112589990684262400|' output.txt
 grep -q 's: |a string with spaces|' output.txt
 grep -q 'multiple: |5.5;38.1|' output.txt
+grep -q 'multiple_default: |7.5;8.25|' output.txt
 grep -q 'multiple_pos: |1.1;2.2;3.3;4.4;123.123;456.456|' output.txt
 echo ">>> Test finished successfully"

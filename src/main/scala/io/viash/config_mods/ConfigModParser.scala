@@ -107,7 +107,7 @@ object ConfigModParser extends RegexParsers {
     *   "myVariable" => "myVariable"
     *   "item_2" => "item_2"
     */
-  def whole: Parser[Integer] = """[+-]?[0-9]+""".r ^^ { _.toInt }
+  def whole: Parser[BigInt] = """[+-]?[0-9]+""".r ^^ { BigInt(_) }
   def real: Parser[Double] = """[+-]?[0-9]+(((\.[0-9]+)?[eE][+-]?[0-9]+[Ff]?)|(\.[0-9]+[Ff]?)|([Ff]))""".r ^^ { _.toDouble }
   def string: Parser[String] = """"([^"]|\\")*"|'([^']|\\')*'""".r ^^ { str =>
     val quoteChar = str.substring(0, 1)
@@ -149,7 +149,7 @@ object ConfigModParser extends RegexParsers {
     *   "\"stringKey\": \"value\"" => ("stringKey", "value")
     * 
     * Examples of 'wholeJson':
-    *   "42" => Json.fromInt(42)
+    *   "42" => Json.fromBigInt(42)
     *   "-10" => -10
     * 
     * Examples of 'realJson':
@@ -173,7 +173,7 @@ object ConfigModParser extends RegexParsers {
   def fieldJson: Parser[(String, Json)] = (identifier | string) ~ ( ":" ~> json) ^^ {
     case id ~ va => (id, va)
   }
-  def wholeJson: Parser[Json] = whole ^^ { Json.fromInt(_) }
+  def wholeJson: Parser[Json] = whole ^^ { Json.fromBigInt(_) }
   def realJson: Parser[Json] = real ^^ { _.asJson }
   def stringJson: Parser[Json] = string ^^ { Json.fromString(_) }
   def booleanJson: Parser[Json] = boolean ^^ { Json.fromBoolean(_)}

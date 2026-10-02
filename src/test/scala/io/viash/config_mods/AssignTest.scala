@@ -67,6 +67,18 @@ class AssignTest extends AnyFunSuite {
     assert(result == expected)
   }
 
+  test("parse assign with json whole numbers outside of the integer range") {
+    val expected = ConfigMods(List(
+      Assign(
+        Path(List(Attribute("x"))),
+        JsonValue(Json.fromValues(List(934812383453L.asJson, -934812383453L.asJson, BigInt("123456789012345678901234567890").asJson)))
+      )
+    ))
+    val command = """.x := [934812383453, -934812383453, 123456789012345678901234567890]"""
+    val result = ConfigModParser.block.parse(command)
+    assert(result == expected)
+  }
+
   test("parse assign with json real numbers") {
     val expected = ConfigMods(List(
       Assign(
