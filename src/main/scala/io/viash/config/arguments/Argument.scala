@@ -103,7 +103,7 @@ abstract class Argument[Type] {
     dest: String = this.dest
   ): Argument[Type]
 
-  def disableChecks: Argument[_] = {
+  def disableChecks: Argument[?] = {
     // todo: fix such that the output is Argument[Type]
     Some(this)
       // set required to false

@@ -105,7 +105,7 @@ class StringArgumentTest extends AnyFunSuite with BeforeAndAfterAll {
       dest = "meta"
     )
 
-    val arg2GParsed = arg2generic.asJson.as[Argument[_]].fold(throw _, a => a)
+    val arg2GParsed = arg2generic.asJson.as[Argument[?]].fold(throw _, a => a)
     // override dest parameter as that is internal functionality and is not serialized
     assert(arg2GParsed == arg2generic.copyArg(dest = "par"))
 

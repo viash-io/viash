@@ -400,7 +400,7 @@ case class Config(
       | - @[boolean_false](arg_boolean_false)
       |""")
   @default("Empty")
-  private val arguments: List[Argument[_]] = Nil
+  private val arguments: List[Argument[?]] = Nil
 
   @description(
     """Config inheritance by including YAML partials. This is useful for defining common APIs in
@@ -518,7 +518,7 @@ case class Config(
     }
   }
 
-  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[_]] = {
+  def getArgumentLikes(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): List[Argument[?]] = {
     // start with arguments
     val args0 = allArguments
 
@@ -536,10 +536,10 @@ case class Config(
 
     args4
   }
-  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[_]]] = {
+  def getArgumentLikesGroupedByDest(includeMeta: Boolean = false, includeDependencies: Boolean = false, filterInputs: Boolean = false, filterOutputs: Boolean = false): ListMap[String, List[Argument[?]]] = {
     val x = getArgumentLikes(includeMeta, includeDependencies, filterInputs, filterOutputs).groupBy(_.dest)
     val y = Seq("par", "meta", "dep").map(k => (k, x.getOrElse(k, Nil)))
-    ListMap(y: _*)
+    ListMap(y*)
   }
 
   def mainScript: Option[Script] =

@@ -184,7 +184,7 @@ object ViashNamespace extends Logging {
           columnHeaders.mkString("\t") + sys.props("line.separator"))
         writer.flush()
       }
-      infoOut(columnFormatString.format(columnHeaders:_*))
+      infoOut(columnFormatString.format(columnHeaders*))
 
       val results = configs2.map { x =>
         x match {

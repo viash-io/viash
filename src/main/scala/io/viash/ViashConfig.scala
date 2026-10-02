@@ -53,7 +53,7 @@ object ViashConfig extends Logging{
             // BooleanTrueArgument and BooleanFalseArgument automatically have a default
             case other => other
           }
-          placeholder.asInstanceOf[Argument[_]]
+          placeholder.asInstanceOf[Argument[?]]
         } else {
           arg
         }

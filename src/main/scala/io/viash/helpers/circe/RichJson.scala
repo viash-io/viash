@@ -209,7 +209,7 @@ class RichJson(json: Json) {
             }
 
             // merge jsons
-            val jsMerged = jsonsToMerge.reduce{_ concatDeepMerge _}
+            val jsMerged = jsonsToMerge.reduce{_.concatDeepMerge(_)}
 
             // return combined object
             jsMerged.asObject.get

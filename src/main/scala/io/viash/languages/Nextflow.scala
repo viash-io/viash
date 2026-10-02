@@ -31,12 +31,12 @@ object Nextflow extends Language {
   // this is processed in a different way
   val viashParseJsonCode: String = ""
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Nextflow scripts are processed differently
     ScriptInjectionMods()
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Config inject is not supported for Nextflow scripts
     ScriptInjectionMods()
   }

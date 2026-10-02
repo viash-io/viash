@@ -30,7 +30,7 @@ object Scala extends Language {
   val executor: Seq[String] = Seq("scala", "-nc")
   val viashParseJsonCode: String = Resources.read("languages/scala/ViashParseJson.scala")
 
-  private def getScalaType(arg: Argument[_]): String = {
+  private def getScalaType(arg: Argument[?]): String = {
     arg match {
       case a: BooleanArgumentBase if a.multiple => "List[Boolean]"
       case a: IntegerArgument if a.multiple => "List[Int]"
@@ -53,7 +53,7 @@ object Scala extends Language {
     }
   }
 
-  private def generateCaseClass(className: String, params: List[Argument[_]]): String = {
+  private def generateCaseClass(className: String, params: List[Argument[?]]): String = {
     val classTypes = params.map { par =>
       s"${par.plainName}: ${getScalaType(par)}"
     }
@@ -62,7 +62,7 @@ object Scala extends Language {
 )"""
   }
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Extract only the object and functions, not the main execution part
     val helperFunctions = viashParseJsonCode
       .split("\n")
@@ -148,7 +148,7 @@ ${extractors.mkString(",\n")}
     )
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     val quo = "\"\"\""
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val className = s"Viash${dest.capitalize}"
@@ -167,7 +167,7 @@ val $dest = $className(
     ScriptInjectionMods(params = paramsCode.mkString("\n"))
   }
 
-  private def formatScalaValue(arg: Argument[_]): String = {
+  private def formatScalaValue(arg: Argument[?]): String = {
     val quo = "\"\"\""
     val rawValues = getArgumentValues(arg)
     
@@ -191,7 +191,7 @@ val $dest = $className(
     }
   }
 
-  private def formatSingleScalaValue(arg: Argument[_], value: String): String = {
+  private def formatSingleScalaValue(arg: Argument[?], value: String): String = {
     val quo = "\"\"\""
     arg match {
       case _: BooleanArgumentBase => if (value.toLowerCase == "true") "true" else "false"

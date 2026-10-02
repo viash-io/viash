@@ -30,7 +30,7 @@ object JavaScript extends Language {
   val executor: Seq[String] = Seq("node")
   val viashParseJsonCode: String = Resources.read("languages/javascript/ViashParseJson.js")
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Extract only the functions, not the main execution part or module exports
     val helperFunctions = viashParseJsonCode
       .split("\n")
@@ -55,7 +55,7 @@ object JavaScript extends Language {
     )
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parSet = params.map { par =>
         val value = formatJSValue(par)
@@ -70,7 +70,7 @@ object JavaScript extends Language {
     ScriptInjectionMods(params = paramsCode.mkString("\n"))
   }
 
-  private def formatJSValue(arg: Argument[_]): String = {
+  private def formatJSValue(arg: Argument[?]): String = {
     val rawValues = getArgumentValues(arg)
     if (rawValues.isEmpty) return "undefined"
 
@@ -82,7 +82,7 @@ object JavaScript extends Language {
     }
   }
 
-  private def formatSingleJSValue(arg: Argument[_], value: String): String = {
+  private def formatSingleJSValue(arg: Argument[?], value: String): String = {
     arg match {
       case _: BooleanArgumentBase => if (value.toLowerCase == "true") "true" else "false"
       case _: IntegerArgument | _: LongArgument => value

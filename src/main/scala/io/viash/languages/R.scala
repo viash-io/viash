@@ -33,7 +33,7 @@ object R extends Language {
 
   private val logger = Logger("R")
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Determine use_jsonlite setting from the RScript resource
     val useJsonlite = config.resources.collectFirst {
       case rs: RScript => rs.use_jsonlite
@@ -109,7 +109,7 @@ object R extends Language {
     ScriptInjectionMods(params = outCode)
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parSet = params.map { par =>
         val value = formatRValue(par)
@@ -124,7 +124,7 @@ object R extends Language {
     ScriptInjectionMods(params = paramsCode.mkString("\n"))
   }
 
-  private def formatRValue(arg: Argument[_]): String = {
+  private def formatRValue(arg: Argument[?]): String = {
     val rawValues = getArgumentValues(arg)
     if (rawValues.isEmpty) return "NULL"
 
@@ -136,7 +136,7 @@ object R extends Language {
     }
   }
 
-  private def formatSingleRValue(arg: Argument[_], value: String): String = {
+  private def formatSingleRValue(arg: Argument[?], value: String): String = {
     arg match {
       case _: BooleanArgumentBase => if (value.toLowerCase == "true") "TRUE" else "FALSE"
       case _: IntegerArgument => s"${value}L"

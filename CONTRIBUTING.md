@@ -14,7 +14,7 @@ Additionally, to ensure we can legally manage and protect the Viash project, all
 
 ## Requirements
 
-* [Java 11](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) or greater
+* [Java 17](https://adoptium.net/temurin/releases/?version=17) or greater
 
 * [sbt](https://www.scala-sbt.org/)
 

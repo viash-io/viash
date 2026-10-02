@@ -21,6 +21,9 @@ TODO add summary
 
 ## BREAKING CHANGES
 
+* `Viash`: Bump Scala to 3.9.0, which raises the minimum Java version required to run the Viash jar from Java 11 to Java 17 (PR #925).
+  The native binary is not affected.
+
 * `Dependencies`: Rename the `repository`/`repositories` nomenclature to `package`/`packages` (PR #920).
   The old `repository`/`repositories` keys are deprecated but remain supported for backwards compatibility and will be removed in a future release; when both the old and new key are used together, the new key wins and a dedicated warning is printed (in addition to the regular deprecation warning) so the old key isn't silently ignored.
   The local cache of checked-out git dependencies also moved from `~/.viash/repositories` to `~/.viash/packages`; the first build after upgrading re-clones every git dependency (existing caches under the old path are no longer used and can be deleted), so expect a slower first CI run.

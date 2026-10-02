@@ -82,24 +82,24 @@ package object arguments {
 
   // must come after the individual encode*/decode* vals above: each branch() call resolves them
   // implicitly, and package object vals initialize in textual order
-  private val argumentBranches: List[DeriveConfiguredSumType.Branch[Argument[_]]] = List(
-    branch[Argument[_], StringArgument]("string"),
-    branch[Argument[_], IntegerArgument]("integer"),
-    branch[Argument[_], LongArgument]("long"),
-    branch[Argument[_], DoubleArgument]("double"),
-    branch[Argument[_], BooleanArgument]("boolean"),
-    branch[Argument[_], BooleanTrueArgument]("boolean_true"),
-    branch[Argument[_], BooleanFalseArgument]("boolean_false"),
-    branch[Argument[_], FileArgument]("file"),
+  private val argumentBranches: List[DeriveConfiguredSumType.Branch[Argument[?]]] = List(
+    branch[Argument[?], StringArgument]("string"),
+    branch[Argument[?], IntegerArgument]("integer"),
+    branch[Argument[?], LongArgument]("long"),
+    branch[Argument[?], DoubleArgument]("double"),
+    branch[Argument[?], BooleanArgument]("boolean"),
+    branch[Argument[?], BooleanTrueArgument]("boolean_true"),
+    branch[Argument[?], BooleanFalseArgument]("boolean_false"),
+    branch[Argument[?], FileArgument]("file"),
   )
 
-  private val argumentEncoder: Encoder.AsObject[Argument[_]] = DeriveConfiguredSumType.encoder(argumentBranches)
+  private val argumentEncoder: Encoder.AsObject[Argument[?]] = DeriveConfiguredSumType.encoder(argumentBranches)
   // Argument is parameterized (Argument[String], Argument[Boolean], ...), so callers need an
   // Encoder for the concrete parameterized type; a fixed Encoder[Argument[_]] doesn't satisfy that
   // via implicit search the way it would for a non-parameterized hierarchy like Resource.
-  implicit def encodeArgument[A <: Argument[_]]: Encoder[A] = argumentEncoder.asInstanceOf[Encoder[A]]
+  implicit def encodeArgument[A <: Argument[?]]: Encoder[A] = argumentEncoder.asInstanceOf[Encoder[A]]
 
-  implicit val decodeDataArgument: Decoder[Argument[_]] = DeriveConfiguredSumType.decoder[Argument[_]](
+  implicit val decodeDataArgument: Decoder[Argument[?]] = DeriveConfiguredSumType.decoder[Argument[?]](
     "type",
     argumentBranches,
     whenInvalid = (typ, validTypes) => invalidSubTypeDecoder[StringArgument](typ, validTypes).widen

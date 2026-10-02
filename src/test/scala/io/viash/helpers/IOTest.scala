@@ -7,10 +7,11 @@ import java.net.URI
 import io.viash.helpers.{IO, Logger}
 import scala.util.Try
 import java.nio.file.Paths
+import scala.compiletime.uninitialized
 
 class IOTest extends AnyFunSuite with BeforeAndAfter {
   Logger.UseColorOverride.value = Some(false)
-  var tempDir: Path = _
+  var tempDir: Path = uninitialized
 
   before {
     tempDir = IO.makeTemp("test")

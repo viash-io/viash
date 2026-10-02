@@ -30,7 +30,7 @@ import scala.reflect.ClassTag
 object DeriveConfiguredSumType {
 
   /** A single subtype of `Base`, tagged with the discriminator value it's written/read as. */
-  final case class Branch[Base](tag: String, cls: Class[_], decode: Decoder[Base], encode: Base => JsonObject)
+  final case class Branch[Base](tag: String, cls: Class[?], decode: Decoder[Base], encode: Base => JsonObject)
 
   def branch[Base, A <: Base](tag: String)(implicit ct: ClassTag[A], dec: Decoder[A], enc: Encoder.AsObject[A]): Branch[Base] =
     Branch(tag, ct.runtimeClass, dec.map(a => a: Base), (b: Base) => enc.encodeObject(b.asInstanceOf[A]))
