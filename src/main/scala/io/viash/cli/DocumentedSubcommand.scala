@@ -27,7 +27,7 @@ import io.viash.helpers.typeOf
   * Wrapper class for Subcommand to expose protected members
   * We need this information to scrape the CLI to export to json
   */
-class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases:_*) {
+class DocumentedSubcommand(commandNameAndAliases: String*) extends Subcommand(commandNameAndAliases*) {
   var registeredSubCommands: Seq[DocumentedSubcommand] = Nil
   var registeredOpts: Seq[RegisteredOpt] = Nil
 

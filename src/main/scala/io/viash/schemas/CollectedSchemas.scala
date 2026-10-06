@@ -96,7 +96,7 @@ object CollectedSchemas {
       getMembers[RubyRequirements](),
       getMembers[YumRequirements](),
 
-      getMembers[Argument[_]](),
+      getMembers[Argument[?]](),
       getMembers[BooleanArgument](),
       getMembers[BooleanTrueArgument](),
       getMembers[BooleanFalseArgument](),

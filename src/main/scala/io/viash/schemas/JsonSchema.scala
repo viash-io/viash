@@ -57,7 +57,7 @@ object JsonSchema {
     }
     Json.obj(
       descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
-      Seq(typeOrRefJson(`type`)): _*
+      Seq(typeOrRefJson(`type`))*
     )
   }
 
@@ -83,7 +83,7 @@ object JsonSchema {
       Seq(
         "type" -> Json.fromString("array"),
         "items" -> json
-      ): _*
+      )*
     )
   }
 
@@ -97,7 +97,7 @@ object JsonSchema {
       Seq(
         "type" -> Json.fromString("object"),
         "additionalProperties" -> json
-      ): _*
+      )*
     )
   }
 
@@ -111,7 +111,7 @@ object JsonSchema {
     if (config.strict && !mustIncludeAll) {
       jsons.last
     } else {
-      Json.obj("oneOf" -> Json.arr(jsons: _*))
+      Json.obj("oneOf" -> Json.arr(jsons*))
     }
   }
 
@@ -237,9 +237,9 @@ object JsonSchema {
     val v = Json.obj(
       descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil) ++
       Seq("type" -> Json.fromString("object"),
-      "properties" -> Json.obj(propertiesJson: _*),
-      "required" -> Json.arr(requiredJson: _*),
-      "additionalProperties" -> Json.False): _*
+      "properties" -> Json.obj(propertiesJson*),
+      "required" -> Json.arr(requiredJson*),
+      "additionalProperties" -> Json.False)*
     )
     k -> v
   }
@@ -249,7 +249,7 @@ object JsonSchema {
     val k = thisParameter.`type`
     implicit val mustIncludeAll = true
     val v = eitherJson(
-      thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s"))): _*
+      thisParameter.subclass.get.map(s => Json.obj("$ref" -> Json.fromString(s"#/definitions/$s")))*
     )
     k -> v
   }
@@ -273,9 +273,9 @@ object JsonSchema {
       case false => comment
     }
     Json.obj(
-      Seq("enum" -> Json.arr(values.map(s => Json.fromString(s)): _*)) ++
+      Seq("enum" -> Json.arr(values.map(s => Json.fromString(s))*)) ++
       comm.map(s => Seq("$comment" -> Json.fromString(s))).getOrElse(Nil) ++
-      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil): _*
+      descr.map(s => Seq("description" -> Json.fromString(s))).getOrElse(Nil)*
     )
   }
 
@@ -312,7 +312,7 @@ object JsonSchema {
     Json.obj(
       "$schema" -> Json.fromString("http://json-schema.org/draft-07/schema#"),
       "definitions" -> Json.obj(
-        definitions: _*
+        definitions*
       ),
       "oneOf" -> Json.arr(valueType("Config"))
     )

@@ -28,7 +28,7 @@ class RichJsonObject(jsonObject: JsonObject) {
     * @return A modified Json
     */
   def map(f: ((String, Json)) => (String, Json)): JsonObject = {
-    JsonObject(jsonObject.toList.map(f): _*)
+    JsonObject(jsonObject.toList.map(f)*)
   }
 
 }

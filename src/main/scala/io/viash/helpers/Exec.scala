@@ -31,7 +31,7 @@ object Exec {
 
   // run command, throw exception if command fails
   def run(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil): String = {
-    Process(command, cwd = cwd, extraEnv = extraEnv: _*).!!
+    Process(command, cwd = cwd, extraEnv = extraEnv*).!!
   }
 
   def runCatch(command: Seq[String], cwd: Option[File] = None, extraEnv: Seq[(String, String)] = Nil, loggers: Seq[String => Unit] = Nil): ExecOutput = {
@@ -46,7 +46,7 @@ object Exec {
 
     // run command, collect output
     try {
-      val exitValue = Process(command, cwd = cwd, extraEnv = extraEnv: _*).!(ProcessLogger(logger, logger))
+      val exitValue = Process(command, cwd = cwd, extraEnv = extraEnv*).!(ProcessLogger(logger, logger))
       printwriter.flush()
       ExecOutput(command, exitValue, stream.toString)
     } catch {

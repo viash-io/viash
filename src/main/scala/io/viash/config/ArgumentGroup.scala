@@ -94,5 +94,5 @@ case class ArgumentGroup(
       |""",
       "yaml")
   @default("Empty")
-  arguments: List[Argument[_]] = Nil
+  arguments: List[Argument[?]] = Nil
 )

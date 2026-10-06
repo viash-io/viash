@@ -174,7 +174,7 @@ object DependencyResolver extends Logging {
         executable = executable
       )
       // Convert case class to map, do some extra conversions of Options while we're at it
-      val map = (info.productElementNames zip info.productIterator).map{
+      val map = (info.productElementNames zip info.productIterator).collect{
           case (k, s: String) => (k, s)
           case (k, Some(s: String)) => (k, s)
           case (k, None) => (k, "")

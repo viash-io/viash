@@ -33,7 +33,7 @@ object Bash extends Language {
 
   private val logger = Logger("Bash")
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Determine use_jq setting from the BashScript resource
     val useJq = config.resources.collectFirst {
       case bs: BashScript => bs.use_jq
@@ -67,7 +67,7 @@ object Bash extends Language {
    * Uses the built-in bash JSON parser, then converts multiple-value
    * arguments from bash arrays to separator-delimited strings.
    */
-  private def generateCompatInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]]): ScriptInjectionMods = {
+  private def generateCompatInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]]): ScriptInjectionMods = {
     val parseCode = s"""${viashParseJsonCompatCode}
 
 # Parse JSON parameters
@@ -101,7 +101,7 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     ScriptInjectionMods(params = fullCode)
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Determine use_jq setting from the BashScript resource
     val useJq = config.resources.collectFirst {
       case bs: BashScript => bs.use_jq
@@ -126,7 +126,7 @@ ViashParseJsonBash <<< "$$_viash_json_content"
     ScriptInjectionMods(params = paramsCode)
   }
 
-  private def getExampleValue(arg: Argument[_], useArrays: Boolean = true): String = {
+  private def getExampleValue(arg: Argument[?], useArrays: Boolean = true): String = {
     val values = getArgumentValues(arg)
 
     if (arg.multiple && arg.direction != Output) {

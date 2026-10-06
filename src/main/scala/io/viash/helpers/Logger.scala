@@ -146,7 +146,7 @@ object Logger {
 
   def apply(name: String, level: LoggerLevel, useColor: Boolean): Logger = new Logger(name, level, useColor)
   def apply(name: String): Logger = new Logger(name, getLoggerLevel(name), useColor)
-  def apply(cls: Class[_]): Logger = apply(cls.getName)
+  def apply(cls: Class[?]): Logger = apply(cls.getName)
   def apply[C: ClassTag](): Logger = apply(classTag[C].runtimeClass.getName)
 
   def rootLogger = apply(rootLoggerName)

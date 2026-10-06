@@ -59,7 +59,7 @@ object Git extends Logging {
       line
         .split("\n")
         .flatMap {
-          case remoteRepoRegex(name, link, _) if name contains "origin" => Some(link)
+          case remoteRepoRegex(name, link, _) if name.contains("origin") => Some(link)
           case _ => None
         }
         .headOption

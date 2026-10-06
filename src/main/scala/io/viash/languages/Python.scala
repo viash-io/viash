@@ -30,7 +30,7 @@ object Python extends Language {
   val executor: Seq[String] = Seq("python", "-B")
   val viashParseJsonCode: String = Resources.read("languages/python/ViashParseJson.py")
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Extract only the functions, not the main execution part
     val helperFunctions = viashParseJsonCode
       .split("\n")
@@ -54,7 +54,7 @@ object Python extends Language {
     )
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parSet = params.map { par =>
         val value = formatPythonValue(par)
@@ -69,7 +69,7 @@ object Python extends Language {
     ScriptInjectionMods(params = paramsCode.mkString("\n"))
   }
 
-  private def formatPythonValue(arg: Argument[_]): String = {
+  private def formatPythonValue(arg: Argument[?]): String = {
     val rawValues = getArgumentValues(arg)
     if (rawValues.isEmpty) return "None"
 
@@ -81,7 +81,7 @@ object Python extends Language {
     }
   }
 
-  private def formatSingleValue(arg: Argument[_], value: String): String = {
+  private def formatSingleValue(arg: Argument[?], value: String): String = {
     arg match {
       case _: BooleanArgumentBase => if (value.toLowerCase == "true") "True" else "False"
       case _: IntegerArgument | _: LongArgument => value

@@ -30,7 +30,7 @@ object CSharp extends Language {
   val executor: Seq[String] = Seq("dotnet", "script")
   val viashParseJsonCode: String = Resources.read("languages/csharp/ViashParseJson.csx")
 
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     // Extract only the class and functions, not the main execution part
     val helperFunctions = viashParseJsonCode
       .split("\n")
@@ -117,7 +117,7 @@ ${fieldAssignments.mkString(",\n")}
     )
   }
 
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods = {
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods = {
     val paramsCode = argsMetaAndDeps.map { case (dest, params) =>
       val parSet = params.map { par =>
         val value = formatCSharpValue(par)
@@ -132,7 +132,7 @@ ${fieldAssignments.mkString(",\n")}
     ScriptInjectionMods(params = paramsCode.mkString("\n"))
   }
 
-  private def getCSharpArrayType(arg: Argument[_]): String = {
+  private def getCSharpArrayType(arg: Argument[?]): String = {
     arg match {
       case _: BooleanArgumentBase => "bool"
       case _: IntegerArgument => "int"
@@ -143,7 +143,7 @@ ${fieldAssignments.mkString(",\n")}
     }
   }
 
-  private def formatCSharpValue(arg: Argument[_]): String = {
+  private def formatCSharpValue(arg: Argument[?]): String = {
     val rawValues = getArgumentValues(arg)
     
     if (rawValues.isEmpty) {
@@ -161,7 +161,7 @@ ${fieldAssignments.mkString(",\n")}
     }
   }
 
-  private def formatSingleCSharpValue(arg: Argument[_], value: String): String = {
+  private def formatSingleCSharpValue(arg: Argument[?], value: String): String = {
     arg match {
       case _: BooleanArgumentBase => if (value.toLowerCase == "true") "true" else "false"
       case _: IntegerArgument | _: LongArgument => value

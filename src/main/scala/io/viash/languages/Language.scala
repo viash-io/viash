@@ -58,7 +58,7 @@ trait Language {
    * @param config The component configuration
    * @return ScriptInjectionMods containing header, params, and footer code
    */
-  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
+  def generateInjectionMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods
 
   /**
    * Generate static code for `viash config inject`.
@@ -69,7 +69,7 @@ trait Language {
    * @param config The component configuration
    * @return ScriptInjectionMods containing the static dictionary/class definitions
    */
-  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[_]]], config: Config): ScriptInjectionMods
+  def generateConfigInjectMods(argsMetaAndDeps: Map[String, List[Argument[?]]], config: Config): ScriptInjectionMods
 
   /**
    * Get the raw example/default values for an argument.
@@ -82,7 +82,7 @@ trait Language {
    * @param arg The argument to get values from
    * @return List of string values (may be empty if no example or default exists)
    */
-  protected def getArgumentValues(arg: Argument[_]): List[String] = {
+  protected def getArgumentValues(arg: Argument[?]): List[String] = {
     arg.example.toList match {
       case Nil => arg.default.toList match {
         case Nil => Nil

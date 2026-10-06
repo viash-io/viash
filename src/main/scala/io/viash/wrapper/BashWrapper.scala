@@ -32,7 +32,7 @@ object BashWrapper {
   // Add pipes after each newline. Prevents pipes being stripped when a string starts with a pipe (with optional leading spaces).
   private def escapePipes(s: String) = s.replaceAll("\n", "\n|")
 
-  val metaArgs: List[Argument[_]] = {
+  val metaArgs: List[Argument[?]] = {
     List(
       StringArgument("name", required = true, dest = "meta"),
       // filearguments set to 'must_exist = false, create_parent = false' because of config inject
@@ -334,7 +334,7 @@ object BashWrapper {
     BashWrapperMods(helpStrings = List(("", help)))
   }
 
-  private def generateParsers(params: List[Argument[_]]) = {
+  private def generateParsers(params: List[Argument[?]]) = {
     // no parsers should be generated for positional arguments, so remove these first
     val wrapperParams = params.filterNot(_.flags == "")
     
@@ -474,7 +474,7 @@ object BashWrapper {
       }
 
     // construct required file checks
-    def fileChecker(args: List[Argument[_]], direction: Direction): String = {
+    def fileChecker(args: List[Argument[?]], direction: Direction): String = {
       val files = args.flatMap {
         case f: FileArgument if f.must_exist && f.direction == direction => Some(f)
         case _ => None
@@ -846,7 +846,7 @@ object BashWrapper {
     )
   }
 
-  private def generateExecutableArgs(params: List[Argument[_]]) = {
+  private def generateExecutableArgs(params: List[Argument[?]]) = {
     val inserts = params.map {
       case bo: BooleanArgumentBase if bo.flagValue.isDefined =>
         s"""
@@ -907,7 +907,7 @@ object BashWrapper {
   
   private def generateRun(
     config: Config,
-    argsMetaAndDeps: Map[String, List[Argument[_]]],
+    argsMetaAndDeps: Map[String, List[Argument[?]]],
     debugPath: Option[String]
   ): BashWrapperMods = {
     // check whether the wd needs to be set to the resources dir
