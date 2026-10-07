@@ -59,7 +59,7 @@ TODO add summary
 
 * `Dependencies`: Clean up the temporary directories used to check out remote (git/github/vsh) dependency repositories; previously these were never removed, so repeated builds/tests would accumulate them under `/tmp` (PR #916).
 
-* `ns build`: Build local dependencies of the selected components when filtering with a query (PR #XXX).
+* `ns build`: Build local dependencies of the selected components when filtering with a query (PR #927).
 
 * `viash run`: Fix `---debug` failing with "the input device is not a TTY" when using the Docker engine (PR #917). stdin, stdout and stderr are now inherited directly from the real terminal for this interactive session, matching the behaviour of running a built executable directly.
 
