@@ -105,6 +105,75 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
+  // local dependencies can be specified implicitly, with the 'local' sugar syntax or by referring to a named local package
+  for ((label, packageRef, packages) <- List(
+    ("implicit package", None, Nil),
+    ("package 'local'", Some("local"), Nil),
+    ("named local package", Some("here"), List(LocalPackageWithName(name = "here")))
+  )) {
+    test(s"Use a local dependency when building with a query, $label") {
+      val testFolder = createViashSubFolder(temporaryFolder, s"local_test_query_${label.replaceAll("\\W", "_")}")
+
+      def dependency(name: String): Dependency =
+        packageRef.fold(Dependency(name))(ref => Dependency(name, `package` = Left(ref)))
+
+      // write test files
+      val conf1 = Config(
+        name = "dep1",
+        namespace = Some("ns1"),
+        resources = textBashScript("echo Hello from dep1"),
+      )
+      val conf2 = Config(
+        name = "dep2",
+        namespace = Some("ns1"),
+        resources = textBashScript("$dep_ns1_dep1\necho Hello from dep2"),
+        packages = packages,
+        dependencies = List(dependency("ns1/dep1"))
+      )
+      val conf3 = Config(
+        name = "dep3",
+        namespace = Some("ns2"),
+        resources = textBashScript("$dep_ns1_dep2\necho Hello from dep3"),
+        packages = packages,
+        dependencies = List(dependency("ns1/dep2"))
+      )
+      val conf4 = Config(
+        name = "dep4",
+        namespace = Some("ns1"),
+        resources = textBashScript("echo Hello from dep4"),
+      )
+
+      writeTestConfig(testFolder.resolve("src/dep1/config.vsh.yaml"), conf1)
+      writeTestConfig(testFolder.resolve("src/dep2/config.vsh.yaml"), conf2)
+      writeTestConfig(testFolder.resolve("src/dep3/config.vsh.yaml"), conf3)
+      writeTestConfig(testFolder.resolve("src/dep4/config.vsh.yaml"), conf4)
+
+      // build
+      val testOutput = TestHelper.testMain(
+          "ns", "build",
+          "-s", testFolder.resolve("src").toString(),
+          "-t", testFolder.resolve("target").toString(),
+          "-q", "dep3"
+        )
+
+      assert(testOutput.stderr.contains("3/3 configs built successfully"), "check build was successful")
+      assert(testOutput.stderr.contains("1 configs were disabled"), "check unrelated config was not built")
+
+      // check the (transitive) local dependencies were built, but not the unrelated component
+      assert(testFolder.resolve("target/executable/ns1/dep1/dep1").toFile.exists)
+      assert(testFolder.resolve("target/executable/ns1/dep2/dep2").toFile.exists)
+      assert(!testFolder.resolve("target/executable/ns1/dep4").toFile.exists)
+
+      // check output when running
+      val out = Exec.runCatch(
+        Seq(testFolder.resolve("target/executable/ns2/dep3/dep3").toString)
+      )
+
+      assert(out.output == "Hello from dep1\nHello from dep2\nHello from dep3\n")
+      assert(out.exitValue == 0)
+    }
+  }
+
   test("Use a local package with an absolute path") {
     val testFolder = createViashSubFolder(temporaryFolder, "local_test_absolute_path")
 
