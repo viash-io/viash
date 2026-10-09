@@ -159,9 +159,11 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     // since nextflow 23.04:
     //   [info]   [31/1c0834] ali…cessWf:step1_process (one) | 1 of 1 ✔
     //   [info]   [f1/e92549] ali…:step1_alias_process (one) | 1 of 1 ✔
-    assert(stdOut.contains(":step1_alias:proc") || stdOut.contains(":step1_alias_process"))
-    assert(stdOut.contains(":step1:proc") || stdOut.contains(":step1_process"))
-    assert(!stdOut.contains("Key for module 'step1' is duplicated"))
+    // Note: Nextflow 26.09.2-edge moved the log from stdout to stderr
+    val output = stdOut + stdErr
+    assert(List(":step1_alias:proc", ":step1_alias_process").exists(output.contains), s"\nOutput:\n$output")
+    assert(List(":step1:proc", ":step1_process").exists(output.contains), s"\nOutput:\n$output")
+    assert(!output.contains("Key for module 'step1' is duplicated"))
   }
 
   test("Test for concurrency issues", DockerTest, NextflowTest) {
@@ -212,7 +214,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 1, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    assert(stdOut.contains("Error processing fromState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
+    assert((stdOut + stdErr).contains("Error processing fromState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
   } 
 
   test("Test invalid argument in toState map", DockerTest, NextflowTest) {
@@ -225,7 +227,7 @@ class NextflowScriptTest extends AnyFunSuite with BeforeAndAfterAll {
     )
 
     assert(exitCode == 1, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
-    assert(stdOut.contains("Error processing toState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
+    assert((stdOut + stdErr).contains("Error processing toState for 'sub_workflow': invalid argument 'thisargumentdoesnotexist'"))
   }
 
 
