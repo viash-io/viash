@@ -29,6 +29,7 @@ import packageConfig.PackageConfig
 import cli.{CLIConf, ViashCommand, DocumentedSubcommand, ViashNs, ViashNsBuild, ViashLogger}
 import exceptions._
 import scala.util.Try
+import scala.annotation.tailrec
 import org.rogach.scallop._
 import io.viash.helpers.LoggerLevel
 import io.viash.runners.Runner
@@ -266,8 +267,9 @@ object Main extends Logging {
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, packageConfig = pack1)
         val configs2 = namespaceDependencies(configs, pack1.target, pack1.rootDir)
+        val configs3 = includeLocalDependencies(configs2, cli.namespace.build, pack1)
         var buildResults = ViashNamespace.build(
-          configs = configs2,
+          configs = configs3,
           target = pack1.target.get,
           setup = cli.namespace.build.setup.toOption,
           push = cli.namespace.build.push(),
@@ -494,8 +496,6 @@ object Main extends Logging {
     val queryNamespace = subcommand.query_namespace.toOption
     val queryName = subcommand.query_name.toOption
     val queryConfig = subcommand.query_config.toOption
-    val runnerStr = subcommand.runner.toOption
-    val engineStr = subcommand.engine.toOption
     val configMods = packageConfig.config_mods
 
     val configs0 = Config.readConfigs(
@@ -507,37 +507,48 @@ object Main extends Logging {
       addOptMainScript = addOptMainScript,
       viashPackage = Some(packageConfig)
     )
-    
-    // TODO: apply engine and runner should probably be split into two Y_Y
-    val configs1 = 
-      if (applyRunner || applyEngine) {
-        configs0.flatMap {
-          // passthrough statuses
-          case ac if ac.status.isDefined => List(ac)
-          case ac =>
-            try {
-              val runners = ac.config.findRunners(runnerStr)
-              val engines = ac.config.findEngines(engineStr)
 
-              runners.map{ runner =>
-                processConfigWithRunnerAndEngine(
-                  appliedConfig = ac,
-                  runner = Some(runner),
-                  engines = engines,
-                  targetDir = packageConfig.target
-                )
-              }
-            } catch {
-              case e: Exception =>
-                error(e.getMessage())
-                List(ac.setStatus(MissingRunnerOrEngine))
-            }
-          }
+    val configs1 =
+      if (applyRunner || applyEngine) {
+        applyRunnersAndEngines(configs0, subcommand, packageConfig)
       } else {
         configs0
       }
-    
+
     configs1
+  }
+
+  // TODO: apply engine and runner should probably be split into two Y_Y
+  def applyRunnersAndEngines(
+    configs: List[AppliedConfig],
+    subcommand: ViashNs,
+    packageConfig: PackageConfig
+  ): List[AppliedConfig] = {
+    val runnerStr = subcommand.runner.toOption
+    val engineStr = subcommand.engine.toOption
+
+    configs.flatMap {
+      // passthrough statuses
+      case ac if ac.status.isDefined => List(ac)
+      case ac =>
+        try {
+          val runners = ac.config.findRunners(runnerStr)
+          val engines = ac.config.findEngines(engineStr)
+
+          runners.map{ runner =>
+            processConfigWithRunnerAndEngine(
+              appliedConfig = ac,
+              runner = Some(runner),
+              engines = engines,
+              targetDir = packageConfig.target
+            )
+          }
+        } catch {
+          case e: Exception =>
+            error(e.getMessage())
+            List(ac.setStatus(MissingRunnerOrEngine))
+        }
+    }
   }
 
   // Handle dependencies operations for a single config
@@ -552,23 +563,66 @@ object Main extends Logging {
   def namespaceDependencies(configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path]): List[AppliedConfig] = {
     if (target.isDefined)
       DependencyResolver.createBuildYaml(target.get)
-    
-    configs.map{
-      case ac if ac.status.isDefined => ac
-      case appliedConfig => {
-        Try{
-          val validConfigs = configs.filter(ac => ac.status == None || ac.status == Some(DisabledByQuery)).map(_.config)
-          handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
-        }.fold(
-          e => e match {
-            case de: AbstractDependencyException =>
-              error(s"Config \"${appliedConfig.config.name}\": ${e.getMessage}")
-              appliedConfig.setStatus(DependencyError)
-            case _ => throw e
-          },
-          ac => ac
-        )
+
+    configs.map(ac => namespaceConfigDependencies(ac, configs, target, rootDir))
+  }
+
+  // Handle dependency operations for a single config within a namespace
+  def namespaceConfigDependencies(appliedConfig: AppliedConfig, configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path]): AppliedConfig = {
+    if (appliedConfig.status.isDefined) {
+      appliedConfig
+    } else {
+      Try{
+        val validConfigs = configs.filter(ac => ac.status == None || ac.status == Some(DisabledByQuery)).map(_.config)
+        handleSingleConfigDependency(appliedConfig, target, rootDir, validConfigs)
+      }.fold(
+        e => e match {
+          case de: AbstractDependencyException =>
+            error(s"Config \"${appliedConfig.config.name}\": ${e.getMessage}")
+            appliedConfig.setStatus(DependencyError)
+          case _ => throw e
+        },
+        ac => ac
+      )
+    }
+  }
+
+  /**
+    * Re-enable configs that were disabled by a query but are (transitively) required as a local dependency
+    * by a config that is enabled. Local dependencies are only available after being built in the same
+    * namespace build, so they have to be built along with the components depending on them.
+    *
+    * @param configs Configs whose dependencies have been resolved with namespaceDependencies
+    * @return The same configs, with the required local dependencies enabled and their dependencies resolved
+    */
+  @tailrec
+  def includeLocalDependencies(
+    configs: List[AppliedConfig],
+    subcommand: ViashNs,
+    packageConfig: PackageConfig
+  ): List[AppliedConfig] = {
+    val requiredConfigPaths = configs
+      .filter(_.status.isEmpty)
+      .flatMap(_.config.dependencies)
+      .filter(_.isLocalDependency)
+      .flatMap(_.foundConfigPath)
+      .toSet
+
+    def isRequired(ac: AppliedConfig): Boolean =
+      ac.status == Some(DisabledByQuery) && ac.config.build_info.exists(bi => requiredConfigPaths.contains(bi.config))
+
+    if (!configs.exists(isRequired)) {
+      configs
+    } else {
+      val configs2 = configs.flatMap {
+        case ac if isRequired(ac) =>
+          info(s"Config \"${ac.config.name}\" does not match the query but is required as a local dependency")
+          applyRunnersAndEngines(List(ac.copy(status = None)), subcommand, packageConfig)
+            .map(namespaceConfigDependencies(_, configs, packageConfig.target, packageConfig.rootDir))
+        case ac => List(ac)
       }
+      // newly enabled configs might have local dependencies of their own
+      includeLocalDependencies(configs2, subcommand, packageConfig)
     }
   }
 
