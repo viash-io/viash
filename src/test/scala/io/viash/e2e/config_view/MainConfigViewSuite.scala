@@ -71,6 +71,9 @@ class MainConfigViewSuite extends AnyFunSuite{
         |      null_field: null
         |  - name: --y
         |    type: string
+        |  - name: --z
+        |    type: string
+        |    info: {}
         |""".stripMargin.getBytes()
     )
 
@@ -88,6 +91,8 @@ class MainConfigViewSuite extends AnyFunSuite{
       assert(arguments.downN(0).downField("info").focus == Some(Json.obj("null_field" -> Json.Null)), s"format: $format")
       // unset info fields are not shown
       assert(arguments.downN(1).downField("info").failed, s"format: $format")
+      // blank info fields are kept
+      assert(arguments.downN(2).downField("info").focus == Some(Json.obj()), s"format: $format")
     }
 
     IO.deleteRecursively(tempDir)

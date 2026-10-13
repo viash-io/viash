@@ -13,6 +13,8 @@ import io.viash.helpers.{IO, Exec, Logger}
 import io.viash.exceptions.ConfigParserException
 import java.nio.file.Files
 import io.viash.helpers.data_structures._
+import io.circe.Json
+import io.circe.yaml.parser
 
 class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
@@ -384,6 +386,52 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     } finally {
       buildConfigFile.close()
     }
+  }
+
+  test("Null values in info fields are kept in the build config") {
+    val configFolder = temporaryConfigFolder.resolve("info_null")
+    Files.createDirectories(configFolder)
+    val configPath = configFolder.resolve("config.vsh.yaml")
+    Files.write(configPath,
+      """name: foo
+        |info:
+        |  string_field: value
+        |  null_field: null
+        |arguments:
+        |  - name: --x
+        |    type: string
+        |    info:
+        |      null_field: null
+        |  - name: --y
+        |    type: string
+        |  - name: --z
+        |    type: string
+        |    info: {}
+        |""".stripMargin.getBytes()
+    )
+
+    val outputFolder = temporaryConfigFolder.resolve("output_info_null")
+
+    TestHelper.testMain(
+      "build",
+      "-o", outputFolder.toString,
+      "--engine", "native",
+      "--runner", "executable",
+      configPath.toString
+    )
+
+    val buildConfig = outputFolder.resolve(".config.vsh.yaml")
+    assert(Files.exists(buildConfig))
+
+    val json = parser.parse(Files.readString(buildConfig)).fold(throw _, identity)
+    val arguments = json.hcursor.downField("argument_groups").downN(0).downField("arguments")
+
+    assert(json.hcursor.downField("info").focus == Some(Json.obj("string_field" -> Json.fromString("value"), "null_field" -> Json.Null)))
+    assert(arguments.downN(0).downField("info").focus == Some(Json.obj("null_field" -> Json.Null)))
+    // unset info fields are either absent or null
+    assert(arguments.downN(1).downField("info").focus.forall(_.isNull))
+    // blank info fields are kept
+    assert(arguments.downN(2).downField("info").focus == Some(Json.obj()))
   }
 
   override def afterAll(): Unit = {
