@@ -3,17 +3,20 @@ package io.viash.e2e.config_view
 import io.viash._
 import io.viash.helpers.{IO, Logger}
 
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import java.nio.file.{Files, Paths}
 import io.circe.Json
 import io.circe.yaml.parser
 
-class MainConfigViewSuite extends AnyFunSuite{
+class MainConfigViewSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val workingDirAnonymizing = getClass.getResource("/testns/").getPath()
   private val configFileAnonymizing = getClass.getResource("/testns/src/ns_add/config.vsh.yaml").getPath
+
+  private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
 
   test("viash config view local") {
     val testOutput = TestHelper.testMain(
@@ -57,8 +60,7 @@ class MainConfigViewSuite extends AnyFunSuite{
   }
 
   test("viash config view keeps null values in info fields") {
-    val tempDir = IO.makeTemp("viash_config_view_info_null")
-    val configPath = tempDir.resolve("config.vsh.yaml")
+    val configPath = temporaryFolder.resolve("config.vsh.yaml")
     Files.write(configPath,
       """name: foo
         |info:
@@ -94,8 +96,9 @@ class MainConfigViewSuite extends AnyFunSuite{
       // blank info fields are kept
       assert(arguments.downN(2).downField("info").focus == Some(Json.obj()), s"format: $format")
     }
-
-    IO.deleteRecursively(tempDir)
   }
 
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryFolder)
+  }
 }

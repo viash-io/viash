@@ -84,6 +84,7 @@ object ConfigMeta {
   private def dropNullInfo(json: Json): Json = {
     json
       .mapObject(_.filter{ case (k, v) => !(k == "info" && v.isNull) }.map{
+        // don't recurse into "info" so its contents are left untouched
         case ("info", v) => ("info", v)
         case (k, v) => (k, dropNullInfo(v))
       })
