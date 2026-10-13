@@ -1,10 +1,12 @@
 package io.viash.e2e.config_view
 
 import io.viash._
-import io.viash.helpers.Logger
+import io.viash.helpers.{IO, Logger}
 
 import org.scalatest.funsuite.AnyFunSuite
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
+import io.circe.Json
+import io.circe.yaml.parser
 
 class MainConfigViewSuite extends AnyFunSuite{
   Logger.UseColorOverride.value = Some(false)
@@ -52,6 +54,43 @@ class MainConfigViewSuite extends AnyFunSuite{
     )
 
     assert(testOutput.stdout.contains("""config: "src/ns_add/config.vsh.yaml""""))
+  }
+
+  test("viash config view keeps null values in info fields") {
+    val tempDir = IO.makeTemp("viash_config_view_info_null")
+    val configPath = tempDir.resolve("config.vsh.yaml")
+    Files.write(configPath,
+      """name: foo
+        |info:
+        |  string_field: value
+        |  null_field: null
+        |arguments:
+        |  - name: --x
+        |    type: string
+        |    info:
+        |      null_field: null
+        |  - name: --y
+        |    type: string
+        |""".stripMargin.getBytes()
+    )
+
+    for (format <- List("yaml", "json")) {
+      val testOutput = TestHelper.testMain(
+        "config", "view",
+        configPath.toString,
+        "--format", format
+      )
+
+      val json = parser.parse(testOutput.stdout).fold(throw _, identity)
+      val arguments = json.hcursor.downField("argument_groups").downN(0).downField("arguments")
+
+      assert(json.hcursor.downField("info").focus == Some(Json.obj("string_field" -> Json.fromString("value"), "null_field" -> Json.Null)), s"format: $format")
+      assert(arguments.downN(0).downField("info").focus == Some(Json.obj("null_field" -> Json.Null)), s"format: $format")
+      // unset info fields are not shown
+      assert(arguments.downN(1).downField("info").failed, s"format: $format")
+    }
+
+    IO.deleteRecursively(tempDir)
   }
 
 }

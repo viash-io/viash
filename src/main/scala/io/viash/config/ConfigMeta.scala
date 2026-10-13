@@ -66,12 +66,28 @@ object ConfigMeta {
 
     val encodedConfig: Json = encodeConfig(anonymizedConfig)
     // drop empty & null values recursively except all "info" fields
-    val cleanEncodedConfig = encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
-    // get config.info and *do* clean it
-    cleanEncodedConfig.mapObject(_.map{
-      case ("info", v) => ("info", v.dropEmptyRecursively)
+    encodedConfig.dropEmptyRecursivelyExcept(Seq("info", ".engines.entrypoint", ".engines.cmd"))
+  }
+
+  /**
+    * Like configToCleanJson, but also drops the null values that are not part of
+    * the contents of an "info" field, so the result can be printed while keeping nulls.
+    */
+  def configToViewJson(config: Config): Json = {
+    // drop "info" fields that are unset, but leave the contents of "info" fields untouched
+    dropNullInfo(configToCleanJson(config)).mapObject(_.map{
+      case ("engines", v) => ("engines", v.mapArray(_.map(_.mapObject(_.filter{ case (k, v) => !v.isNull || (k != "entrypoint" && k != "cmd") }))))
       case other => other
     })
+  }
+
+  private def dropNullInfo(json: Json): Json = {
+    json
+      .mapObject(_.filter{ case (k, v) => !(k == "info" && v.isNull) }.map{
+        case ("info", v) => ("info", v)
+        case (k, v) => (k, dropNullInfo(v))
+      })
+      .mapArray(_.map(dropNullInfo))
   }
 
   def toMetaFile(appliedConfig: AppliedConfig, buildDir: Option[Path]): PlainFile = {

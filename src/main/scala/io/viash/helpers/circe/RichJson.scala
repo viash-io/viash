@@ -246,17 +246,20 @@ class RichJson(json: Json) {
     stringStyle = YamlPrinter.StringStyle.DoubleQuoted
   )
   private val jsonPrinter = JsonPrinter.spaces2.copy(dropNullValues = true)
+  private val yamlPrinterKeepNulls = yamlPrinter.copy(dropNullKeys = false)
+  private val jsonPrinterKeepNulls = jsonPrinter.copy(dropNullValues = false)
 
   /**
     * Convert to a pretty String.
     *
     * @param format Must be either 'yaml' or 'json'
+    * @param dropNulls Whether to drop null values from objects
     * @return The YAML or JSON String representation.
     */
-  def toFormattedString(format: String): String = {
+  def toFormattedString(format: String, dropNulls: Boolean = true): String = {
     format match {
-      case "yaml" => yamlPrinter.pretty(json)
-      case "json" => jsonPrinter.print(json)
+      case "yaml" => (if (dropNulls) yamlPrinter else yamlPrinterKeepNulls).pretty(json)
+      case "json" => (if (dropNulls) jsonPrinter else jsonPrinterKeepNulls).print(json)
       case _ => throw new IllegalArgumentException("'format' must be either 'json' or 'yaml'.")
     }
   }
