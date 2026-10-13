@@ -40,7 +40,7 @@ TODO add summary
 
 ## BUG FIXES
 
-* `config view`, `ns list` and `.config.vsh.yaml`: Keep `null` values inside `info` fields instead of stripping them (PR #XXX).
+* `config view`, `ns list` and `.config.vsh.yaml`: Keep `null` values inside `info` fields instead of stripping them (PR #930).
 
 * `Config parsing`: Fix an empty or comment-only `.vsh.yaml` config file causing a `NullPointerException` or an opaque decode error; this now raises a clear "config file is empty" error instead (PR #895).
 
