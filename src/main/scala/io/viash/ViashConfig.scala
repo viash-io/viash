@@ -65,13 +65,14 @@ object ViashConfig extends Logging{
   }
 
   def view(config: Config, format: String): Unit = {
-    val json = ConfigMeta.configToCleanJson(config)
-    infoOut(json.toFormattedString(format))
+    val json = ConfigMeta.configToViewJson(config)
+    // configToViewJson already dropped all nulls outside of "info" fields
+    infoOut(json.toFormattedString(format, dropNulls = false))
   }
 
   def viewMany(configs: List[Config], format: String): Unit = {
-    val jsons = configs.map(c => ConfigMeta.configToCleanJson(c))
-    infoOut(jsons.asJson.toFormattedString(format))
+    val jsons = configs.map(c => ConfigMeta.configToViewJson(c))
+    infoOut(jsons.asJson.toFormattedString(format, dropNulls = false))
   }
 
   def inject(config: Config, force: Boolean = false): Unit = {

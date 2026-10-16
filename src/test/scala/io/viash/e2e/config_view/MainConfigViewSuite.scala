@@ -1,17 +1,22 @@
 package io.viash.e2e.config_view
 
 import io.viash._
-import io.viash.helpers.Logger
+import io.viash.helpers.{IO, Logger}
 
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
+import io.circe.Json
+import io.circe.yaml.parser
 
-class MainConfigViewSuite extends AnyFunSuite{
+class MainConfigViewSuite extends AnyFunSuite with BeforeAndAfterAll {
   Logger.UseColorOverride.value = Some(false)
   // path to namespace components
   private val configFile = getClass.getResource(s"/testbash/config.vsh.yaml").getPath
   private val workingDirAnonymizing = getClass.getResource("/testns/").getPath()
   private val configFileAnonymizing = getClass.getResource("/testns/src/ns_add/config.vsh.yaml").getPath
+
+  private val temporaryFolder = IO.makeTemp(s"viash_${this.getClass.getName}_")
 
   test("viash config view local") {
     val testOutput = TestHelper.testMain(
@@ -54,4 +59,46 @@ class MainConfigViewSuite extends AnyFunSuite{
     assert(testOutput.stdout.contains("""config: "src/ns_add/config.vsh.yaml""""))
   }
 
+  test("viash config view keeps null values in info fields") {
+    val configPath = temporaryFolder.resolve("config.vsh.yaml")
+    Files.write(configPath,
+      """name: foo
+        |info:
+        |  string_field: value
+        |  null_field: null
+        |arguments:
+        |  - name: --x
+        |    type: string
+        |    info:
+        |      null_field: null
+        |  - name: --y
+        |    type: string
+        |  - name: --z
+        |    type: string
+        |    info: {}
+        |""".stripMargin.getBytes()
+    )
+
+    for (format <- List("yaml", "json")) {
+      val testOutput = TestHelper.testMain(
+        "config", "view",
+        configPath.toString,
+        "--format", format
+      )
+
+      val json = parser.parse(testOutput.stdout).fold(throw _, identity)
+      val arguments = json.hcursor.downField("argument_groups").downN(0).downField("arguments")
+
+      assert(json.hcursor.downField("info").focus == Some(Json.obj("string_field" -> Json.fromString("value"), "null_field" -> Json.Null)), s"format: $format")
+      assert(arguments.downN(0).downField("info").focus == Some(Json.obj("null_field" -> Json.Null)), s"format: $format")
+      // unset info fields are not shown
+      assert(arguments.downN(1).downField("info").failed, s"format: $format")
+      // blank info fields are kept
+      assert(arguments.downN(2).downField("info").focus == Some(Json.obj()), s"format: $format")
+    }
+  }
+
+  override def afterAll(): Unit = {
+    IO.deleteRecursively(temporaryFolder)
+  }
 }
