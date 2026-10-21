@@ -1,0 +1,15 @@
+name: output_directory
+arguments:
+  - name: "--output"
+    type: file
+    required: true
+    direction: output
+resources:
+  - type: bash_script
+    path: script.sh
+engines:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+runners:
+  - type: nextflow
