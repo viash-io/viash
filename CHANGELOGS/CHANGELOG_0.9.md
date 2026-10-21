@@ -1,3 +1,11 @@
+# Viash 0.9.7 (2026-03-03): Bug fix release
+
+Fix a few issues with how Viash interacts with Nextflow and fix an issue with dependency resolving.
+
+## BUG FIXES
+
+* `Dependencies`: Fix an edge case during dependency resolving (PR #870). Local dependencies of dependencies of local dependencies were resolved incorrectly and resulted in a wrongly resolved destination path.
+
 # Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
 
 This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.

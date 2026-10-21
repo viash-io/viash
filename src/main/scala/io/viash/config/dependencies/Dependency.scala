@@ -97,7 +97,7 @@ case class Dependency(
 
   @internalFunctionality
   internalDependencyTargetScope: ScopeEnum = ScopeEnum.Public
-) {
+) extends Logging {
   @description("Deprecated. Use 'package' instead.")
   @deprecated("Use 'package' instead.", "0.10.0", "0.11.0")
   @default("Empty")
@@ -129,12 +129,14 @@ case class Dependency(
     if (isLocalDependency) {
       // Local dependency so it will only exist once the component is built.
       // TODO improve this, for one, the runner id should be dynamic
+      debug("getRelativePath: isLocalDependency is true, using ViashNamespace to determine the path")
       Some(ViashNamespace.targetOutputPath("", "executable", internalDependencyTargetScope, None, name))
     } else {
       // Previous existing dependency. Use the location of the '.build.yaml' to determine the relative location.
       val relativePath = Dependency.getRelativePath(fullPath, Paths.get(workPackage.get.localPath))
       if (relativePath.isEmpty)
         throw new MissingBuildYamlException(fullPath, this)
+      debug(s"getRelativePath: relativePath: $relativePath, workPackage: ${workPackage.get}")
       relativePath.flatMap(rp => workPackage.map(r => Paths.get(r.subOutputPath).resolve(rp).toString()))
     }
   }
@@ -157,16 +159,19 @@ object Dependency extends Logging {
     * @param output Output / target path as root for where the build artifacts should be located
     * @param packagePath Path of the package where the dependency is found
     * @param mainDependency Top level dependency for which optionally dependencies of dependencies are being resolved. Used to relativize paths
-    * @param remoteLocalDependencyResolver Optional tuple of the path where the dependant is stored and its relative path in the target folder. Used to resolve local dependencies of dependencies of dependencies
+    * @param remoteLocalDependencyResolver Optional tuple of the path where the dependant is stored, the path where it was copied to and its relative path in the target folder. Used to resolve local dependencies of dependencies of dependencies
     * @return Tuple with source and destination paths, relativized to current package locations, ready to be copied
     */
-  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, packagePath: Path, mainDependency: Dependency, remoteLocalDependencyResolver: Option[(Path, Path)]): (Path, Path) = {
+  def getSourceAndDestinationFromWrittenPath(dependencyPath: String, output: Path, packagePath: Path, mainDependency: Dependency, remoteLocalDependencyResolver: Option[(Path, Path, Path)]): (Path, Path) = {
     import scala.jdk.CollectionConverters._
 
+    trace(s"getSourceAndDestinationFromWrittenPath: dependencyPath: $dependencyPath, output: $output, packagePath: $packagePath, mainDependency: $mainDependency, remoteLocalDependencyResolver: $remoteLocalDependencyResolver")
+
     val defaultSourcePath = packagePath.resolve(dependencyPath)
-    val sourcePath = if (defaultSourcePath.toFile().exists()) {
+    val (sourcePath, relativePath) = if (defaultSourcePath.toFile().exists()) {
       // If the dependencyPath is a valid path, use it as source
-      defaultSourcePath
+      debug(s"defaultSourcePath exists, use that as sourcePath: $defaultSourcePath")
+      (defaultSourcePath, None)
     } else if (remoteLocalDependencyResolver.isDefined) {
       // This is empty if we're resolving the first level of dependencies.
       // For the most part we should not end up here, but there is an edge case where we have to resolve a local dependency for a dependency of a dependency.
@@ -175,7 +180,7 @@ object Dependency extends Logging {
       debug(s"Couldn't find sourcePath, using remote local dependency resolver for $dependencyPath")
       debug(s"Remote local dependency resolver: $remoteLocalDependencyResolver")
       val alternativeSourcePath = remoteLocalDependencyResolver.get._1 // This is the path where the dependant is located
-      val alternativeTargetPath = remoteLocalDependencyResolver.get._2 // This is the relative path of the dependant in the target folder
+      val alternativeTargetPath = remoteLocalDependencyResolver.get._3 // This is the relative path of the dependant in the target folder
 
       // strips alternativeTargetPath from dependencyPath
       // ie. `target` from `target/foo/bar` so that it can be added to alternativeSourcePath as it doesn't contain the `target` folder anymore at this point
@@ -188,7 +193,7 @@ object Dependency extends Logging {
       debug(s"relativePath: $relativePath")
       val res = alternativeSourcePath.resolve(relativePath)
       debug(s"Using alternative source path: $res")
-      res
+      (res, Some(relativePath))
     } else {
       // Otherwise, throw an error. We shouldn't end up here.
       throw new MissingBuildYamlException(defaultSourcePath, mainDependency)
@@ -200,12 +205,18 @@ object Dependency extends Logging {
       // Drop the other "target" folder from the found path. This can be multiple folders too
       val relativePath = Dependency.getRelativePath(sourcePath, packagePath)
         .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
+      trace(s"destinationPath case 1: output: $output, relativePath: $relativePath")
       output.resolve(relativePath)
+    } else if (remoteLocalDependencyResolver.isDefined && relativePath.isDefined) {
+      trace(s"destinationPath case 2: remoteLocalDependencyResolver._2: ${remoteLocalDependencyResolver.get._2}, relativePath: $relativePath")
+      remoteLocalDependencyResolver.get._2.resolve(relativePath.get)
     } else {
       val subPath = mainDependency.getRelativePath(sourcePath)
         .fold(throw new MissingBuildYamlException(sourcePath, mainDependency))(identity)
+      trace(s"destinationPath case 3: output: $output, subPath: $subPath")
       output.resolve("dependencies").resolve(subPath)
     }
+    debug(s"Determined destination path: $destinationPath")
 
     (sourcePath, destinationPath)
   }
