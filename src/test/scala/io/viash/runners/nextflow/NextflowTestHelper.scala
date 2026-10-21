@@ -17,14 +17,14 @@ object NextflowTestHelper {
       headerKeyword: String,
       fileContentMatcher: String
   ): Unit = {
-    val DebugRegex = s"$headerKeyword: \\[foo, (.*)\\]".r
+    // search unanchored: concurrent view() outputs can end up on the same line
+    val DebugRegex = s"$headerKeyword: \\[foo, ([^\\]\\n]*)\\]".r
 
-    val lines = output.split("\n").find(DebugRegex.findFirstIn(_).isDefined)
+    val path = DebugRegex.findFirstMatchIn(output).map(_.group(1))
 
-    assert(lines.isDefined)
-    val DebugRegex(path) = lines.get : @unchecked
+    assert(path.isDefined)
 
-    val src = Source.fromFile(path)
+    val src = Source.fromFile(path.get)
     try {
       val step3Out = src.getLines().mkString
       assert(step3Out.matches(fileContentMatcher))
@@ -41,7 +41,8 @@ object NextflowTestHelper {
     * @return Returns a tuple of the id and the arguments
     */
   def outputTupleProcessor(output: String, headerKeyword: String): Array[(String, Map[String, String])] = {
-    val stdOutLines = output.split("\n")
+    // also split before each header: concurrent view() outputs can end up on the same line
+    val stdOutLines = output.split("\n").flatMap(_.split(s"(?=$headerKeyword: \\[)"))
 
     val DebugRegex = s"$headerKeyword: \\[(.*), \\[(.*)\\]\\]".r
     val debugPrints = stdOutLines.flatMap {
@@ -144,6 +145,7 @@ object NextflowTestHelper {
       "nextflow" :: 
         { if (quiet) List("-q") else Nil } ::: 
         "run" :: "." ::
+        "-ansi-log" :: "false" ::
         "-main-script" :: mainScript ::
         { if (entry.isDefined) List("-entry", entry.get) else Nil } :::
         { if (paramsFile.isDefined) List("-params-file", paramsFile.get) else Nil } :::
