@@ -1,3 +1,11 @@
+# Viash 0.9.6 (2025-10-10): Hotfix for dependency path resolution
+
+This release fixes an issue with dependency resolution in some edge cases that was introduced in Viash 0.9.5.
+
+## BUG FIXES
+
+* `Dependencies`: Fix an issue when trying to relativize a relative path results in an empty array (PR #857). The empty array then throws an error when trying to reduce it.
+
 # Viash 0.9.5 (2025-10-06): Hotfix for internal CI usage
 
 This is a hotfix release to support internal CI usage and testing.
