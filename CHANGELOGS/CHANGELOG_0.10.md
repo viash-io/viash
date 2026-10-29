@@ -1,6 +1,14 @@
-# Viash 0.x.x (yyyy-MM-dd): TODO Add title
+# Viash 0.10.0-RC1 (2026-10-29): JSON-based parameter passing and removal of deprecated functionality
 
-TODO add summary
+This release changes how argument values reach your scripts. Viash no longer injects values directly into the script code. It now writes them to a JSON file that each language parses at runtime.
+This fixes a long list of bugs with special characters such as backticks, quotes, dollar signs and newlines. It also lets you unset arguments and computational requirements at runtime using `UNDEFINED`.
+In Bash scripts, `multiple: true` arguments are now real bash arrays instead of semicolon-separated strings.
+
+The deprecated `functionality` and `platforms` fields have been removed together with the old Nextflow helper functions and `map`/`mapId`/`mapData`/... arguments.
+The `repository`/`repositories` dependency keys are renamed to `package`/`packages`. The old keys still work but now give a deprecation warning.
+Components can now be run straight from a ViashHub package bundle without building them first (`viash run vsh://...`).
+
+Running the Viash jar now requires Java 17 or newer.
 
 ## NEW FEATURES
 
