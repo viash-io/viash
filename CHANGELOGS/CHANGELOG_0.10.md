@@ -1,4 +1,4 @@
-# Viash 0.10.0 (2026-10-29): JSON-based parameter passing and removal of deprecated functionality
+# Viash 0.10.0-RC1 (2026-10-29): JSON-based parameter passing and removal of deprecated functionality
 
 This release changes how argument values reach your scripts. Viash no longer injects values directly into the script code. It now writes them to a JSON file that each language parses at runtime.
 This fixes a long list of bugs with special characters such as backticks, quotes, dollar signs and newlines. It also lets you unset arguments and computational requirements at runtime using `UNDEFINED`.
