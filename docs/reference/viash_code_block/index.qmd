@@ -74,7 +74,7 @@ pwalk(langs, function(id, label, config_path, script_path, ...) {
     |Running `viash config inject` effectively changes the contents of the script.
     |
     |```{bash config-inject}
-    |viash config inject {%basename(config_path)%}
+    |viash config inject --force {%basename(config_path)%}
     |```
     |
     |The updated `{%basename(script_path)%}` now contains the following code:
