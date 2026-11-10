@@ -2,7 +2,7 @@
 
 ## BUG FIXES
 
-* `ns test`: Fix only the first engine being tested for components with multiple engines and a remote dependency. The other engines failed to copy the dependency, yet the command still exited with code 0 (PR #XXX).
+* `ns test`: Fix only the first engine being tested for components with multiple engines and a remote dependency. The other engines failed to copy the dependency, yet the command still exited with code 0 (PR #937).
   The dependency checkouts are now removed once all engines have been tested. `ns test` now exits with a non-zero code when it aborts on an unexpected error.
   A checkout that cannot be removed now logs a warning instead of failing an otherwise successful build or test.
 
