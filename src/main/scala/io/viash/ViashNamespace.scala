@@ -20,7 +20,7 @@ package io.viash
 import java.nio.file.{Paths, Files, StandardOpenOption}
 import io.viash.ViashTest.{ManyTestOutput, TestOutput}
 import config.Config
-import helpers.{IO, Logging}
+import helpers.{IO, Logging, DependencyResolver}
 import io.viash.exceptions.MissingResourceFileException
 import io.viash.helpers.status._
 import java.nio.file.Path
@@ -214,7 +214,11 @@ object ViashNamespace extends Logging {
                 cpus = cpus,
                 memory = memory,
                 dryRun = dryRun,
-                deterministicWorkingDirectory = Some(directoryName)
+                deterministicWorkingDirectory = Some(directoryName),
+                // the configs passed to `ns test` are split per engine after dependency resolution,
+                // so all engines of a component share the same dependency checkouts; these are
+                // cleaned up once all configs have been tested (see `finally` below)
+                cleanupDependencies = false
               )
             } catch {
               case e: MissingResourceFileException => 
@@ -284,9 +288,13 @@ object ViashNamespace extends Logging {
     } catch {
       case e: Exception => 
         infoOut(e.getMessage())
-        Nil
+        // mark the run as failed so that the caller does not report success
+        configs.map(ac => (ac.setStatus(ac.status.filter(_.isError).getOrElse(TestError)), ManyTestOutput(None, List())))
     } finally {
       tsvWriter.foreach(_.close())
+
+      // clean up the dependency checkouts now that all engines of all configs have been tested
+      configs1.foreach(ac => DependencyResolver.cleanupWorkPackages(ac.config))
 
       // Delete temp path if empty, otherwise fail quietly and keep.
       // (tests should have cleaned themselves according to the overall 'keep' value)
