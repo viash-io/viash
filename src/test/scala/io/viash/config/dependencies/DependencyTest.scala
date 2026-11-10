@@ -323,6 +323,80 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(out.exitValue == 0)
   }
 
+  test("ns test with multiple engines and a remote dependency tests every engine") {
+    val testFolder = temporaryFolder.resolve("multi_engine_remote_test")
+
+    // A package with a single built component, committed to a local git repository.
+    //
+    // This must be a `type: git` package rather than a `type: local` one: an edge condition only occurs for
+    // git-based packages (git, github, vsh), because only those are cloned into a temporary
+    // `viash_hub_repo*` checkout that gets cleaned up after testing. A local package is read in place,
+    // so it would not reproduce this edge condition. Viash clones the `uri` with `git clone`, so it has to point
+    // to a real repository with a commit, hence the `git init/add/commit` below.
+    // A local repository is used instead of the remote test repository (vsh://)
+    // so the test needs no network access, and because `type: git` packages are not cached under VIASH_HOME.
+    Files.createDirectories(testFolder)
+    val depFolder = createViashSubFolder(testFolder, "dep", Some("name: deppkg"))
+    Files.createDirectories(depFolder.resolve("src/dep_comp"))
+    Files.write(depFolder.resolve("src/dep_comp/config.vsh.yaml"),
+      """name: dep_comp
+        |resources:
+        |  - type: bash_script
+        |    text: echo dep
+        |    use_jq: false
+        |runners:
+        |  - type: executable
+        |""".stripMargin.getBytes())
+    val depBuildOutput = TestHelper.testMain("ns", "build", "-s", depFolder.resolve("src").toString, "-t", depFolder.resolve("target").toString)
+    assert(depBuildOutput.exitCode == Some(0), s"building the dependency package failed:\n${depBuildOutput.stderr}")
+    for (cmd <- List(
+      Seq("git", "init", "-q"),
+      Seq("git", "add", "-A"),
+      Seq("git", "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "built")
+    )) {
+      val out = Exec.runCatch(cmd, cwd = Some(depFolder.toFile))
+      assert(out.exitValue == 0, s"git command failed: ${out.output}")
+    }
+
+    // a component that depends on it and has two engines
+    val mainFolder = createViashSubFolder(testFolder, "main", Some("name: mainpkg"))
+    Files.createDirectories(mainFolder.resolve("src/main_comp"))
+    Files.write(mainFolder.resolve("src/main_comp/config.vsh.yaml"),
+      s"""name: main_comp
+        |resources:
+        |  - type: bash_script
+        |    text: echo main
+        |    use_jq: false
+        |test_resources:
+        |  - type: bash_script
+        |    text: |
+        |      $$dep_dep_comp
+        |      echo ok
+        |    use_jq: false
+        |dependencies:
+        |  - name: dep_comp
+        |    package:
+        |      type: git
+        |      uri: $depFolder
+        |engines:
+        |  - type: native
+        |  - type: native
+        |    id: native2
+        |runners:
+        |  - type: executable
+        |""".stripMargin.getBytes())
+
+    val testOutput = TestHelper.testMain(
+      "ns", "test",
+      "-s", mainFolder.resolve("src").toString
+    )
+
+    val successLines = testOutput.stdout.linesIterator.filter(_.contains("SUCCESS")).toList
+    assert(successLines.exists(_.contains(" native ")), s"first engine was tested:\n${testOutput.stdout}")
+    assert(successLines.exists(_.contains(" native2 ")), s"second engine was tested:\n${testOutput.stdout}")
+    assert(testOutput.exitCode == Some(0))
+  }
+
   test("Use a remote dependency, defined in .packages") {
     val testFolder = createViashSubFolder(temporaryFolder, "remote_test_packages")
 
