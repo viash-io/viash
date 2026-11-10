@@ -347,7 +347,8 @@ class DependencyTest extends AnyFunSuite with BeforeAndAfterAll {
         |runners:
         |  - type: executable
         |""".stripMargin.getBytes())
-    TestHelper.testMain("ns", "build", "-s", depFolder.resolve("src").toString, "-t", depFolder.resolve("target").toString)
+    val depBuildOutput = TestHelper.testMain("ns", "build", "-s", depFolder.resolve("src").toString, "-t", depFolder.resolve("target").toString)
+    assert(depBuildOutput.exitCode == Some(0), s"building the dependency package failed:\n${depBuildOutput.stderr}")
     for (cmd <- List(
       Seq("git", "init", "-q"),
       Seq("git", "add", "-A"),
