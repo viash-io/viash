@@ -289,7 +289,8 @@ object ViashNamespace extends Logging {
       case e: Exception => 
         infoOut(e.getMessage())
         // mark the run as failed so that the caller does not report success
-        configs.map(ac => (ac.setStatus(ac.status.filter(_.isError).getOrElse(TestError)), ManyTestOutput(None, List())))
+        // (statuses that were already set, e.g. disabled components, are left alone)
+        configs.map(ac => (if (ac.status.isDefined) ac else ac.setStatus(TestError), ManyTestOutput(None, List())))
     } finally {
       tsvWriter.foreach(_.close())
 
