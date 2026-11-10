@@ -294,8 +294,9 @@ object ViashNamespace extends Logging {
     } finally {
       tsvWriter.foreach(_.close())
 
-      // clean up the dependency checkouts now that all engines of all configs have been tested
-      configs1.foreach(ac => DependencyResolver.cleanupWorkPackages(ac.config))
+      // clean up the dependency checkouts now that all engines of all configs have been tested;
+      // this includes configs that were filtered out above (e.g. nextflow), as their dependencies were resolved too
+      configs.foreach(ac => DependencyResolver.cleanupWorkPackages(ac.config))
 
       // Delete temp path if empty, otherwise fail quietly and keep.
       // (tests should have cleaned themselves according to the overall 'keep' value)
