@@ -40,6 +40,12 @@ case class ConfigParserEmptyException(uri: String) extends AbstractConfigExcepti
   override def getMessage(): String = "The Viash config file is empty."
 }
 
+case class ConfigResourceConflictException(uri: String, message: String) extends AbstractConfigException {
+  val e: Throwable = null
+  val innerMessage: String = "conflicting resources"
+  override def getMessage(): String = message
+}
+
 case class ConfigParserSubTypeException(tpe: String, validTypes: List[String], json: String) extends Exception {
 
   private val validTypesStr = validTypes.dropRight(1).mkString("'", "', '", "'") + s", and '${validTypes.last}'"

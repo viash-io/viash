@@ -46,7 +46,7 @@ import Status._
 import io.viash.wrapper.BashWrapper
 import scala.collection.immutable.ListMap
 import io.viash.helpers.data_structures.oneOrMoreToList
-import io.viash.exceptions.ConfigParserEmptyException
+import io.viash.exceptions.{ConfigParserEmptyException, ConfigResourceConflictException}
 
 @description(
   """A Viash configuration is a YAML file which contains metadata to describe the behaviour and build target(s) of a component.  
@@ -748,6 +748,9 @@ object Config extends Logging {
       case false => conf4
     }
     
+    // check that no two resources end up at the same place in the build directory
+    checkResourceConflicts(conf5.resources, uri)
+
     /* CONFIG 6: Finalize Scope */
     val conf6 = scopeLens.modify {
       case Left(scope) => Right(Scope(scope))
@@ -755,6 +758,30 @@ object Config extends Logging {
     }(conf5)
 
     conf6
+  }
+
+  /**
+    * Throws an error when two different resources would be written to the same destination.
+    * Identical resources, e.g. added twice through `__merge__`, are allowed since they don't conflict.
+    */
+  private def checkResourceConflicts(resources: List[Resource], uri: URI): Unit = {
+    // executables are not written to the build directory
+    val uniqueResources = resources.filterNot(_.isInstanceOf[Executable]).distinct
+
+    def describe(res: Resource): String =
+      res.path.map(p => s"path '$p'").getOrElse("inline text") + s" (type '${res.`type`}')"
+
+    val conflicts = uniqueResources
+      .groupBy(res => Paths.get(res.resourcePath).normalize.toString)
+      .filter(_._2.size > 1)
+      .toList.sortBy(_._1)
+      .map { case (dest, ress) =>
+        s"Multiple resources have destination '$dest':\n" + ress.map("  - " + describe(_)).mkString("\n")
+      }
+
+    if (conflicts.nonEmpty) {
+      throw ConfigResourceConflictException(uri.toString, conflicts.mkString("\n"))
+    }
   }
 
   def readConfigs(
