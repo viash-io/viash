@@ -94,13 +94,17 @@ object ConfigMeta {
   def toMetaFile(appliedConfig: AppliedConfig, buildDir: Option[Path]): PlainFile = {
     val config = appliedConfig.config
 
-    // get resources
+    // generate a placeholder for each resource with a 'text' field
+    // the index of the resource is included so that every placeholder is unique, even when
+    // multiple resources share the same filename (e.g. 'a/notes.txt' and 'b/notes.txt')
     // the filename is url-encoded so the placeholder is guaranteed to consist only of characters
     // that the yaml printer never needs to escape (e.g. '"' or '\'), regardless of what the
     // filename itself contains; this keeps the placeholder search below exact and unambiguous
-    val placeholderMap = config.resources.filter(_.text.isDefined).map{ res =>
-      (res, "VIASH_PLACEHOLDER~" + URLEncoder.encode(res.filename, "UTF-8") + "~")
-    }.toMap
+    val resourcesWithPlaceholders = config.resources.zipWithIndex.map{ case (res, index) =>
+      val placeholder = res.text.map(_ => s"VIASH_PLACEHOLDER~$index~" + URLEncoder.encode(res.filename, "UTF-8") + "~")
+      (res, placeholder)
+    }
+    val placeholders = resourcesWithPlaceholders.collect{ case (res, Some(placeholder)) => (res, placeholder) }
 
     val executableName = appliedConfig.runner match {
       case Some(_: NextflowRunner) => "main.nf"
@@ -112,13 +116,11 @@ object ConfigMeta {
     // * set 'path' fields to the resourcePath
     // * add more info variables
     val toWriteConfig = config.copy(
-      resources = config.resources.map{ res =>
-        if (res.text.isDefined) {
-          val textVal = Some(placeholderMap(res))
-          res.copyResource(text = textVal, parent = None)
-        } else {
+      resources = resourcesWithPlaceholders.map{
+        case (res, Some(placeholder)) =>
+          res.copyResource(text = Some(placeholder), parent = None)
+        case (res, None) =>
           res.copyResource(parent = None, path = Some(res.resourcePath))
-        }
       },
       test_resources = config.test_resources.map { res =>
         if (res.text.isDefined) {
@@ -137,7 +139,7 @@ object ConfigMeta {
     val configYamlStr = printer.pretty(configToCleanJson(toWriteConfig))
 
     // replace text placeholders with nice multiline string
-    val configYamlStr2 = placeholderMap.foldLeft(configYamlStr) {
+    val configYamlStr2 = placeholders.foldLeft(configYamlStr) {
       case (configStr, (res, placeholder)) =>
         val IndentRegex = ("( *)text: \"" + Pattern.quote(placeholder) + "\"").r
         val indent = IndentRegex.findFirstMatchIn(configStr)

@@ -1,3 +1,13 @@
+# Viash 0.10.0 (yyyy-MM-dd): TODO Add title
+
+TODO add summary
+
+## BUG FIXES
+
+* `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #XXX).
+  Inline text resources in different folders, e.g. `dest: a/notes.txt` and `dest: b/notes.txt`, now build correctly.
+  Different resources with the same destination now give a clear config error instead of overwriting each other. Identical resources, e.g. added twice through `__merge__`, are still allowed.
+
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
 
 This release changes how argument values reach your scripts. Viash no longer injects values directly into the script code. It now writes them to a JSON file that each language parses at runtime.

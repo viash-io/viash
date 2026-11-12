@@ -180,6 +180,89 @@ class ConfigTest extends AnyFunSuite with BeforeAndAfterAll {
     assert(ex.getMessage() == "The Viash config file is empty.")
   }
 
+  private def writeResourcesConfig(folderName: String, resourcesYaml: String): String = {
+    val tempFolder = temporaryFolder.resolve(folderName)
+    Files.createDirectory(tempFolder)
+    val configPath = tempFolder.resolve("config.vsh.yaml")
+    IO.write(
+      s"""name: $folderName
+         |resources:
+         |  - type: bash_script
+         |    text: echo hi
+         |$resourcesYaml""".stripMargin,
+      configPath
+    )
+    configPath.toString
+  }
+
+  test("Two inline text resources with the same dest throw a config error") {
+    val configPath = writeResourcesConfig("test_dup_dest",
+      """  - type: file
+        |    dest: notes.txt
+        |    text: hello
+        |  - type: file
+        |    dest: notes.txt
+        |    text: something else
+        |""".stripMargin)
+
+    val ex = intercept[io.viash.exceptions.ConfigResourceConflictException] {
+      Config.read(configPath)
+    }
+    assert(ex.getMessage().contains("Multiple resources have destination 'notes.txt'"))
+  }
+
+  test("Two inline text resources with the same filename in different folders end up in the meta config") {
+    val configPath = writeResourcesConfig("test_dup_filename",
+      """  - type: file
+        |    dest: a/notes.txt
+        |    text: hello
+        |  - type: file
+        |    dest: b/notes.txt
+        |    text: something else
+        |""".stripMargin)
+
+    val config = Config.read(configPath)
+    val metaText = ConfigMeta.toMetaFile(AppliedConfig(config, None, Nil, None), None).text.get
+
+    assert(!metaText.contains("VIASH_PLACEHOLDER"), "All placeholders should be replaced")
+    assert(metaText.contains("dest: \"a/notes.txt\""))
+    assert(metaText.contains("dest: \"b/notes.txt\""))
+    assert(metaText.contains("hello"))
+    assert(metaText.contains("something else"))
+  }
+
+  test("A path resource and an inline text resource with the same dest throw a config error") {
+    val configPath = writeResourcesConfig("test_dup_path_text",
+      """  - type: file
+        |    path: notes.txt
+        |  - type: file
+        |    dest: ./notes.txt
+        |    text: hello
+        |""".stripMargin)
+
+    val ex = intercept[io.viash.exceptions.ConfigResourceConflictException] {
+      Config.read(configPath)
+    }
+    assert(ex.getMessage().contains("Multiple resources have destination 'notes.txt'"))
+  }
+
+  test("Identical duplicate resources are allowed") {
+    val configPath = writeResourcesConfig("test_identical_resources",
+      """  - type: file
+        |    dest: notes.txt
+        |    text: hello
+        |  - type: file
+        |    dest: notes.txt
+        |    text: hello
+        |""".stripMargin)
+
+    val config = Config.read(configPath)
+    assert(config.resources.count(_.dest == Some("notes.txt")) == 2)
+
+    val metaText = ConfigMeta.toMetaFile(AppliedConfig(config, None, Nil, None), None).text.get
+    assert(!metaText.contains("VIASH_PLACEHOLDER"), "All placeholders should be replaced")
+  }
+
   test("Test default scope value") {
     val newConfigFilePath = configDeriver.derive(Nil, "default_scope")
     val newConfig = Config.read(newConfigFilePath)
