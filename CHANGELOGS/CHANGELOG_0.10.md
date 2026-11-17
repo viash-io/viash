@@ -6,7 +6,7 @@
   The dependency checkouts are now removed once all engines have been tested. `ns test` now exits with a non-zero code when it aborts on an unexpected error.
   A checkout that cannot be removed now logs a warning instead of failing an otherwise successful build or test.
 
-* `executable` runner: Fix the `min`/`max` check of `double` arguments rejecting values like `+1` and `1e0`, and using the wrong bound for very small or large limits such as `100000000` (PR #TODO).
+* `executable` runner: Fix the `min`/`max` check of `double` arguments rejecting values like `+1` and `1e0`, and using the wrong bound for very small or large limits such as `100000000` (PR #940).
   Also fix the "has be" typo in `min`/`max` error messages, and numbers like `+1`, `.5` and `007` not reaching the script.
 
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
