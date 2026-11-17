@@ -322,10 +322,10 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     // min -3.2
     // max 5.7
     // traditionally bad arguments should already be checked elsewhere, so do less of them here
-    // values in exponent notation must be compared numerically as well (#936)
+    // values with a leading '+' or in exponent notation must be compared numerically as well (#936)
     val checkMin = Seq("-10", "-4", "-3.3", "-3.3e0", "-1E1")
-    val checkMax = Seq("5.8", "6", "10", "5.8e0", "1E1")
-    val checksPass = Seq("-3.2", "0", "2", "5.7", "2e0", "5.7E0", "-32e-1", "2e-3")
+    val checkMax = Seq("5.8", "6", "10", "5.8e0", "1E1", "+5.8", "+1e1")
+    val checksPass = Seq("-3.2", "0", "2", "5.7", "2e0", "5.7E0", "-32e-1", "2e-3", "+2", "+5.7", "+.5", "+1.e0")
     val checksFail = Seq("1+", "1-", "foo")
     val signs = Seq("")
 
@@ -361,8 +361,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     // bounds that Double.toString writes in exponent notation (1.0E-7, 1.0E8) (#936)
     {
-      val wideIn = Seq("0.0000001", "1e-7", "50", "5E1", "1e0", "100000000", "1e8")
-      val wideOut = Seq("0.00000001", "1e-8", "-5", "0", "100000001", "1.00001e8", "1e9")
+      val wideIn = Seq("0.0000001", "1e-7", "50", "5E1", "1e0", "100000000", "1e8", "+1e-7", "+1E+8")
+      val wideOut = Seq("0.00000001", "1e-8", "-5", "0", "100000001", "1.00001e8", "1e9", "+1e-8", "+1e+9")
       val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, wideIn, signs, checksFail ++ wideOut)
 
       val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
