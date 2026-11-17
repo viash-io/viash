@@ -58,6 +58,9 @@ object ViashTest extends Logging {
     * @param parentTempPath A parent temporary directory.
     * @param cpus How many logical CPUs to use during testing.
     * @param memory How much memory to use during testing.
+    * @param cleanupDependencies Whether to delete the temporary checkouts of the config's dependencies after testing.
+    *   Set to `false` when the same resolved config is tested more than once (e.g. once per engine), and clean up
+    *   with `DependencyResolver.cleanupWorkPackages` after the last test instead.
     * @return A ManyTestOutput containing the results of the unit tests.
     */
   def apply(
@@ -72,6 +75,7 @@ object ViashTest extends Logging {
     memory: Option[String],
     dryRun: Option[Boolean] = None,
     deterministicWorkingDirectory: Option[String] = None,
+    cleanupDependencies: Boolean = true,
   ): ManyTestOutput = {
     // create temporary directory
     val dir = IO.makeTemp(
@@ -109,8 +113,10 @@ object ViashTest extends Logging {
 
     // dependency packages (if any) were checked out into temporary directories; now that the
     // tests (and the runners generated for them) have run, they are no longer needed and can be
-    // cleaned up
-    DependencyResolver.cleanupWorkPackages(modifiedAppliedConfig.config)
+    // cleaned up, unless the caller still needs them
+    if (cleanupDependencies) {
+      DependencyResolver.cleanupWorkPackages(modifiedAppliedConfig.config)
+    }
 
     val count = results.count(_.exitValue == 0)
     val anyErrors = setupRes.exists(_.exitValue > 0) || count < results.length

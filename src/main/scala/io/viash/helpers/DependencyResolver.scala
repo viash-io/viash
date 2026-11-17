@@ -336,10 +336,17 @@ object DependencyResolver extends Logging {
   // are fully resolved and no longer need to be read from disk, e.g. once the wrapper scripts
   // referencing them (which still rely on dependency package paths, see subOutputPath) have
   // been generated.
+  // Best effort: a checkout that cannot be deleted must not fail a build or test that already
+  // succeeded. Anything left behind is retried by the shutdown hook.
   def cleanupWorkPackages(config: Config): Unit = {
     dependenciesLens.get(config).foreach{ dep =>
       dep.workPackage.foreach{ pkg =>
-        IO.cleanupTempDirFor(Paths.get(pkg.localPath), AbstractGitPackage.tempDirPrefix)
+        try {
+          IO.cleanupTempDirFor(Paths.get(pkg.localPath), AbstractGitPackage.tempDirPrefix)
+        } catch {
+          case e: Exception =>
+            warn(s"Could not clean up the temporary checkout of dependency '${dep.name}' at '${pkg.localPath}': ${e.getMessage}")
+        }
       }
     }
   }
