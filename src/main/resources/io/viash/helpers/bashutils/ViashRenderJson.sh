@@ -104,11 +104,29 @@ function ViashRenderJsonUnquotedValue {
   local key="$1"
   local value="$2"
   
-  # Validate that the value is a valid number (integer, decimal, or scientific notation)
-  if ! [[ "$value" =~ ^-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$ ]]; then
+  # Accept the same numbers as the argument type checks, which allow a leading '+',
+  # leading zeros and a bare '.5' or '1.', and write them as valid JSON numbers.
+  local sign=""
+  local digits="${value#[+-]}"
+  if [[ "$value" == -* ]]; then
+    sign="-"
+  fi
+  if ! [[ "$digits" =~ ^([0-9]*)(\.[0-9]*)?([eE][+-]?[0-9]+)?$ ]] || [[ "${BASH_REMATCH[1]}${BASH_REMATCH[2]#.}" == "" ]]; then
     echo "Argument '$key' has to be a number, but got '$value'. Use '--help' to get more information on the parameters." >&2
     exit 1
   fi
-  
-  echo "$value"
+  local int="${BASH_REMATCH[1]}"
+  local frac="${BASH_REMATCH[2]}"
+  local exp="${BASH_REMATCH[3]}"
+
+  # JSON numbers have no leading zeros and need digits on both sides of the '.'
+  int="${int#"${int%%[!0]*}"}"
+  if [ -z "$int" ]; then
+    int="0"
+  fi
+  if [ "$frac" == "." ]; then
+    frac=".0"
+  fi
+
+  echo "${sign}${int}${frac}${exp}"
 }

@@ -320,4 +320,45 @@ set -e
 assert_exit_code "test12l_exit_code" 1 "$exit_code"
 assert_contains "test12l_stderr" "has to be a number" "$stderr"
 
+# TEST12m-v: Numbers accepted by the argument type checks are written as valid JSON numbers
+output=$(ViashRenderJsonUnquotedValue "value" "+1")
+assert_value_equal "test12m_leading_plus" "1" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" ".5")
+assert_value_equal "test12n_leading_dot" "0.5" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "-.5")
+assert_value_equal "test12o_negative_leading_dot" "-0.5" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "1.")
+assert_value_equal "test12p_trailing_dot" "1.0" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "+1.e5")
+assert_value_equal "test12q_trailing_dot_exponent" "1.0e5" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "007")
+assert_value_equal "test12r_leading_zeros" "7" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "-00.5")
+assert_value_equal "test12s_leading_zeros_decimal" "-0.5" "$output"
+
+output=$(ViashRenderJsonUnquotedValue "value" "000")
+assert_value_equal "test12t_zeros" "0" "$output"
+
+# TEST12u: Invalid - sign only
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" "+" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12u_exit_code" 1 "$exit_code"
+assert_contains "test12u_stderr" "has to be a number" "$stderr"
+
+# TEST12v: Invalid - exponent without digits before it
+set +e
+stderr=$(ViashRenderJsonUnquotedValue "value" ".e5" 2>&1 >/dev/null)
+exit_code=$?
+set -e
+assert_exit_code "test12v_exit_code" 1 "$exit_code"
+assert_contains "test12v_stderr" "has to be a number" "$stderr"
+
 print_test_summary

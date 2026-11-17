@@ -151,6 +151,24 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     testSingleParameter("real_number_multiple", multiTests, "double_multi")
   }
 
+  test("Check that numbers accepted by the type check reach the script as valid JSON numbers") {
+    // '+1', '.5', '1.' and leading zeros are not valid JSON numbers. Previously the value
+    // was silently dropped for single-value arguments, so only checking the exit code
+    // was not enough.
+    val cases = Seq("+1" -> "1", ".5" -> "0.5", "-.5" -> "-0.5", "1." -> "1.0", "007" -> "7")
+    for ((input, expected) <- cases) {
+      val out = Exec.runCatch(Seq(executable.toString, "--real_number", input, "--real_number_multiple", input))
+      assert(out.exitValue == 0, s"input '$input':\n${out.output}")
+      assert(!out.output.contains("has to be a number"), s"input '$input':\n${out.output}")
+      assert(out.output.contains(s"real_number: |$expected|"), s"input '$input':\n${out.output}")
+      assert(out.output.contains(s"real_number_multiple: |$expected|"), s"input '$input':\n${out.output}")
+    }
+
+    val ints = Exec.runCatch(Seq(executable.toString, "--whole_number", "+007"))
+    assert(ints.exitValue == 0, ints.output)
+    assert(ints.output.contains("whole_number: |7|"), ints.output)
+  }
+
   test("Check whether integer values are checked correctly") {
     // Decision was made to allow quite permissive syntax checking
     val checksPass = Seq("0", "1", "456")
