@@ -1,6 +1,12 @@
 # Viash 0.10.0 (yyyy-MM-dd): TODO Add title
 
+TODO add summary
+
 ## BUG FIXES
+
+* `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #XXX).
+  Inline text resources in different folders, e.g. `dest: a/notes.txt` and `dest: b/notes.txt`, now build correctly.
+  Different resources with the same destination now give a clear config error instead of overwriting each other. Identical resources, e.g. added twice through `__merge__`, are still allowed.
 
 * `ns test`: Fix only the first engine being tested for components with multiple engines and a remote dependency. The other engines failed to copy the dependency, yet the command still exited with code 0 (PR #937).
   The dependency checkouts are now removed once all engines have been tested. `ns test` now exits with a non-zero code when it aborts on an unexpected error.
