@@ -12,7 +12,7 @@ TODO add summary
   The dependency checkouts are now removed once all engines have been tested. `ns test` now exits with a non-zero code when it aborts on an unexpected error.
   A checkout that cannot be removed now logs a warning instead of failing an otherwise successful build or test.
 
-* `viash run`: Fix package bundles hanging for namespaced components (e.g. `vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics`), and run the bundle's prebuilt executable instead of rebuilding it, which failed for components with a script file (PR #XXX).
+* `viash run`: Fix package bundles hanging for namespaced components (e.g. `vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics`), and run the bundle's prebuilt executable instead of rebuilding it, which failed for components with a script file (PR #943).
 
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
 
