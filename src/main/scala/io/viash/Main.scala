@@ -230,14 +230,38 @@ object Main extends Logging {
     // process commands
     cli.subcommands match {
       case List(cli.run) =>
-        val config = readConfig(cli.run, packageConfig = pack1, allowPackageBundle = true)
-        ViashRun(
-          appliedConfig = config,
-          args = runArgs.toIndexedSeq.dropWhile(_ == "--"), 
-          keepFiles = cli.run.keep.toOption.map(_.toBoolean),
-          cpus = cli.run.cpus.toOption,
-          memory = cli.run.memory.toOption
-        )
+        cli.run.config() match {
+          case packageBundleRegex(package_, version, component) =>
+            // package bundles contain prebuilt executables, so options that require rebuilding can't be applied
+            if (cli.run.config_mods().nonEmpty) {
+              info("viash: --config_mods cannot be used when running a package bundle.")
+              throw new ExitException(1)
+            }
+            if (cli.run.runner.toOption.exists(_ != "executable")) {
+              info("viash: Only the 'executable' runner is supported when running a package bundle.")
+              throw new ExitException(1)
+            }
+            if (cli.run.keep.isSupplied)
+              info("Warning: --keep has no effect when running a package bundle.")
+            val configPath = fetchPackageBundle(package_, packageBundleVersion(version), component)
+            ViashRun.runPackageBundle(
+              configPath = configPath,
+              componentName = component.split("/").last,
+              args = runArgs.toIndexedSeq.dropWhile(_ == "--"),
+              engine = cli.run.engine.toOption,
+              cpus = cli.run.cpus.toOption,
+              memory = cli.run.memory.toOption
+            )
+          case _ =>
+            val config = readConfig(cli.run, packageConfig = pack1)
+            ViashRun(
+              appliedConfig = config,
+              args = runArgs.toIndexedSeq.dropWhile(_ == "--"),
+              keepFiles = cli.run.keep.toOption.map(_.toBoolean),
+              cpus = cli.run.cpus.toOption,
+              memory = cli.run.memory.toOption
+            )
+        }
       case List(cli.build) =>
         val config = readConfig(cli.build, packageConfig = pack1)
         val config2 = singleConfigDependencies(config, cli.build.output.toOption, pack1.rootDir)
@@ -446,6 +470,14 @@ object Main extends Logging {
     )
   }
 
+  // Matches 'vsh://<package>[@<version>]/[<namespace>/]<component>'.
+  // The version may not contain a '/', otherwise the namespace of the component would be
+  // absorbed into the version (e.g. 'vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics').
+  val packageBundleRegex = raw"vsh://(\w+)(@[A-Za-z0-9][\w\-\.]*)?/(.*)".r
+
+  private def packageBundleVersion(version: String): String =
+    if (version == null) "latest" else version.stripPrefix("@")
+
   def readConfig(
     subcommand: ViashCommand,
     packageConfig: PackageConfig,
@@ -453,13 +485,11 @@ object Main extends Logging {
     applyRunnerAndEngine: Boolean = true,
     allowPackageBundle: Boolean = false
   ): AppliedConfig = {
-    val packageBundleRegex = raw"vsh://(\w+)(@[A-Za-z0-9][\w\-\./]*)?/(.*)".r
     val configPath = subcommand.config() match {
-      case packageBundleRegex(package_, version, component) => 
+      case packageBundleRegex(package_, version, component) =>
         if allowPackageBundle then
-          val versionStr = if (version == null) "latest" else version.stripPrefix("@")
-          fetchPackageBundle(package_, versionStr, component)
-        else 
+          fetchPackageBundle(package_, packageBundleVersion(version), component).toString
+        else
           throw new IllegalArgumentException("Error: Package bundles are not allowed in this context.")
       case str => str
     }
@@ -673,10 +703,12 @@ object Main extends Logging {
     * @param component component name
     * @return the path to the config file matched 
     */
-  def fetchPackageBundle(`package`: String, version: String, component: String): String = {
+  def fetchPackageBundle(`package`: String, version: String, component: String): Path = {
     debug(s"Fetching package bundle: ${`package`}/$version/$component")
 
-    val cacheIdentifier = s"${`package`}-$version-$component-executable"
+    // namespaced components contain a '/', which must not end up in a file name.
+    // Viash Hub uses '_' as separator in the bundle's top-level directory as well.
+    val cacheIdentifier = s"${`package`}-$version-${component.replace("/", "_")}-executable"
     debug(s"Cache identifier: $cacheIdentifier")
     val path = Paths.get(SysEnv.viashHome).resolve("package-bundle-cache")
     val tarballPath = path.resolve(s"$cacheIdentifier.tar.gz")
@@ -719,8 +751,13 @@ object Main extends Logging {
       val etag = headersScala.get("etag").flatMap(_.asScala.headOption)
       debug(s"ETag: $etag")
 
-      // save tarball
-      (url #> tarballPath.toFile()).!!
+      // save tarball, reusing the already open connection so its timeouts apply
+      val in = connection.getInputStream()
+      try {
+        Files.copy(in, tarballPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+      } finally {
+        in.close()
+      }
 
       // save etag
       if (etag.isDefined) {
@@ -744,7 +781,7 @@ object Main extends Logging {
     debug(s"Config file: $config")
 
     config match {
-      case Some(c) => c._1
+      case Some(c) => Paths.get(c._1)
       case None => throw new RuntimeException("Error: Could not find config file in package bundle")
     }
   }
