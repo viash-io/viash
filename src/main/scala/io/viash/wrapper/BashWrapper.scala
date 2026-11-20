@@ -556,57 +556,63 @@ object BashWrapper {
           |  fi
           |""".stripMargin
 
-      def minCheckDouble(min: Double) = 
+      // Double.toString gives e.g. "1.0E8", which bc misreads as 1.098.
+      def plainDouble(d: Double): String =
+        BigDecimal(d).bigDecimal.stripTrailingZeros.toPlainString
+      // bc supports neither a leading '+' nor exponent notation ('1e-3' is a syntax
+      // error, '1E-3' is silently misread as 16), so '+1.5e-3' becomes '1.5*10^-3'.
+      val bcValue =
+        s"""    viash_bc_val=$$${param.VIASH_PAR}
+          |    viash_bc_val="$${viash_bc_val#+}"
+          |    if [[ "$$viash_bc_val" == *[eE]* ]]; then
+          |      viash_bc_exp="$${viash_bc_val#*[eE]}"
+          |      viash_bc_val="$${viash_bc_val%%[eE]*}*10^$${viash_bc_exp#+}"
+          |    fi
+          |""".stripMargin
+      // bc: 'scale' sets the digits kept after the decimal point. The default of 0
+      // turns 10^-n into 0; doubles go down to about 1e-324, so 1000 is enough.
+      // awk: '+0' forces a numeric comparison, in case an awk treats a value like
+      // '+1' or '1e0' as a string ("10" < "9").
+      def checkDouble(bound: Double, op: String, word: String, kind: String) = {
+        val b = plainDouble(bound)
         s"""  if command -v bc &> /dev/null; then
-          |    if ! [[ `echo $$${param.VIASH_PAR} '>=' $min | bc` -eq 1 ]]; then
-          |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |$bcValue    if ! [[ `echo "scale=1000; $$viash_bc_val $op $b" | bc` -eq 1 ]]; then
+          |      ViashError '${param.name}' has to be $word than or equal to $b. Use "--help" to get more information on the parameters.
           |      exit 1
           |    fi
           |  elif command -v awk &> /dev/null; then
-          |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$min 'BEGIN { print (n1 >= n2) ? "1" : "0" }'` -eq 1 ]]; then
-          |      ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$b 'BEGIN { print (n1+0 $op n2+0) ? "1" : "0" }'` -eq 1 ]]; then
+          |      ViashError '${param.name}' has to be $word than or equal to $b. Use "--help" to get more information on the parameters.
           |      exit 1
           |    fi
           |  else
-          |    ViashWarning '${param.name}' specifies a minimum value but the value was not verified as neither \\'bc\\' or \\`awk\\` are present on the system.
+          |    ViashWarning '${param.name}' specifies a $kind value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
           |  fi
           |""".stripMargin
-      def maxCheckDouble(max: Double) = 
-        s"""  if command -v bc &> /dev/null; then
-          |    if ! [[ `echo $$${param.VIASH_PAR} '<=' $max | bc` -eq 1 ]]; then
-          |      ViashError '${param.name}' has to be less than or equal to $max. Use "--help" to get more information on the parameters.
-          |      exit 1
-          |    fi
-          |  elif command -v awk &> /dev/null; then
-          |    if ! [[ `awk -v n1=$$${param.VIASH_PAR} -v n2=$max 'BEGIN { print (n1 <= n2) ? "1" : "0" }'` -eq 1 ]]; then
-          |      ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
-          |      exit 1
-          |    fi
-          |  else
-          |    ViashWarning '${param.name}' specifies a maximum value but the value was not verified as neither \\'bc\\' or \\'awk\\' are present on the system.
-          |  fi
-          |""".stripMargin
+      }
+      def minCheckDouble(min: Double) = checkDouble(min, ">=", "more", "minimum")
+      def maxCheckDouble(max: Double) = checkDouble(max, "<=", "less", "maximum")
       def minCheckInt(min: Int) = 
         s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
-          |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |    ViashError '${param.name}' has to be more than or equal to $min. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
       def maxCheckInt(max: Int) = 
         s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
-          |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |    ViashError '${param.name}' has to be less than or equal to $max. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
       def minCheckLong(min: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -lt $min ]]; then
-          |    ViashError '${param.name}' has be more than or equal to $min. Use "--help" to get more information on the parameters.
+          |    ViashError '${param.name}' has to be more than or equal to $min. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin
       def maxCheckLong(max: Long) = 
         s"""  if [[ $$${param.VIASH_PAR} -gt $max ]]; then
-          |    ViashError '${param.name}' has be less than or equal to $max. Use "--help" to get more information on the parameters.
+          |    ViashError '${param.name}' has to be less than or equal to $max. Use "--help" to get more information on the parameters.
           |    exit 1
           |  fi
           |""".stripMargin

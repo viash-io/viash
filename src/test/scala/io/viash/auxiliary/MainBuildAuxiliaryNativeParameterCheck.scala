@@ -57,7 +57,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     (passSingles, failSingles, passCombined, failCombined++failMixCombined)
   }
 
-  def testSingleParameter(parameterName: String, valuesAndExpectedResults: Seq[(String, Int)], testName: String) = {
+  def testSingleParameter(parameterName: String, valuesAndExpectedResults: Seq[(String, Int)], testName: String, exec: java.io.File = executable) = {
     val values = valuesAndExpectedResults.map(_._1)
     val inputFile = Paths.get(tempFolStr, testName + "_input.txt")
     val outputFile = Paths.get(tempFolStr, testName + "_output.txt")
@@ -66,7 +66,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     val out = Exec.runCatch(
       Seq(
         loopExecutable.toString,
-        "--exec_path", executable.toString,
+        "--exec_path", exec.toString,
         "--input", inputFile.toString,
         "--output", outputFile.toString,
         "--parameter", parameterName
@@ -149,6 +149,24 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
 
     testSingleParameter("real_number", singleTests, "double_single")
     testSingleParameter("real_number_multiple", multiTests, "double_multi")
+  }
+
+  test("Check that numbers accepted by the type check reach the script as valid JSON numbers") {
+    // '+1', '.5', '1.' and leading zeros are not valid JSON numbers. Previously the value
+    // was silently dropped for single-value arguments, so only checking the exit code
+    // was not enough.
+    val cases = Seq("+1" -> "1", ".5" -> "0.5", "-.5" -> "-0.5", "1." -> "1.0", "007" -> "7")
+    for ((input, expected) <- cases) {
+      val out = Exec.runCatch(Seq(executable.toString, "--real_number", input, "--real_number_multiple", input))
+      assert(out.exitValue == 0, s"input '$input':\n${out.output}")
+      assert(!out.output.contains("has to be a number"), s"input '$input':\n${out.output}")
+      assert(out.output.contains(s"real_number: |$expected|"), s"input '$input':\n${out.output}")
+      assert(out.output.contains(s"real_number_multiple: |$expected|"), s"input '$input':\n${out.output}")
+    }
+
+    val ints = Exec.runCatch(Seq(executable.toString, "--whole_number", "+007"))
+    assert(ints.exitValue == 0, ints.output)
+    assert(ints.output.contains("whole_number: |7|"), ints.output)
   }
 
   test("Check whether integer values are checked correctly") {
@@ -300,13 +318,14 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     assert(!outOfRange.output.contains("syntax error"), outOfRange.output)
   }
 
-  test("Check whether double values with min and/or max specified are checked correctly") {
+  def checkDoubleMinMax(exec: java.io.File, suffix: String): Unit = {
     // min -3.2
     // max 5.7
     // traditionally bad arguments should already be checked elsewhere, so do less of them here
-    val checkMin = Seq("-10", "-4", "-3.3")
-    val checkMax = Seq("5.8", "6", "10")
-    val checksPass = Seq("-3.2", "0", "2", "5.7")
+    // values with a leading '+' or in exponent notation must be compared numerically as well (#936)
+    val checkMin = Seq("-10", "-4", "-3.3", "-3.3e0", "-1E1")
+    val checkMax = Seq("5.8", "6", "10", "5.8e0", "1E1", "+5.8", "+1e1")
+    val checksPass = Seq("-3.2", "0", "2", "5.7", "2e0", "5.7E0", "-32e-1", "2e-3", "+2", "+5.7", "+.5", "+1.e0")
     val checksFail = Seq("1+", "1-", "foo")
     val signs = Seq("")
 
@@ -316,8 +335,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
       val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
       val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      testSingleParameter("real_number_min", singleTests, "real_number_min_single")
-      testSingleParameter("real_number_min_multiple", multiTests, "real_number_min_multi")
+      testSingleParameter("real_number_min", singleTests, s"real_number_min_single$suffix", exec)
+      testSingleParameter("real_number_min_multiple", multiTests, s"real_number_min_multi$suffix", exec)
     }
 
     {
@@ -326,8 +345,8 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
       val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
       val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      testSingleParameter("real_number_max", singleTests, "real_number_max_single")
-      testSingleParameter("real_number_max_multiple", multiTests, "real_number_max_multi")
+      testSingleParameter("real_number_max", singleTests, s"real_number_max_single$suffix", exec)
+      testSingleParameter("real_number_max_multiple", multiTests, s"real_number_max_multi$suffix", exec)
     }
 
     {
@@ -336,10 +355,35 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
       val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
       val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
 
-      testSingleParameter("real_number_min_max", singleTests, "real_number_min_max_single")
-      testSingleParameter("real_number_min_max_multiple", multiTests, "real_number_min_max_multi")
+      testSingleParameter("real_number_min_max", singleTests, s"real_number_min_max_single$suffix", exec)
+      testSingleParameter("real_number_min_max_multiple", multiTests, s"real_number_min_max_multi$suffix", exec)
     }
 
+    // bounds that Double.toString writes in exponent notation (1.0E-7, 1.0E8) (#936)
+    {
+      val wideIn = Seq("0.0000001", "1e-7", "50", "5E1", "1e0", "100000000", "1e8", "+1e-7", "+1E+8")
+      val wideOut = Seq("0.00000001", "1e-8", "-5", "0", "100000001", "1.00001e8", "1e9", "+1e-8", "+1e+9")
+      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, wideIn, signs, checksFail ++ wideOut)
+
+      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
+      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
+
+      testSingleParameter("real_number_wide", singleTests, s"real_number_wide_single$suffix", exec)
+      testSingleParameter("real_number_wide_multiple", multiTests, s"real_number_wide_multi$suffix", exec)
+    }
+
+    // error messages show the bound as written, not in exponent notation
+    val tooLow = Exec.runCatch(Seq(exec.toString, "--real_number_wide", "1e-8"))
+    assert(tooLow.exitValue == 1)
+    assert(tooLow.output.contains("has to be more than or equal to 0.0000001"), tooLow.output)
+    val tooHigh = Exec.runCatch(Seq(exec.toString, "--real_number_wide", "1e9"))
+    assert(tooHigh.exitValue == 1)
+    assert(tooHigh.output.contains("has to be less than or equal to 100000000"), tooHigh.output)
+    assert(!tooHigh.output.contains("syntax error"), tooHigh.output)
+  }
+
+  test("Check whether double values with min and/or max specified are checked correctly") {
+    checkDoubleMinMax(executable, "")
   }
 
   test("Check whether double values with min and/or max specified are checked correctly using the awk fallback") {
@@ -349,46 +393,7 @@ class MainBuildAuxiliaryNativeParameterCheck extends AnyFunSuite with BeforeAndA
     Exec.run(
       Seq("sed", "-i'.original'", "s/command -v bc/command -v bcfoo/g", executableAwk.toString)
     )
-
-    // min -3.2
-    // max 5.7
-    // traditionally bad arguments should already be checked elsewhere, so do less of them here
-    val checkMin = Seq("-10", "-4", "-3.3")
-    val checkMax = Seq("5.8", "6", "10")
-    val checksPass = Seq("-3.2", "0", "2", "5.7")
-    val checksFail = Seq("1+", "1-", "foo")
-    val signs = Seq("")
-
-    {
-      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMax, signs, checksFail ++ checkMin)
-
-      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
-      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
-
-      testSingleParameter("real_number_min", singleTests, "real_number_min_single_awk")
-      testSingleParameter("real_number_min_multiple", multiTests, "real_number_min_multi_awk")
-    }
-
-    {
-      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass ++ checkMin, signs, checksFail ++ checkMax)
-
-      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
-      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
-
-      testSingleParameter("real_number_max", singleTests, "real_number_max_single_awk")
-      testSingleParameter("real_number_max_multiple", multiTests, "real_number_max_multi_awk")
-    }
-
-    {
-      val (passSingle, failSingle, passMulti, failMulti) = generatePassAndFail(signs, checksPass, signs, checksFail ++ checkMin ++ checkMax)
-
-      val singleTests = passSingle.map((_, 0)) ++ failSingle.map((_, 1))
-      val multiTests = passMulti.map((_, 0)) ++ failMulti.map((_, 1))
-
-      testSingleParameter("real_number_min_max", singleTests, "real_number_min_max_single_awk")
-      testSingleParameter("real_number_min_max_multiple", multiTests, "real_number_min_max_multi_awk")
-    }
-
+    checkDoubleMinMax(executableAwk, "_awk")
   }
 
   test("Check whether long values with min and/or max specified are checked correctly") {

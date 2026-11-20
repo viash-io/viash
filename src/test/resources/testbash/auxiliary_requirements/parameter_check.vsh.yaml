@@ -146,6 +146,15 @@ arguments:
     min: -3.2
     max: 5.7
     multiple: true
+  - name: "--real_number_wide"
+    type: double
+    min: 0.0000001
+    max: 100000000
+  - name: "--real_number_wide_multiple"
+    type: double
+    min: 0.0000001
+    max: 100000000
+    multiple: true
   - name: "--long_number_min_multiple"
     type: long
     min: -3000000000
