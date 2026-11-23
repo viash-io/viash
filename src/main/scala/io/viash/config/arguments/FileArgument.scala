@@ -86,7 +86,11 @@ case class FileArgument(
   @default("Empty")
   example: OneOrMore[Path] = Nil,
 
-  @description("The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.")
+  @description(
+    """The default value when no argument value is provided. This will not work if the [`required`](#required) property is enabled.
+      |
+      |In the Nextflow runner, an output file without a `default` still gets a generated path such as `$id.$key.output.txt`,
+      |unless both [`must_exist`](#must_exist) and [`required`](#required) are `false`.""")
   @example(
     """- name: --my_file
       |  type: file
@@ -98,7 +102,10 @@ case class FileArgument(
 
   @description(
     """Checks whether the file or folder exists. For input files, this check will happen
-      |before the execution of the script, while for output files the check will happen afterwards.""")
+      |before the execution of the script, while for output files the check will happen afterwards.
+      |
+      |In the Nextflow runner, an output file without a [`default`](#default) gets a generated default path (e.g. `$id.$key.output.txt`).
+      |This does not happen when both `must_exist` and [`required`](#required) are `false`: such an output is only passed to the script when a value is provided.""")
   @example(
     """- name: --my_file
       |  type: file
@@ -119,7 +126,11 @@ case class FileArgument(
   @default("True")
   create_parent: Boolean = true,
 
-  @description("Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.")
+  @description(
+    """Make the value for this argument required. If set to `true`, an error will be produced if no value was provided. `false` by default.
+      |
+      |In the Nextflow runner, an output file without a [`default`](#default) gets a generated default path (e.g. `$id.$key.output.txt`).
+      |This does not happen when both [`must_exist`](#must_exist) and `required` are `false`: such an output is only passed to the script when a value is provided.""")
   @example(
     """- name: --my_file
       |  type: file
