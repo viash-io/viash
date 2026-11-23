@@ -15,7 +15,7 @@ TODO add summary
 * `executable` runner: Fix the `min`/`max` check of `double` arguments rejecting values like `+1` and `1e0`, and using the wrong bound for very small or large limits such as `100000000` (PR #940).
   Also fix the "has be" typo in `min`/`max` error messages, and numbers like `+1`, `.5` and `007` not reaching the script.
 
-* `Nextflow` runner: Fix optional output files with `must_exist: false` and `required: false` always getting a default path such as `$id.$key.output.txt`, so the script always received a value for them (PR #XXX).
+* `Nextflow` runner: Fix optional output files with `must_exist: false` and `required: false` always getting a default path such as `$id.$key.output.txt`, so the script always received a value for them (PR #945).
   Such outputs are now only passed to the script when a value is given.
 
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
