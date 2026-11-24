@@ -305,7 +305,7 @@ object Main extends Logging {
           dryRun = cli.namespace.test.dryRun.toOption,
           deterministicWorkingDirectory = cli.namespace.test.deterministicWorkingDirectory.toOption,
         )
-        val errors = testResults.map(_._1).flatMap(_.status).count(_.isError)
+        val errors = ViashNamespace.testStatuses(testResults).count(_.isError)
         if (errors > 0) 1 else 0
       case List(cli.namespace, cli.namespace.list) =>
         if (cli.namespace.list.parse_argument_groups()) {
