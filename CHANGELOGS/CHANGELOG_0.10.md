@@ -12,7 +12,7 @@ TODO add summary
   The dependency checkouts are now removed once all engines have been tested. `ns test` now exits with a non-zero code when it aborts on an unexpected error.
   A checkout that cannot be removed now logs a warning instead of failing an otherwise successful build or test.
 
-* `ns test`: Fix the command exiting with code 0 when a test failed or a Docker image failed to build (PR #XXX).
+* `ns test`: Fix the command exiting with code 0 when a test failed or a Docker image failed to build (PR #946).
   It now exits with code 1 if any test or build fails. Components without tests still exit with code 0.
 
 * `executable` runner: Fix the `min`/`max` check of `double` arguments rejecting values like `+1` and `1e0`, and using the wrong bound for very small or large limits such as `100000000` (PR #940).
