@@ -279,9 +279,9 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |\"\"\"
   |script:$assertStr
   |// Construct meta map
-  |// start from all meta keys (see BashWrapper.metaArgs) so that unset values end up as null
+  |// start from the meta keys that may not be set (see BashWrapper.metaArgs) so that they end up as null
   |def viashMeta = [
-  |  "name", "resources_dir", "executable", "config", "temp_dir", "cpus",
+  |  "executable", "cpus",
   |  "memory_b", "memory_kb", "memory_mb", "memory_gb", "memory_tb", "memory_pb",
   |  "memory_kib", "memory_mib", "memory_gib", "memory_tib", "memory_pib"
   |].collectEntries{ [it, null] } + [
