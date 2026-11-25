@@ -269,20 +269,7 @@ object ViashNamespace extends Logging {
 
       }.toList
 
-      val testResults = results.flatMap{ case (ac, ManyTestOutput(setup, tests)) =>
-        val acStatus = ac.status.toList
-        val testStatus =
-          if (setup.isDefined && setup.get.exitValue > 0) {
-            List.empty[Status]
-          } else if (tests.isEmpty) {
-            List(TestMissing)
-          } else {
-            tests.map(to => if (to.exitValue == 0) Success else TestError)
-          }
-        val setupStatus: List[Status] = setup.toList.map(to => if (to.exitValue == 0) Success else BuildError)
-        acStatus ::: setupStatus ::: testStatus
-        }
-      printResults(testResults, true, true)
+      printResults(testStatuses(results), true, true)
 
       results
     } catch {
@@ -307,8 +294,28 @@ object ViashNamespace extends Logging {
     }
   }
 
+  /**
+    * Convert the results of `test` into a list of statuses: the status of each config
+    * (e.g. a parse error), followed by the status of its setup and of each of its tests.
+    */
+  def testStatuses(results: List[(AppliedConfig, ManyTestOutput)]): List[Status] = {
+    results.flatMap{ case (ac, ManyTestOutput(setup, tests)) =>
+      val acStatus = ac.status.toList
+      val testStatus =
+        if (setup.isDefined && setup.get.exitValue > 0) {
+          List.empty[Status]
+        } else if (tests.isEmpty) {
+          List(TestMissing)
+        } else {
+          tests.map(to => if (to.exitValue == 0) Success else TestError)
+        }
+      val setupStatus: List[Status] = setup.toList.map(to => if (to.exitValue == 0) Success else BuildError)
+      acStatus ::: setupStatus ::: testStatus
+    }
+  }
+
   def list(
-    configs: List[AppliedConfig], 
+    configs: List[AppliedConfig],
     format: String = "yaml"
   ): Unit = {
     val configs2 = configs.filter(_.status.isEmpty).map(_.config)
