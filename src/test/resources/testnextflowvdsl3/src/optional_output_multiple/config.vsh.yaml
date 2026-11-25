@@ -1,0 +1,27 @@
+name: optional_output_multiple
+description: |
+  Component with an optional multiple output file that does not need to exist.
+  Such an output should not receive a fallback default value, so the
+  script should only see it when it was explicitly passed.
+arguments:
+  - name: "--output"
+    type: file
+    required: true
+    direction: output
+    example: output.txt
+  - name: "--optional_outputs"
+    type: file
+    required: false
+    must_exist: false
+    direction: output
+    multiple: true
+    example: optional_*.txt
+resources:
+  - type: bash_script
+    path: script.sh
+engines:
+  - type: native
+  - type: docker
+    image: nextflow/bash:latest
+runners:
+  - type: nextflow

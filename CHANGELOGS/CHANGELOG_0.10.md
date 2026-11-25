@@ -15,6 +15,11 @@ TODO add summary
 * `executable` runner: Fix the `min`/`max` check of `double` arguments rejecting values like `+1` and `1e0`, and using the wrong bound for very small or large limits such as `100000000` (PR #940).
   Also fix the "has be" typo in `min`/`max` error messages, and numbers like `+1`, `.5` and `007` not reaching the script.
 
+* `Nextflow` runner: Fix optional output files with `must_exist: false` and `required: false` always getting a default path such as `$id.$key.output.txt`, so the script always received a value for them (PR #945).
+  Such outputs are now only passed to the script when a value is given.
+
+* `viash run`: Fix package bundles hanging for namespaced components (e.g. `vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics`), and run the bundle's prebuilt executable instead of rebuilding it, which failed for components with a script file (PR #943).
+
 * `Nextflow` runner: Fix unset optional arguments and unset `meta` values (e.g. `meta["memory_gb"]` when no memory is set) being left out of `par` and `meta` (PR #944).
   They are now passed as `null` (e.g. `None` in Python), as in the `executable` runner and in Viash 0.9, so scripts that do `par["arg"]` or `meta["memory_gb"]` no longer fail with a `KeyError`.
 

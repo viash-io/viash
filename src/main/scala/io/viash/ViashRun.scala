@@ -17,7 +17,7 @@
 
 package io.viash
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 
 import io.viash.config._
 import io.viash.config.arguments.{FileArgument, Output}
@@ -52,22 +52,13 @@ object ViashRun extends Logging {
       // write executable and resources to temporary directory
       IO.writeResources(configYaml :: resources.resources, dir)
 
-      // determine command
-      val cmd =
-        Array(Paths.get(dir.toString, appliedConfig.config.name).toString) ++ 
-        args ++ 
-        Array(cpus.map("---cpus=" + _), memory.map("---memory="+_)).flatMap(a => a)
-
-      if (args.contains("---debug")) {
-        // ---debug drops into an interactive `docker run -it bash` session (see
-        // ExecutableRunner). That needs stdin/stdout/stderr to all be the real
-        // terminal: relaying/buffering them line by line, as the regular case
-        // below does, breaks raw keystroke input and prompt/cursor redrawing.
-        code = new ProcessBuilder(cmd*).inheritIO().start().waitFor()
-      } else {
-        // execute command, print everything to console
-        code = Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
-      }
+      code = execute(
+        executable = Paths.get(dir.toString, appliedConfig.config.name),
+        args = args,
+        engine = None,
+        cpus = cpus,
+        memory = memory
+      )
 
       code
     } finally {
@@ -77,6 +68,55 @@ object ViashRun extends Logging {
       } else {
         infoOut(s"Files and logs are stored at '$dir'")
       }
+    }
+  }
+
+  /**
+    * Run the prebuilt executable of a package bundle fetched from Viash Hub.
+    *
+    * A package bundle only contains build output, in which the main script has been
+    * inlined into the executable. Its config can therefore not be rebuilt, so the
+    * executable is run as-is.
+    *
+    * @param configPath Path to the `.config.vsh.yaml` of the component inside the bundle
+    * @param componentName Name of the component, which is also the name of the executable
+    */
+  def runPackageBundle(
+    configPath: Path,
+    componentName: String,
+    args: Seq[String],
+    engine: Option[String],
+    cpus: Option[Int],
+    memory: Option[String]
+  ): Int = {
+    val executable = configPath.getParent().resolve(componentName)
+    if (!Files.isRegularFile(executable)) {
+      throw new RuntimeException(s"Error: Could not find executable '$executable' in package bundle")
+    }
+    execute(executable, args, engine, cpus, memory)
+  }
+
+  private def execute(
+    executable: Path,
+    args: Seq[String],
+    engine: Option[String],
+    cpus: Option[Int],
+    memory: Option[String]
+  ): Int = {
+    val cmd =
+      Array(executable.toString) ++
+      args ++
+      Array(engine.map("---engine=" + _), cpus.map("---cpus=" + _), memory.map("---memory=" + _)).flatten
+
+    if (args.contains("---debug")) {
+      // ---debug drops into an interactive `docker run -it bash` session (see
+      // ExecutableRunner). That needs stdin/stdout/stderr to all be the real
+      // terminal: relaying/buffering them line by line, as the regular case
+      // below does, breaks raw keystroke input and prompt/cursor redrawing.
+      new ProcessBuilder(cmd*).inheritIO().start().waitFor()
+    } else {
+      // execute command, print everything to console
+      Process(cmd).!(ProcessLogger(s => infoOut(s), s => infoOut(s)))
     }
   }
 }
