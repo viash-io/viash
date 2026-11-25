@@ -6,10 +6,11 @@ TODO add summary
 
 * `ns build`, `build`, `test`, `ns test`: The `.build.yaml` file now contains the package config used for the build under `.package_config`, with `__merge__`s resolved and command line overrides such as `--src`, `--target` and `--config_mods` applied (PR #948).
   This file is written to the target folder for `ns build`, the output folder for `build`, and each component's temporary test folder for `test` and `ns test`.
+  Each `ns build` overwrites the file, so after a partial build (e.g. with `--query`) it reflects the settings of the most recent build, not necessarily those of every component in the target folder.
 
 ## BUG FIXES
 
-* `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #XXX).
+* `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #939).
   Inline text resources in different folders, e.g. `dest: a/notes.txt` and `dest: b/notes.txt`, now build correctly.
   Different resources with the same destination now give a clear config error instead of overwriting each other. Identical resources, e.g. added twice through `__merge__`, are still allowed.
 
