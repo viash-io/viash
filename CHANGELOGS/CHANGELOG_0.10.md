@@ -18,6 +18,8 @@ TODO add summary
 * `Nextflow` runner: Fix optional output files with `must_exist: false` and `required: false` always getting a default path such as `$id.$key.output.txt`, so the script always received a value for them (PR #945).
   Such outputs are now only passed to the script when a value is given.
 
+* `viash run`: Fix package bundles hanging for namespaced components (e.g. `vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics`), and run the bundle's prebuilt executable instead of rebuilding it, which failed for components with a script file (PR #943).
+
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
 
 This release changes how argument values reach your scripts. Viash no longer injects values directly into the script code. It now writes them to a JSON file that each language parses at runtime.
