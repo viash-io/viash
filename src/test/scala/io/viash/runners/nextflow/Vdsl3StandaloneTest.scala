@@ -304,6 +304,92 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Optional output with must_exist: false does not get a fallback default", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/optional_output/main.nf",
+      args = List(
+        "--publish_dir", "moduleOutputOptional1"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("moduleOutputOptional1/run.optional_output.output.txt")
+    assert(Files.exists(outputPath), s"Expected output file $outputPath to exist")
+    val moduleOut = Using.resource(Source.fromFile(outputPath.toFile))(_.getLines().mkString(","))
+    assert(moduleOut == "optional_output: unset", s"Expected the script not to receive a value for --optional_output, got '$moduleOut'")
+
+    val published = temporaryFolder.resolve("moduleOutputOptional1").toFile.listFiles().map(_.getName).toList
+    assert(!published.exists(_.contains("optional_output.optional")), s"Did not expect an optional output to be published, got: $published")
+  }
+
+  test("Optional output with must_exist: false is created when passed explicitly", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/optional_output/main.nf",
+      args = List(
+        "--optional_output", "$id.$key.optional_output.txt",
+        "--publish_dir", "moduleOutputOptional2"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("moduleOutputOptional2/run.optional_output.output.txt")
+    val moduleOut = Using.resource(Source.fromFile(outputPath.toFile))(_.getLines().mkString(","))
+    assert(moduleOut == "optional_output: set", s"Expected the script to receive a value for --optional_output, got '$moduleOut'")
+
+    val optionalPath = temporaryFolder.resolve("moduleOutputOptional2/run.optional_output.optional_output.txt")
+    assert(Files.exists(optionalPath), s"Expected optional output file $optionalPath to exist")
+    val optionalOut = Using.resource(Source.fromFile(optionalPath.toFile))(_.getLines().mkString(","))
+    assert(optionalOut == "optional content")
+  }
+
+  test("Optional multiple output with must_exist: false does not get a fallback default", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/optional_output_multiple/main.nf",
+      args = List(
+        "--publish_dir", "moduleOutputOptionalMultiple1"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("moduleOutputOptionalMultiple1/run.optional_output_multiple.output.txt")
+    assert(Files.exists(outputPath), s"Expected output file $outputPath to exist")
+    val moduleOut = Using.resource(Source.fromFile(outputPath.toFile))(_.getLines().mkString(","))
+    assert(moduleOut == "optional_outputs: unset", s"Expected the script not to receive a value for --optional_outputs, got '$moduleOut'")
+
+    val published = temporaryFolder.resolve("moduleOutputOptionalMultiple1").toFile.listFiles().map(_.getName).toList
+    assert(!published.exists(_.contains("optional_outputs")), s"Did not expect optional outputs to be published, got: $published")
+  }
+
+  test("Optional multiple output with must_exist: false is created when passed explicitly", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/optional_output_multiple/main.nf",
+      args = List(
+        "--optional_outputs", "$id.$key.optional_outputs_*.txt",
+        "--publish_dir", "moduleOutputOptionalMultiple2"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("moduleOutputOptionalMultiple2/run.optional_output_multiple.output.txt")
+    val moduleOut = Using.resource(Source.fromFile(outputPath.toFile))(_.getLines().mkString(","))
+    assert(moduleOut == "optional_outputs: set", s"Expected the script to receive a value for --optional_outputs, got '$moduleOut'")
+
+    for (i <- 0 to 1) {
+      val optionalPath = temporaryFolder.resolve(s"moduleOutputOptionalMultiple2/run.optional_output_multiple.optional_outputs_$i.txt")
+      assert(Files.exists(optionalPath), s"Expected optional output file $optionalPath to exist")
+      val optionalOut = Using.resource(Source.fromFile(optionalPath.toFile))(_.getLines().mkString(","))
+      assert(optionalOut == s"optional content $i")
+    }
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }
