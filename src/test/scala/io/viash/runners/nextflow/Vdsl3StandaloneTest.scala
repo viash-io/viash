@@ -390,6 +390,36 @@ class Vdsl3StandaloneTest extends AnyFunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Unset optional arguments are passed as null", NextflowTest) {
+    val (exitCode, stdOut, stdErr) = NextflowTestHelper.run(
+      mainScript = "target/nextflow/unset_optional_args/main.nf",
+      args = List(
+        "--id", "foo",
+        "--given", "x",
+        "--publish_dir", "unsetOptionalArgs"
+      ),
+      cwd = tempFolFile
+    )
+
+    assert(exitCode == 0, s"\nexit code was $exitCode\nStd output:\n$stdOut\nStd error:\n$stdErr")
+
+    val outputPath = temporaryFolder.resolve("unsetOptionalArgs/foo.unset_optional_args.output")
+    val json = io.circe.parser.parse(Files.readString(outputPath)).fold(throw _, identity)
+    val par = json.hcursor.downField("par").focus.flatMap(_.asObject).get
+
+    assert(par("given").flatMap(_.asString) == Some("x"))
+    assert(par("with_default").flatMap(_.asString) == Some("foo"))
+    assert(par("optional_unset").exists(_.isNull), s"optional_unset should be null, got: $par")
+    assert(par("optional_file").exists(_.isNull), s"optional_file should be null, got: $par")
+
+    // meta values that are not set (e.g. no memory directive) should also be present as null
+    val meta = json.hcursor.downField("meta").focus.flatMap(_.asObject).get
+    assert(meta("name").flatMap(_.asString) == Some("unset_optional_args"))
+    for (key <- List("executable", "memory_b", "memory_gb", "memory_pib")) {
+      assert(meta(key).exists(_.isNull), s"meta $key should be null, got: $meta")
+    }
+  }
+
   override def afterAll(): Unit = {
     IO.deleteRecursively(temporaryFolder)
   }

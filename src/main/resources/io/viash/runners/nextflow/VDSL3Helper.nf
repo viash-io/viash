@@ -220,6 +220,12 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
       "\n  |if (!${varName}.empty) { viashPar[\"${par.plainName}\"] = ${varName} instanceof List ? ${varName}.collect{it.toString()} : ${varName}.toString() }"
     }
 
+  // all argument names, so that unset arguments end up as null in par
+  // (consistent with the executable runner)
+  def allParNames = meta.config.allArguments
+    .collect { par -> "\"${par.plainName}\"" }
+    .join(", ")
+
   // NOTE: if using docker, use /tmp instead of tmpDir!
   def tmpDir = java.nio.file.Paths.get(
     System.getenv('NXF_TEMP') ?: 
@@ -273,7 +279,12 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |\"\"\"
   |script:$assertStr
   |// Construct meta map
+  |// start from the meta keys that may not be set (see BashWrapper.metaArgs) so that they end up as null
   |def viashMeta = [
+  |  "executable", "cpus",
+  |  "memory_b", "memory_kb", "memory_mb", "memory_gb", "memory_tb", "memory_pb",
+  |  "memory_kib", "memory_mib", "memory_gib", "memory_tib", "memory_pib"
+  |].collectEntries{ [it, null] } + [
   |  "resources_dir": "\${resourcesDir}",
   |  "temp_dir": "${['docker', 'podman', 'charliecloud'].any{ it == workflow.containerEngine } ? '/tmp' : tmpDir}",
   |  "name": "${meta.config.name}",
@@ -295,7 +306,7 @@ def _vdsl3ProcessFactory(Map workflowArgs, Map meta, String rawScript) {
   |  viashMeta["memory_pib"] = (long)((viashMeta["memory_tib"] + 1023) / 1024)
   |}
   |// Define args
-  |def viashPar = args + [:]${inputFileAdditions.join()}
+  |def viashPar = [${allParNames}].collectEntries{ [it, null] } + args${inputFileAdditions.join()}
   |
   |// Construct full params object
   |def viashParams = [

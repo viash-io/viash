@@ -23,6 +23,9 @@ TODO add summary
 
 * `viash run`: Fix package bundles hanging for namespaced components (e.g. `vsh://openpipeline@v4.2.0/qc/calculate_qc_metrics`), and run the bundle's prebuilt executable instead of rebuilding it, which failed for components with a script file (PR #943).
 
+* `Nextflow` runner: Fix unset optional arguments and unset `meta` values (e.g. `meta["memory_gb"]` when no memory is set) being left out of `par` and `meta` (PR #944).
+  They are now passed as `null` (e.g. `None` in Python), as in the `executable` runner and in Viash 0.9, so scripts that do `par["arg"]` or `meta["memory_gb"]` no longer fail with a `KeyError`.
+
 # Viash 0.10.0-RC1 (2026-11-02): JSON-based parameter passing and removal of deprecated functionality
 
 This release changes how argument values reach your scripts. Viash no longer injects values directly into the script code. It now writes them to a JSON file that each language parses at runtime.
