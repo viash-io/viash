@@ -4,7 +4,7 @@ TODO add summary
 
 ## NEW FUNCTIONALITY
 
-* `ns build`, `build`, `test`, `ns test`: The `.build.yaml` file now contains the package config used for the build under `.package_config`, with `__merge__`s resolved and command line overrides such as `--src`, `--target` and `--config_mods` applied (PR #XXX).
+* `ns build`, `build`, `test`, `ns test`: The `.build.yaml` file now contains the package config used for the build under `.package_config`, with `__merge__`s resolved and command line overrides such as `--src`, `--target` and `--config_mods` applied (PR #948).
   This file is written to the target folder for `ns build`, the output folder for `build`, and each component's temporary test folder for `test` and `ns test`.
 
 ## BUG FIXES
