@@ -56,6 +56,28 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
     assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
+  test("Check whether the .build.yaml contains the package config") {
+    val tempTarget = IO.makeTemp("viash_ns_build_build_yaml")
+    TestHelper.testMain(
+      "ns", "build",
+      "-s", nsPath,
+      "-t", tempTarget.toString,
+      "-c", ".version := '1.2.3'"
+    )
+
+    val buildYaml = tempTarget.resolve(".build.yaml")
+    assert(buildYaml.toFile.exists)
+
+    val json = io.viash.helpers.circe.Convert.textToJson(IO.read(buildYaml.toUri), buildYaml.toString)
+    val packageConfig = json.hcursor.downField("package_config")
+    // no _viash.yaml, so absolute paths are anonymized
+    assert(packageConfig.downField("source").as[String] == Right("[anonymized]/testns"))
+    assert(packageConfig.downField("target").as[String] == Right(s"[anonymized]/${tempTarget.getFileName}"))
+    assert(packageConfig.downField("config_mods").as[List[String]] == Right(List(".version := '1.2.3'")))
+
+    IO.deleteRecursively(tempTarget)
+  }
+
   test("Check whether the executable can run") {
     for ((component, _, _, _) <- components) {
       Exec.run(

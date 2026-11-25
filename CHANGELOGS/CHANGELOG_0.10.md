@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## NEW FUNCTIONALITY
+
+* `ns build`: The `.build.yaml` file in the target folder now contains the package config used for the build under `.package_config`, with `__merge__`s resolved and command line overrides such as `--src`, `--target` and `--config_mods` applied (PR #XXX).
+
 ## BUG FIXES
 
 * `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #XXX).

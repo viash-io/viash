@@ -34,6 +34,8 @@ import io.viash.exceptions.MissingDependencyException
 import io.viash.exceptions.MalformedInputException
 import io.viash.helpers.circe.Convert
 import io.viash.config.ScopeEnum
+import io.viash.config.ConfigMeta
+import io.viash.packageConfig.PackageConfig
 
 object DependencyResolver extends Logging {
 
@@ -269,12 +271,19 @@ object DependencyResolver extends Logging {
     }
   }
 
-  // Add the '.build.yaml' file as relative root marker. File content to be decided.
-  def createBuildYaml(output: String): Unit = {
+  // Add the '.build.yaml' file as relative root marker.
+  // If a package config is passed, (over)write the file with the built package config under `.package_config`.
+  // Otherwise, only create an empty file if none exists yet.
+  def createBuildYaml(output: String, packageConfig: Option[PackageConfig] = None): Unit = {
     Files.createDirectories(Paths.get(output))
     val filePath = Paths.get(output, ".build.yaml")
-    if (Files.notExists(filePath))
-      Files.createFile(filePath)
+    packageConfig match {
+      case Some(_) =>
+        Files.writeString(filePath, ConfigMeta.toBuildYamlString(packageConfig))
+      case None =>
+        if (Files.notExists(filePath))
+          Files.createFile(filePath)
+    }
   }
 
   // Handle dependencies of dependencies. For a given already built component, get their dependencies, copy them to our new target folder and recurse into these.
