@@ -584,7 +584,7 @@ object Main extends Logging {
   // Handle dependencies operations for a single config
   def singleConfigDependencies(appliedConfig: AppliedConfig, output: Option[String], rootDir: Option[Path]): AppliedConfig = {
     if (output.isDefined)
-      DependencyResolver.createBuildYaml(output.get)
+      DependencyResolver.createBuildYaml(output.get, appliedConfig.config.package_config)
 
     handleSingleConfigDependency(appliedConfig, output, rootDir)
   }
