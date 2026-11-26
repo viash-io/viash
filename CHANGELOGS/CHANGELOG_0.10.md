@@ -4,7 +4,7 @@ TODO add summary
 
 ## MINOR CHANGES
 
-* `bash_script` resource: The deprecation warning for an unset `use_jq` now includes an example config (PR #XXX).
+* `bash_script` resource: The deprecation warning for an unset `use_jq` now includes an example config (PR #949).
 
 ## BUG FIXES
 
