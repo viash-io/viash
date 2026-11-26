@@ -56,7 +56,12 @@ object Bash extends Language {
           "Currently defaulting to compatibility mode (built-in parser, separator-delimited strings for multiple-value arguments). " +
           "In a future version of Viash, the default will change to 'use_jq: true', " +
           "which requires jq to be installed. " +
-          "Please set 'use_jq: true' or 'use_jq: false' explicitly in your bash_script resource to silence this warning."
+          "Please set 'use_jq: true' or 'use_jq: false' explicitly in your bash_script resource to silence this warning.\n" +
+          "Example:\n" +
+          "  resources:\n" +
+          "    - type: bash_script\n" +
+          "      path: script.sh\n" +
+          "      use_jq: true"
         )
         generateCompatInjectionMods(argsMetaAndDeps)
     }

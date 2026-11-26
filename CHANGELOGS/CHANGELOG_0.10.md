@@ -2,6 +2,10 @@
 
 TODO add summary
 
+## MINOR CHANGES
+
+* `bash_script` resource: The deprecation warning for an unset `use_jq` now includes an example config (PR #XXX).
+
 ## BUG FIXES
 
 * `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #XXX).
