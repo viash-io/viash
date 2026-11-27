@@ -88,7 +88,7 @@ object ViashTest extends Logging {
     )
     if (!quiet) infoOut(s"Running tests in temporary directory: '$dir'")
 
-    DependencyResolver.createBuildYaml(dir.toString())
+    DependencyResolver.createBuildYaml(dir.toString(), appliedConfig.config.package_config)
 
     // set version to temporary value
     // Make dependencies available for the tests

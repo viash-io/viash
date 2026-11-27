@@ -56,6 +56,58 @@ class MainNSBuildNativeSuite extends AnyFunSuite with BeforeAndAfterAll{
     assert(regexBuildError.findFirstIn(testOutput.stderr).isDefined, "Expecting to get an error because of an invalid yaml in ns_error")
   }
 
+  test("Check whether the .build.yaml contains the package config") {
+    val tempTarget = IO.makeTemp("viash_ns_build_build_yaml")
+    TestHelper.testMain(
+      "ns", "build",
+      "-s", nsPath,
+      "-t", tempTarget.toString,
+      "-c", ".version := '1.2.3'"
+    )
+
+    val buildYaml = tempTarget.resolve(".build.yaml")
+    assert(buildYaml.toFile.exists)
+
+    val json = io.viash.helpers.circe.Convert.textToJson(IO.read(buildYaml.toUri), buildYaml.toString)
+    val packageConfig = json.hcursor.downField("package_config")
+    // no _viash.yaml, so absolute paths are anonymized
+    assert(packageConfig.downField("source").as[String] == Right("[anonymized]/testns"))
+    assert(packageConfig.downField("target").as[String] == Right(s"[anonymized]/${tempTarget.getFileName}"))
+    assert(packageConfig.downField("config_mods").as[List[String]] == Right(List(".version := '1.2.3'")))
+
+    IO.deleteRecursively(tempTarget)
+  }
+
+  test("Check whether the .build.yaml contains paths relative to the _viash.yaml") {
+    val tempPackage = IO.makeTemp("viash_ns_build_build_yaml_relative")
+    IO.copyFolder(nsPath, tempPackage.toString)
+    val buildTarget = tempPackage.resolve("build_target")
+
+    TestHelper.testMain(
+      Some(tempPackage),
+      "ns", "build",
+      "-s", tempPackage.resolve("src").toString,
+      "-t", buildTarget.toString,
+      "-c", ".version := '1.2.3'"
+    )
+
+    val buildYaml = buildTarget.resolve(".build.yaml")
+    assert(buildYaml.toFile.exists)
+
+    val json = io.viash.helpers.circe.Convert.textToJson(IO.read(buildYaml.toUri), buildYaml.toString)
+    val packageConfig = json.hcursor.downField("package_config")
+    // absolute paths inside the package are made relative to the directory of the _viash.yaml
+    assert(packageConfig.downField("source").as[String] == Right("src"))
+    assert(packageConfig.downField("target").as[String] == Right("build_target"))
+    // config mods from the _viash.yaml come first, followed by the ones passed on the command line
+    val configMods = packageConfig.downField("config_mods").as[List[String]]
+    assert(configMods.map(_.length) == Right(2))
+    assert(configMods.map(_.head.contains(".info := ")) == Right(true))
+    assert(configMods.map(_.last) == Right(".version := '1.2.3'"))
+
+    IO.deleteRecursively(tempPackage)
+  }
+
   test("Check whether the executable can run") {
     for ((component, _, _, _) <- components) {
       Exec.run(
