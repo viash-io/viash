@@ -528,7 +528,30 @@ final case class ExecutableRunner(
         |if [[ "$$VIASH_ENGINE_TYPE" == "docker" ]]; then
         |  # change file ownership
         |  function ViashPerformChown {
+        |    if [ "$${VIASH_DOCKER_CHOWN:-true}" == "false" ]; then
+        |      ViashDebug "Skipping chown of output files because VIASH_DOCKER_CHOWN is set to 'false'"
+        |      return
+        |    fi
         |    if (( $${#VIASH_CHOWN_VARS[@]} )); then
+        |      # Only chown when some output files are not owned by the current user.
+        |      # Rootless engines (e.g. rootless podman or Docker) map container root to the
+        |      # current user, so their output files are already owned correctly. Running
+        |      # chown there would map the host uid to a subordinate uid instead.
+        |      local viash_uid=$$(id -u)
+        |      local viash_gid=$$(id -g)
+        |      local viash_chown_needed=false
+        |      local viash_chown_var
+        |      for viash_chown_var in "$${VIASH_CHOWN_VARS[@]}"; do
+        |        # left unquoted so that patterns of 'multiple: true' outputs are expanded
+        |        if [ -n "$$(find $${viash_chown_var#$$VIASH_DOCKER_AUTOMOUNT_PREFIX} \\( ! -uid $$viash_uid -o ! -gid $$viash_gid \\) -print -quit 2> /dev/null)" ]; then
+        |          viash_chown_needed=true
+        |          break
+        |        fi
+        |      done
+        |      if [ "$$viash_chown_needed" == "false" ]; then
+        |        ViashDebug "Skipping chown of output files because they are already owned by the current user"
+        |        return
+        |      fi
         |      set +e
         |      VIASH_CHMOD_CMD="docker run --entrypoint=bash --rm $${VIASH_UNIQUE_MOUNTS[@]} $$VIASH_DOCKER_IMAGE_ID -c 'chown $$(id -u):$$(id -g) --silent --recursive $${VIASH_CHOWN_VARS[@]}'"
         |      ViashDebug "+ $$VIASH_CHMOD_CMD"

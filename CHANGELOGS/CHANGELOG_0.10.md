@@ -10,6 +10,10 @@ TODO add summary
 
 ## BUG FIXES
 
+* `docker`: Fix output files getting the wrong owner (e.g. uid `100999`) when using rootless podman or rootless Docker as the `docker` command (PR #XXX).
+  The output files are now only chowned when they are not already owned by the current user.
+  Set the `VIASH_DOCKER_CHOWN` environment variable to `false` to skip the chown step altogether.
+
 * `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #939).
   Inline text resources in different folders, e.g. `dest: a/notes.txt` and `dest: b/notes.txt`, now build correctly.
   Different resources with the same destination now give a clear config error instead of overwriting each other. Identical resources, e.g. added twice through `__merge__`, are still allowed.

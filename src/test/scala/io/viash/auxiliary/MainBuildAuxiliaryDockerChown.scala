@@ -35,23 +35,54 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
     """.resources[.type == "bash_script"].path := "docker_options/code_multiple_output.sh"""",
   )
 
-  def dockerChownGetOwner(mods: List[String], amount: Int, dockerId: String): List[String] = {
+  // rootless podman, used through a `docker` symlink on the PATH
+  private lazy val podmanShimDir: Option[String] = {
+    val rootless = Exec.runCatch(Seq("podman", "info", "--format", "{{.Host.Security.Rootless}}"))
+    if (rootless.exitValue == 0 && rootless.output.trim == "true") {
+      val podmanPath = Exec.run(Seq("sh", "-c", "command -v podman")).trim
+      val shimDir = temporaryFolder.resolve("podman_shim")
+      Files.createDirectories(shimDir)
+      Files.createSymbolicLink(shimDir.resolve("docker"), Paths.get(podmanPath))
+      Some(shimDir.toString)
+    } else {
+      None
+    }
+  }
+
+  private lazy val dockerIsRootless: Boolean =
+    Exec.runCatch(Seq("docker", "info", "--format", "{{.SecurityOptions}}")).output.contains("rootless")
+
+  def dockerChownGetOwner(
+    mods: List[String],
+    amount: Int,
+    dockerId: String,
+    extraEnv: Seq[(String, String)] = Nil,
+    usePodman: Boolean = false
+  ): List[String] = {
     assert(amount > 0)
     assert(amount < 4)
 
-    val engineMod = s""".engines := [{"type": "docker", "image": "bash:3.2", "id": "$dockerId", "setup": [{"type": "apk", "packages": ["jq"]}]}]"""
+    val engineMod = s""".engines := [{"type": "docker", "image": "docker.io/library/bash:3.2", "id": "$dockerId", "setup": [{"type": "apk", "packages": ["jq"]}]}]"""
     val modsWithEngine = mods :+ engineMod
     val localConfigFile = configDeriver.derive(modsWithEngine, dockerId)
     val localConfig = Config.read(localConfigFile)
     val localExecutable = Paths.get(tempFolStr, localConfig.name).toFile
 
+    // the executable builds the image itself when running with podman
+    val setupArgs = if (usePodman) Nil else Seq("--setup", "build")
+    val runEnv = if (usePodman) {
+      extraEnv :+ ("PATH" -> s"${podmanShimDir.get}:${sys.env("PATH")}")
+    } else {
+      extraEnv
+    }
+
     // prepare the environment
     TestHelper.testMain(
-      "build",
-      "--engine", dockerId,
-      "-o", tempFolStr,
-      "--setup", "build",
-      localConfigFile
+      Seq(
+        "build",
+        "--engine", dockerId,
+        "-o", tempFolStr
+      ) ++ setupArgs ++ Seq(localConfigFile)*
     )
 
     assert(localExecutable.exists)
@@ -73,7 +104,8 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
         "--real_number", "10.5",
         "--whole_number=10",
         "-s", "a string with a few spaces",
-      ) ++ outputParams
+      ) ++ outputParams,
+      extraEnv = runEnv
     )
 
     // find files based on the pattern
@@ -109,6 +141,26 @@ class MainBuildAuxiliaryDockerChown extends AnyFunSuite with BeforeAndAfterAll w
       assert(owner.nonEmpty)
       assert(owner != "root")
     })
+  }
+
+  test("Test that chown can be disabled with VIASH_DOCKER_CHOWN=false", DockerTest) {
+    assume(!dockerIsRootless, "Docker is running in rootless mode, output files are never owned by root")
+    val owners = dockerChownGetOwner(singleOutputmods, 1, "chown_disabled", extraEnv = Seq("VIASH_DOCKER_CHOWN" -> "false"))
+    assert(owners == List("root"))
+  }
+
+  private val currentUser = System.getProperty("user.name")
+
+  test("Test ownership with rootless podman and one output file", DockerTest) {
+    assume(podmanShimDir.isDefined, "Rootless podman is not available")
+    val owners = dockerChownGetOwner(singleOutputmods, 1, "podman_chown", usePodman = true)
+    assert(owners == List(currentUser))
+  }
+
+  test("Test ownership with rootless podman and multiple output files", DockerTest) {
+    assume(podmanShimDir.isDefined, "Rootless podman is not available")
+    val owners = dockerChownGetOwner(multipleOutputsMods, 3, "podman_multiple_chown", usePodman = true)
+    assert(owners == List.fill(3)(currentUser))
   }
 
   override def afterAll(): Unit = {
