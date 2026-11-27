@@ -8,6 +8,10 @@ TODO add summary
   This file is written to the target folder for `ns build`, the output folder for `build`, and each component's temporary test folder for `test` and `ns test`.
   Each `ns build` overwrites the file, so after a partial build (e.g. with `--query`) it reflects the settings of the most recent build, not necessarily those of every component in the target folder.
 
+## MINOR CHANGES
+
+* `bash_script` resource: The deprecation warning for an unset `use_jq` now includes an example config (PR #949).
+
 ## BUG FIXES
 
 * `config`: Fix crash ("Could not find placeholder for text field") when building a component with multiple inline `text` resources that share a filename (PR #939).
