@@ -1,0 +1,9 @@
+[tools]
+dotnet = "10"
+"dotnet:dotnet-script" = "latest"
+scala = "3.9.0"
+
+[tasks.test]
+description = "Run the sbt test suite with mise tools on PATH"
+env = { NXF_SYNTAX_PARSER = "v1", NXF_VER = "26.10.2" }
+run = "sbt test"

@@ -1,6 +1,6 @@
-name: test_languages_scala
+name: test_languages_executable
 description: |
-  List buckets and objects with mc.
+  List the files in a directory using an executable resource.
 arguments:
   - name: "target"
     type: file
