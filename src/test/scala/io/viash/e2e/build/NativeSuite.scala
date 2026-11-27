@@ -47,6 +47,27 @@ class NativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(executable.canExecute)
   }
 
+  test("Check whether the .build.yaml in the output directory contains the package config") {
+    val tempOutput = IO.makeTemp("viash_build_build_yaml")
+    TestHelper.testMain(
+      "build",
+      "--engine", "native",
+      "--runner", "executable",
+      "-o", tempOutput.toString,
+      "-c", ".version := '1.2.3'",
+      configFile
+    )
+
+    val buildYaml = tempOutput.resolve(".build.yaml")
+    assert(buildYaml.toFile.exists)
+
+    val json = io.viash.helpers.circe.Convert.textToJson(IO.read(buildYaml.toUri), buildYaml.toString)
+    val packageConfig = json.hcursor.downField("package_config")
+    assert(packageConfig.downField("config_mods").as[List[String]] == Right(List(".version := '1.2.3'")))
+
+    IO.deleteRecursively(tempOutput)
+  }
+
   test("Check whether the executable can run") {
     Exec.run(
       Seq(executable.toString, "--help")

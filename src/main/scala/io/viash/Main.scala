@@ -290,7 +290,7 @@ object Main extends Logging {
         0 // Exceptions are thrown when a test fails, so then the '0' is not returned but a '1'. Can be improved further.
       case List(cli.namespace, cli.namespace.build) =>
         val configs = readConfigs(cli.namespace.build, packageConfig = pack1)
-        val configs2 = namespaceDependencies(configs, pack1.target, pack1.rootDir)
+        val configs2 = namespaceDependencies(configs, pack1.target, pack1.rootDir, Some(pack1))
         val configs3 = includeLocalDependencies(configs2, cli.namespace.build, pack1)
         var buildResults = ViashNamespace.build(
           configs = configs3,
@@ -584,15 +584,15 @@ object Main extends Logging {
   // Handle dependencies operations for a single config
   def singleConfigDependencies(appliedConfig: AppliedConfig, output: Option[String], rootDir: Option[Path]): AppliedConfig = {
     if (output.isDefined)
-      DependencyResolver.createBuildYaml(output.get)
+      DependencyResolver.createBuildYaml(output.get, appliedConfig.config.package_config)
 
     handleSingleConfigDependency(appliedConfig, output, rootDir)
   }
 
   // Handle dependency operations for namespaces
-  def namespaceDependencies(configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path]): List[AppliedConfig] = {
+  def namespaceDependencies(configs: List[AppliedConfig], target: Option[String], rootDir: Option[Path], packageConfig: Option[PackageConfig] = None): List[AppliedConfig] = {
     if (target.isDefined)
-      DependencyResolver.createBuildYaml(target.get)
+      DependencyResolver.createBuildYaml(target.get, packageConfig)
 
     configs.map(ac => namespaceConfigDependencies(ac, configs, target, rootDir))
   }

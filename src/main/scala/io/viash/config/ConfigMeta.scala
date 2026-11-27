@@ -30,6 +30,7 @@ import io.circe.JsonObject
 import io.viash.config.resources.NextflowScript
 import io.viash.helpers.IO
 import io.viash.runners.NextflowRunner
+import io.viash.packageConfig.{PackageConfig, encodePackageConfig}
 
 object ConfigMeta {
   // create a yaml printer for writing the viash.yaml file
@@ -42,6 +43,30 @@ object ConfigMeta {
   )
 
   val metaFilename: String = ".config.vsh.yaml"
+
+  /** Make the source and target paths of a package config relative to its root dir */
+  def anonymizePackageConfig(packageConfig: PackageConfig): PackageConfig = {
+    val rootDir = packageConfig.rootDir
+    packageConfig.copy(
+      source = packageConfig.source.map(IO.anonymizePath(rootDir, _)),
+      target = packageConfig.target.map(IO.anonymizePath(rootDir, _))
+    )
+  }
+
+  /**
+    * Generate the contents of the '.build.yaml' file written to the root of a build target.
+    *
+    * @param packageConfig The package config used for the build, if any
+    * @return The yaml contents
+    */
+  def toBuildYamlString(packageConfig: Option[PackageConfig]): String = {
+    val packageJson = packageConfig
+      .map(pc => encodePackageConfig(anonymizePackageConfig(pc)).dropEmptyRecursivelyExcept(Seq("info")))
+    val json = Json.obj(
+      "package_config" -> packageJson.getOrElse(Json.Null)
+    ).dropNullValues
+    printer.pretty(json)
+  }
 
   def configToCleanJson(config: Config): Json = {
     // relativize paths in the info field
@@ -58,10 +83,7 @@ object ConfigMeta {
         executable = info.executable.map(IO.anonymizePath(rootDir, _)),
         dependencies = dependencies
       )),
-      package_config = config.package_config.map(pc => pc.copy(
-        source = pc.source.map(IO.anonymizePath(rootDir, _)),
-        target = pc.target.map(IO.anonymizePath(rootDir, _))
-      ))
+      package_config = config.package_config.map(anonymizePackageConfig)
     )
 
     val encodedConfig: Json = encodeConfig(anonymizedConfig)

@@ -311,6 +311,29 @@ class MainTestNativeSuite extends AnyFunSuite with BeforeAndAfterAll {
     checkTempDirAndRemove(testOutput.stdout, true)
   }
 
+  test("Check whether the .build.yaml in the test directory contains the package config") {
+    val testDir = temporaryFolder.resolve("build_yaml_test")
+    val testOutput = TestHelper.testMain(
+      "test",
+      "--engine", "native",
+      "--runner", "executable",
+      "-k", "true",
+      "--deterministic_working_directory", testDir.toString,
+      "-c", ".version := '1.2.3'",
+      configFile
+    )
+    assert(testOutput.stdout.contains("SUCCESS! All 2 out of 2 test scripts succeeded!"))
+
+    val buildYaml = testDir.resolve(".build.yaml")
+    assert(buildYaml.toFile.exists)
+
+    val json = io.viash.helpers.circe.Convert.textToJson(IO.read(buildYaml.toUri), buildYaml.toString)
+    val packageConfig = json.hcursor.downField("package_config")
+    assert(packageConfig.downField("config_mods").as[List[String]] == Right(List(".version := '1.2.3'")))
+
+    IO.deleteRecursively(testDir)
+  }
+
   test("Check output in case --dry_run is specified") {
     val testOutput = TestHelper.testMain(
       "test",
